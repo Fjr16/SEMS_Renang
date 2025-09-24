@@ -1,0 +1,73 @@
+<div class="container mt-4">
+  <h2>Manajemen Atlet</h2>
+  <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalAthlete">+ Tambah Atlet</button>
+
+  <div class="table-responsive">
+      <table id="dataTable" class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nama</th>
+            <th>Tanggal Lahir</th>
+            <th>Gender</th>
+            <th>Klub</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Budi Santoso</td>
+            <td>2005-01-12</td>
+            <td>L</td>
+            <td>Club A</td>
+            <td>
+              <button class="btn btn-warning btn-sm">Edit</button>
+              <button class="btn btn-danger btn-sm">Hapus</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalAthlete" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form>
+        <div class="modal-header">
+          <h5 class="modal-title">Tambah Atlet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label>Nama Lengkap</label>
+            <input type="text" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label>Tanggal Lahir</label>
+            <input type="date" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label>Gender</label>
+            <select class="form-select">
+              <option>L</option>
+              <option>P</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label>Klub</label>
+            <select class="form-select">
+              <option>Club A</option>
+              <option>Club B</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

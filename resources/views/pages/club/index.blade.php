@@ -1,0 +1,39 @@
+@extends('layouts.main')
+
+@section('content')
+    <h2>Manajemen Klub</h2>
+    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalClub">+ Tambah Klub</button>
+    <div class="table-responsive">
+        <table id="dataTable" class="table table-striped">
+            <thead>
+            <tr><th>#</th><th>Nama Klub</th><th>Kode</th><th>Kontak</th><th>Aksi</th></tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>1</td><td>Club A</td><td>CLA</td><td>0812345678</td>
+                <td>
+                <button class="btn btn-warning btn-sm">Edit</button>
+                <button class="btn btn-danger btn-sm">Hapus</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+@endsection
+
+    <!-- Modal -->
+    <div class="modal fade" id="modalClub" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <form>
+            <div class="modal-header"><h5 class="modal-title">Tambah Klub</h5></div>
+            <div class="modal-body">
+            <div class="mb-3"><label>Nama Klub</label><input type="text" class="form-control"></div>
+            <div class="mb-3"><label>Kode Klub</label><input type="text" class="form-control"></div>
+            <div class="mb-3"><label>Kontak</label><input type="text" class="form-control"></div>
+            </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-primary">Simpan</button></div>
+        </form>
+        </div>
+    </div>
+    </div>
