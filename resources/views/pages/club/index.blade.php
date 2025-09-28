@@ -19,7 +19,6 @@
             </tbody>
         </table>
     </div>
-@endsection
 
     <!-- Modal -->
     <div class="modal fade" id="modalClub" tabindex="-1">
@@ -37,3 +36,4 @@
         </div>
     </div>
     </div>
+@endsection

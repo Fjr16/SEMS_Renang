@@ -8,7 +8,7 @@
           <div class="card-body text-center">
             <h5 class="card-title">Atlet</h5>
             <p class="card-text">Kelola data atlet terdaftar</p>
-            <a href="athletes.html" class="btn btn-primary">Lihat</a>
+            <a href="{{ route('atlet') }}" class="btn btn-primary">Lihat</a>
           </div>
         </div>
       </div>
@@ -17,7 +17,7 @@
           <div class="card-body text-center">
             <h5 class="card-title">Klub</h5>
             <p class="card-text">Kelola data klub & tim</p>
-            <a href="clubs.html" class="btn btn-primary">Lihat</a>
+            <a href="{{ route('club') }}" class="btn btn-primary">Lihat</a>
           </div>
         </div>
       </div>
@@ -26,7 +26,7 @@
           <div class="card-body text-center">
             <h5 class="card-title">Kompetisi</h5>
             <p class="card-text">Daftar & kelola kompetisi</p>
-            <a href="competitions.html" class="btn btn-primary">Lihat</a>
+            <a href="{{ route('competition') }}" class="btn btn-primary">Lihat</a>
           </div>
         </div>
       </div>

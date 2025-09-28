@@ -6,6 +6,22 @@
   font-size: 1.2rem;
 }
 
+/* Hover & active efek menu navbar */
+.navbar .nav-link {
+  transition: background-color 0.2s, color 0.2s;
+  padding: .5rem 1rem;
+  border-radius: .375rem;
+}
+
+.navbar .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.navbar .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.25);
+  font-weight: 600;
+}
+
 /* Card di dashboard */
 .card {
   border-radius: 12px;
@@ -37,15 +53,20 @@
   border-radius: 10px;
 }
 
-/* Footer (opsional kalau mau ditambahkan) */
-.footer {
-  margin-top: 40px;
-  padding: 15px;
-  text-align: center;
-  background: #f8f9fa;
-  border-top: 1px solid #e9ecef;
-  color: #6c757d;
-  font-size: 14px;
+/* Footer Mode default (light) */
+footer {
+  background: #f8f9fa; 
+  color: #212529;
+}
+
+/* Saat dark mode aktif */
+body.dark-mode footer {
+  background: #212529; 
+  color: #f8f9fa;
+}
+
+body.dark-mode footer a {
+  color: #0d6efd; /* link tetap terlihat */
 }
 
 /* handle dark mode */
