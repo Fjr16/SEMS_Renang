@@ -12,7 +12,8 @@
             <tbody>
             <tr>
                 <td>1</td><td>Kejuaraan Nasional</td><td>2025-08-12</td><td>Jakarta Aquatic Stadium</td>
-                <td><button class="btn btn-info btn-sm">Event</button></td>
+                <td><a href="{{ route('events') }}" class="btn btn-info btn-sm">Event</a>
+                <a href="{{ route('competition.show') }}" class="btn btn-info btn-sm">show</a></td>
             </tr>
             </tbody>
         </table>
