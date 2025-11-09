@@ -1,10 +1,17 @@
 <?php
 
+use App\Http\Controllers\ClubController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('pages.dashboard');
 })->name('dashboard');
+
+Route::prefix('/master/club')->group(function(){
+    Route::get('/', [ClubController::class, 'index'])->name('club.index');
+    Route::post('/store', [ClubController::class, 'store'])->name('club.store');
+    Route::delete('/destroy/{id}', [ClubController::class, 'destroy'])->name('club.destroy');
+});
 
 Route::get('/atlet', function(){
     return view('pages.atlet.index');
