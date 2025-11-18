@@ -9,6 +9,7 @@ Route::get('/', function () {
 
 Route::prefix('/master/club')->group(function(){
     Route::get('/', [ClubController::class, 'index'])->name('club.index');
+    Route::get('/data', [ClubController::class, 'data'])->name('club.data');
     Route::post('/store', [ClubController::class, 'store'])->name('club.store');
     Route::delete('/destroy/{id}', [ClubController::class, 'destroy'])->name('club.destroy');
 });

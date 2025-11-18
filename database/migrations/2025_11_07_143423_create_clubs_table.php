@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('club_address')->nullable();
             $table->string('club_province')->nullable();
             $table->string('club_lead')->nullable();
-            $table->string('club_lead')->nullable();
             $table->string('lead_phone')->nullable();
             $table->timestamps();
         });

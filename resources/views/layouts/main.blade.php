@@ -16,7 +16,7 @@
 
     <!-- Navbar -->
     @include('layouts.partials.navbar')
-  
+
 
   <!-- Konten -->
   <div class="container py-4">
