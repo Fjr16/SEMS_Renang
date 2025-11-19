@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AthleteController;
 use App\Http\Controllers\ClubController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,10 +14,13 @@ Route::prefix('/master/club')->group(function(){
     Route::post('/store', [ClubController::class, 'store'])->name('club.store');
     Route::delete('/destroy/{id}', [ClubController::class, 'destroy'])->name('club.destroy');
 });
+Route::prefix('/master/atlet')->group(function(){
+    Route::get('/', [AthleteController::class, 'index'])->name('atlet.index');
+    Route::get('/data', [AthleteController::class, 'data'])->name('atlet.data');
+    Route::post('/store', [AthleteController::class, 'store'])->name('atlet.store');
+    Route::delete('/destroy/{id}', [AthleteController::class, 'destroy'])->name('atlet.destroy');
+});
 
-Route::get('/atlet', function(){
-    return view('pages.atlet.index');
-})->name('atlet');
 Route::get('/club', function(){
     return view('pages.club.index');
 })->name('club');

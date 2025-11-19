@@ -18,48 +18,21 @@
   <div class="card shadow-sm border-0">
     <div class="card-body">
       <div class="table-responsive">
-        <table id="dataTable" class="table table-striped align-middle">
+        <table id="atletTable" class="table table-striped align-middle">
           <thead class="table-light">
             <tr>
-              <th>#</th>
-              <th>Nama</th>
-              <th>Umur</th>
-              <th>Klub</th>
-              <th>Kategori</th>
-              <th>Aksi</th>
+                <th>Aksi</th>
+                <th>Foto</th>
+                <th>Atlet</th>
+                <th>Klub Sekarang</th>
+                <th>BOD</th>
+                <th>Jenis Kelamin</th>
+                <th>Sekolah</th>
+                <th>Klub</th>
+                <th>Kota</th>
+                <th>Provinsi</th>
             </tr>
           </thead>
-          <tbody>
-            <!-- Contoh data statis, nanti pakai loop blade -->
-            <tr>
-              <td>1</td>
-              <td>Budi Santoso</td>
-              <td>16</td>
-              <td>Shark Swim Club</td>
-              <td>Junior</td>
-              <td>
-                <div class="btn-group">
-                  <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
-                  <a href="#" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                  <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>Siti Aminah</td>
-              <td>18</td>
-              <td>Dolphin Club</td>
-              <td>Senior</td>
-              <td>
-                <div class="btn-group">
-                  <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
-                  <a href="#" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                  <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
         </table>
       </div>
     </div>
@@ -106,3 +79,41 @@
     </div>
   </div>
 @endsection
+
+@push('scripts')
+<script>
+    var table;
+    $(document).ready(function(){
+        table = $('#atletTable').DataTable({
+            processing:true,
+            serverSide:true,
+            language:{
+                processing:'loading...',
+                search:'Cari:',
+                infoEmpty:'Tidak ada data',
+                zeroRecords:'Tidak ada data yang cocok',
+                paginate:{
+                    first:'Awal',
+                    last:'Akhir',
+                    next:'Berikutnya',
+                    previous:'Sebelumnya'
+                },
+            },
+            ajax:"{{ route('atlet.data') }}",
+            columns:[
+                {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
+                {data:'foto', name:'foto', className:'text-center', orderable:false, searchable:false},
+                {data:'codeName', name:'name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'clubDesc', name:'clubDesc', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'bod', name:'bod', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'genderAttr', name:'gender', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'school_name', name:'school_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'club_name', name:'club_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'city_name', name:'city_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'province_name', name:'province_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+            ],
+            order:[[2,'asc']]
+        });
+    });
+</script>
+@endpush
