@@ -1,5 +1,40 @@
 @extends('layouts.main')
 
+@push('css')
+    <style>
+        .gallery-box {
+            border: 2px dashed #ced4da;
+            border-radius: 8px;
+            padding: 6px;
+            /* width: 100%; */
+            width: 150px;
+            aspect-ratio: 3 / 4; /* kotak potret */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+            overflow: hidden;
+        }
+
+        .gallery-box:hover {
+            border-color: #0d6efd;
+            background-color: #eef4ff;
+        }
+
+        .gallery-placeholder {
+            padding: 4px;
+        }
+
+        .gallery-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+    </style>
+@endpush
 @section('content')
   <!-- Header Page -->
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
@@ -40,7 +75,7 @@
 
   <!-- Modal -->
   <div class="modal fade" id="modalAthlete" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <form>
           <div class="modal-header">
@@ -48,27 +83,72 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <div class="mb-3">
-              <label>Nama Lengkap</label>
-              <input type="text" class="form-control" required>
+              <div class="mb-3">
+                <div class="row">
+                    <div class="col-6">
+                        <label class="form-label" for="club_role_category_id">Kategori Klub</label>
+                        <select name="club_role_category_id" id="club_role_category_id" class="form-control">
+                            @foreach ($clubCategories as $cat)
+                                <option value="{{ $cat->id }}" @selected(old('club_role_category_id') == $cat->id)>{{ $cat->name ?? '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="club_id">Klub</label>
+                        <select name="club_id" id="club_id" class="form-control" style="width: 100%"></select>
+                    </div>
+                </div>
             </div>
             <div class="mb-3">
-              <label>Tanggal Lahir</label>
-              <input type="date" class="form-control" required>
+                <div class="row">
+                    <div class="col-8">
+                        <div class="mb-3">
+                            <label class="form-label" for="name">Nama Lengkap</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="bod">Tanggal Lahir</label>
+                            <input type="date" class="form-control" name="bod" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="gender">Gender</label>
+                            <select class="form-control" name="gender" id="gender">
+                                @foreach ($genders as $gd)
+                                    <option value="{{ $gd->value }}" @selected(old('gender') == $gd->value)>{{ $gd->label() }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="mb-2">
+                            <label class="form-label" for="foto">Foto</label>
+                        </div>
+
+                        <!-- Gallery Box -->
+                        <div class="gallery-box" onclick="document.getElementById('foto').click()">
+                            <div id="galleryPlaceholder" class="gallery-placeholder text-center">
+                                <div class="small text-muted mb-1">Klik untuk pilih foto</div>
+                                <div class="small text-muted">JPG / PNG, maks 2MB</div>
+                            </div>
+                            <img id="fotoPreview" class="gallery-image d-none" alt="Preview Foto">
+                        </div>
+
+                        <!-- Input File Asli (disembunyikan) -->
+                        <input type="file" name="foto" id="foto" accept="image/*" class="d-none" onchange="previewImg(event)">
+                    </div>
+                </div>
             </div>
             <div class="mb-3">
-              <label>Gender</label>
-              <select class="form-select">
-                <option>L</option>
-                <option>P</option>
-              </select>
+                <label>Nama Sekolah</label>
+                <input type="text" class="form-control" required>
             </div>
             <div class="mb-3">
-              <label>Klub</label>
-              <select class="form-select">
-                <option>Club A</option>
-                <option>Club B</option>
-              </select>
+                <label>Nama Klub</label>
+                <input type="text" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Nama Provinsi</label>
+                <input type="text" class="form-control" required>
             </div>
           </div>
           <div class="modal-footer">
@@ -115,5 +195,67 @@
             order:[[2,'asc']]
         });
     });
+
+
+    function previewImg(event){
+        const input = event.target;
+        const file = input.files[0];
+
+        if(!file) return;
+
+        const allowTypes = ['image/jpeg', 'image/png'];
+        const maxSize = 2*1024*1024;
+
+        if(!allowTypes.includes(file.type)){
+            Toast.fire({
+                icon:'error',
+                title:'Gambar yang diterima hanya .jpeg/jpg .png'
+            });
+            input.value = '';
+            return;
+        }
+
+        if(file.size > maxSize){
+            Toast.fire({
+                icon:'error',
+                title:'Ukuran foto maksimal 2mb'
+            });
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e){
+            const img = document.getElementById('fotoPreview');
+            const placeholder = document.getElementById('galleryPlaceholder');
+
+            img.src = e.target.result;
+            img.classList.remove('d-none');
+            if(placeholder) placeholder.classList.add('d-none');
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+    $('#club_id').select2({
+        width:'resolve',
+        theme:'classic',
+        ajax: {
+            url:"{{ route('getClubByCategory') }}",
+            dataType:'json',
+            delay:250,
+            data:function(params){
+                return {
+                    q :params.term,
+                }
+            },
+            processResults:function(data){
+                return {
+                    results: '['+data.club_code+'] ' + data.club_name
+                }
+            }
+        }
+    })
+    $('#club_id').attr('disabled', false);
 </script>
 @endpush

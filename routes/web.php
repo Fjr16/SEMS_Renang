@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AthleteController;
 use App\Http\Controllers\ClubController;
+use App\Http\Controllers\OtherController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -57,3 +58,6 @@ Route::get('/users', function () {
 Route::get('/users/detail', function () {
     return view('pages.users.show');
 })->name('users.detail');
+
+
+Route::get('/select2/getClubByCategory', [OtherController::class, 'getClubByCategory'])->name('getClubByCategory');

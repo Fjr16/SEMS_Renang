@@ -18,18 +18,18 @@
 // });
 
 // Contoh fungsi export (dummy)
-function exportResults(format) {
-  alert("Export hasil dalam format: " + format);
-  // TODO: ganti dengan fetch API backend untuk download file
-}
+// function exportResults(format) {
+//   alert("Export hasil dalam format: " + format);
+//   // TODO: ganti dengan fetch API backend untuk download file
+// }
 
-// Pasang event listener tombol export di results.html
-document.addEventListener("DOMContentLoaded", () => {
-  const btnPdf = document.querySelector(".btn-outline-primary");
-  const btnCsv = document.querySelector(".btn-outline-success");
-  if (btnPdf) btnPdf.addEventListener("click", () => exportResults("PDF"));
-  if (btnCsv) btnCsv.addEventListener("click", () => exportResults("CSV"));
-});
+// // Pasang event listener tombol export di results.html
+// document.addEventListener("DOMContentLoaded", () => {
+//   const btnPdf = document.querySelector(".btn-outline-primary");
+//   const btnCsv = document.querySelector(".btn-outline-success");
+//   if (btnPdf) btnPdf.addEventListener("click", () => exportResults("PDF"));
+//   if (btnCsv) btnCsv.addEventListener("click", () => exportResults("CSV"));
+// });
 
 // untuk spinner
 function showSpinner() {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\Gender;
 use App\Models\Athlete;
+use App\Models\ClubRoleCategory;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -54,7 +55,9 @@ class AthleteController extends Controller
     }
 
     public function index(){
-        return view('pages.atlet.index');
+        $genders = Gender::cases();
+        $clubCategories = ClubRoleCategory::all();
+        return view('pages.atlet.index', compact('genders', 'clubCategories'));
     }
     public function store(Request $r){
         try {

@@ -8,7 +8,7 @@
           <div class="card-body text-center">
             <h5 class="card-title">Atlet</h5>
             <p class="card-text">Kelola data atlet terdaftar</p>
-            <a href="{{ route('atlet') }}" class="btn btn-primary">Lihat</a>
+            <a href="{{ route('atlet.index') }}" class="btn btn-primary">Lihat</a>
           </div>
         </div>
       </div>
