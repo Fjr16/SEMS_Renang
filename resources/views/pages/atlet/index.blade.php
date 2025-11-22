@@ -88,6 +88,7 @@
                     <div class="col-6">
                         <label class="form-label" for="club_role_category_id">Kategori Klub</label>
                         <select name="club_role_category_id" id="club_role_category_id" class="form-control">
+                            <option value="">--- Pilih Kategori ---</option>
                             @foreach ($clubCategories as $cat)
                                 <option value="{{ $cat->id }}" @selected(old('club_role_category_id') == $cat->id)>{{ $cat->name ?? '' }}</option>
                             @endforeach
@@ -95,7 +96,7 @@
                     </div>
                     <div class="col-6">
                         <label class="form-label" for="club_id">Klub</label>
-                        <select name="club_id" id="club_id" class="form-control" style="width: 100%"></select>
+                        <select name="club_id" id="club_id" class="form-control" style="width: 100%" disabled></select>
                     </div>
                 </div>
             </div>
@@ -237,25 +238,44 @@
         reader.readAsDataURL(file);
     }
 
-    $('#club_id').select2({
-        width:'resolve',
-        theme:'classic',
-        ajax: {
+    $('#club_role_category_id').select2({
+        width:'100%',
+        placeholder:'Pilih Kategori Klub',
+        allowClear:true
+    });
+
+    const clubSelect = $('club_id').select2({
+        width:'100%',
+        placeholder:'Pilih Klub',
+        allowClear:true,
+        minimumInputLength:0,
+        ajax:{
             url:"{{ route('getClubByCategory') }}",
             dataType:'json',
             delay:250,
             data:function(params){
                 return {
-                    q :params.term,
-                }
+                    q:params.term || '',
+                    page:params.page || 1,
+                    category_id:$('#club_role_category_id').val()
+                };
             },
-            processResults:function(data){
+            processResult:function(data,params){
+                params.page = params.page || 1;
+
                 return {
-                    results: '['+data.club_code+'] ' + data.club_name
-                }
-            }
-        }
+                    results:(data.results || []).map(row => ({
+                        id:row.id,
+                        text:row.text || `[${row.code ?? ''}] ${row.name ?? ''}`
+                    })),
+                    pagination:{
+                        more:data.pagination?.more || false
+                    }
+                };
+            },
+            cache:true,
+        },
+        // template
     })
-    $('#club_id').attr('disabled', false);
 </script>
 @endpush
