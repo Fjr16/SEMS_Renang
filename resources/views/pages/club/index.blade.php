@@ -12,6 +12,7 @@
                     <thead>
                         <tr>
                             <th>Aksi</th>
+                            <th>Logo</th>
                             <th>Kategori</th>
                             <th>Kode</th>
                             <th>Nama</th>
@@ -19,7 +20,6 @@
                             <th>Provinsi</th>
                             <th>Penanggung Jawab (PJ)</th>
                             <th>HP PJ</th>
-                            <th>Logo</th>
                         </tr>
                     </thead>
                 </table>
@@ -96,9 +96,13 @@
                 processing :true,
                 serverSide :true,
                 ajax :"{{ route('club.data') }}",
-                // columnDefs:[]
+                columnDefs:[
+                    {target:0, className:'dt-actions'},
+                    {target:1, className:'dt-fotos'}
+                ],
                 columns:[
                     {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
+                    {data:'club_logo', name:'club_logo',defaultContent:'-', className:'text-center', orderable:false, searchable:false},
                     {data:'club_role_category_id', name:'category.name',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                     {data:'club_code', name:'club_code',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                     {data:'club_name', name:'club_name',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
@@ -106,25 +110,8 @@
                     {data:'club_province', name:'club_province',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                     {data:'club_lead', name:'club_lead',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                     {data:'lead_phone', name:'lead_phone',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                    {data:'club_logo', name:'club_logo',defaultContent:'-', className:'text-center', orderable:false, searchable:false},
                 ],
-                language: {
-                    processing: 'loading...',
-                    search: 'Cari:',
-                    // lengthMenu: 'Tampil _MENU_ data',
-                    // info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
-                    infoEmpty: 'Tidak ada data',
-                    // infoFiltered: "(difilter dari _MAX_ total data)",
-                    zeroRecords: "Tidak ada data yang cocok",
-                    paginate: {
-                        first: "Awal",
-                        last: "Akhir",
-                        next: "Berikutnya",
-                        previous: "Sebelumnya"
-                    },
-                },
-                order: [[1, 'desc']],
-                // deferRender: true,      // lebih hemat memori kalau data besar,
+                order: [[2, 'desc']],
 
                 // initComplete: function(settings, json) {
                 //     // dipanggil SEKALI setelah table pertama kali selesai inisialisasi

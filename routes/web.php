@@ -61,3 +61,4 @@ Route::get('/users/detail', function () {
 
 
 Route::get('/select2/getClubByCategory', [OtherController::class, 'getClubByCategory'])->name('getClubByCategory');
+Route::get('/findAtletById/{id}', [OtherController::class, 'findAtletById'])->name('findAtletById');

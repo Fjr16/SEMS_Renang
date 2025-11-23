@@ -7,8 +7,10 @@ use App\Models\Athlete;
 use App\Models\ClubRoleCategory;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Enum;
 use Yajra\DataTables\Facades\DataTables;
 
 class AthleteController extends Controller
@@ -18,8 +20,8 @@ class AthleteController extends Controller
 
         return DataTables::of($data)
         ->addColumn('action', function($row){
-            $edit = '<button class="btn btn-warning btn-sm" onclick="edit(this)">Edit</button>';
-            $dlt = '<button class="btn btn-danger btn-sm" data-id="'.$row->id.'" onclick="destroy(this)">Hapus</button>';
+            $edit = '<button class="btn btn-warning btn-sm" onclick="edit('.$row->id.')">Edit</button>';
+            $dlt = '<button class="btn btn-danger btn-sm" onclick="destroy('.$row->id.')">Hapus</button>';
             return $edit .' '. $dlt;
         })
         ->addColumn('codeName', function($row){
@@ -60,47 +62,49 @@ class AthleteController extends Controller
         return view('pages.atlet.index', compact('genders', 'clubCategories'));
     }
     public function store(Request $r){
-        try {
-            $validators = Validator::make($r->all(), [
-                'club_id' => 'required',
-                'code' => 'required',
-                'name' => 'required',
-                'bod' => 'required',
-                'gender' => 'required',
-                'school_name' => 'required',
-                'club_name' => 'nullable',
-                'city_name' => 'nullable',
-                'province_name' => 'nullable',
+        $validators = Validator::make($r->all(), [
+            'club_id' => 'required|integer|exists:clubs,id',
+            'name' => 'required|string|max:255',
+            'bod' => 'required|date|before_or_equal:today',
+            'gender' => ['required', new Enum(Gender::class)],
+            'school_name' => 'nullable|string|max:255',
+            'city_name' => 'nullable|string|max:255',
+            'province_name' => 'nullable|string|max:255',
+            'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'athlete_id' => 'nullable|integer|exists:athletes,id',
+        ]);
+
+        if ($validators->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => substr($validators->errors()->first(),0,100),
             ]);
+        }
 
-            if ($validators->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => substr($validators->errors()->first(),0,100),
-                ]);
-            }
+        $item = $r->input('athlete_id') ? Athlete::find($r->input('athlete_id')) : new Athlete;
+        $item->club_id = $r->club_id;
+        $item->name = $r->name;
+        $item->bod = $r->bod;
+        $item->gender = $r->gender;
+        $item->school_name = $r->school_name;
+        // $item->club_name = $r->club_name;
+        $item->city_name = $r->city_name;
+        $item->province_name = $r->province_name;
+        if($r->file('foto')){
+            $item->foto = $r->file('foto')->store('club/athlete', 'public');
+        }
 
-            $item = $r->input('athlete_id') ? Athlete::find($r->input('athlete_id')) : new Athlete;
-            if($r->file('foto')){
-                if ($item->foto) Storage::disk('public')->delete($item->foto);
-                $item->foto = $r->file('foto')->store('/club/athlete', 'public');
-            }
-            $item->club_id = $r->club_id;
-            $item->code = $r->code;
-            $item->name = $r->name;
-            $item->bod = $r->bod;
-            $item->gender = $r->gender;
-            $item->school_name = $r->school_name;
-            $item->club_name = $r->club_name;
-            $item->city_name = $r->city_name;
-            $item->province_name = $r->province_name;
+        try {
+            DB::beginTransaction();
             $item->save();
+            DB::commit();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Sukses simpan data',
+                'message' => $r->input('athlete_id') ? 'Sukses Update Data' : 'Sukses Simpan Data',
             ]);
         } catch (\Throwable $th) {
+            DB::rollBack();
             return response()->json([
                 'status' => false,
                 'message' => substr($th->getMessage(),0,100) ?? 'Gagal Simpan Data',
@@ -109,7 +113,7 @@ class AthleteController extends Controller
     }
     public function destroy($id){
         try {
-            $item = Athlete::find($id);
+            $item = Athlete::findOrFail($id);
             $item->delete();
             return response()->json([
                 'status' => true,
