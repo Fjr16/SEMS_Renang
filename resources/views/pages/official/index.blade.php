@@ -39,12 +39,12 @@
   <!-- Header Page -->
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
     <div>
-      <h2 class="fw-bold mb-1">Manajemen Atlet</h2>
-      <p class="text-muted mb-0">Kelola data atlet yang terdaftar dalam sistem</p>
+      <h2 class="fw-bold mb-1">Manajemen Official</h2>
+      <p class="text-muted mb-0">Kelola data official yang terdaftar dalam sistem</p>
     </div>
     <div class="mt-3 mt-md-0">
-      <button data-bs-toggle="modal" data-bs-target="#modalAthlete" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Atlet'); $('#athlete_id').val('');">
-        <i class="bi bi-plus-circle me-1"></i> Tambah Atlet
+      <button data-bs-toggle="modal" data-bs-target="#modalOfficial" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Official'); $('#official_id').val('');">
+        <i class="bi bi-plus-circle me-1"></i> Tambah Official
       </button>
     </div>
   </div>
@@ -52,16 +52,14 @@
   <!-- Card Content -->
   <div class="card shadow-sm border-0">
     <div class="card-body">
-        <table id="atletTable" class="table table-striped align-middle">
+        <table id="officialTable" class="table table-striped align-middle">
             <thead class="table-light">
             <tr>
                 <th>Aksi</th>
                 <th>Foto</th>
-                <th>Atlet</th>
-                <th>Klub Sekarang</th>
-                <th>BOD</th>
+                <th>Official</th>
                 <th>Jenis Kelamin</th>
-                <th>Sekolah</th>
+                <th>License</th>
                 <th>Klub</th>
                 <th>Kota</th>
                 <th>Provinsi</th>
@@ -72,10 +70,10 @@
   </div>
 
   <!-- Modal -->
-  <div class="modal fade" id="modalAthlete" tabindex="-1">
+  <div class="modal fade" id="modalOfficial" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <form id="formAthlete" enctype="multipart/form-data">
+        <form id="formOfficial" enctype="multipart/form-data">
           <div class="modal-header">
             <h5 class="modal-title" id="modalTitle">Tambah Atlet</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -84,7 +82,7 @@
               <div class="mb-3">
                 <div class="row">
                     <div class="col-6">
-                        <input type="hidden" name="athlete_id" id="athlete_id">
+                        <input type="hidden" name="official_id" id="official_id">
                         <label class="form-label" for="club_role_category_id">Kategori Klub</label>
                         <select name="club_role_category_id" id="club_role_category_id" class="form-control form-control-md">
                             <option value=""></option>
@@ -107,7 +105,7 @@
                             <input type="text" class="form-control" name="name"  id="name" required>
                         </div>
                         <div class="row mb-3">
-                            <div class="col-sm-6 col-md-6 col-12 mb-3 mb-sm-0">
+                            <div class="col-sm-6 col-12 mb-3 mb-sm-0">
                                 <label class="form-label" for="gender">Gender</label>
                                 <select class="form-control" name="gender" id="gender">
                                     @foreach ($genders as $gd)
@@ -115,14 +113,18 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-sm-6 col-md-6 col-12">
-                                <label class="form-label" for="bod">Tanggal Lahir</label>
-                                <input type="text" class="form-control tanggal" name="bod" id="bod" required placeholder="Pilih tanggal lahir">
+                            <div class="col-sm-6 col-12">
+                                <label class="form-label" for="license">License</label>
+                                <select class="form-control" name="license" id="license">
+                                    @foreach ($licenses as $license)
+                                        <option value="{{ $license->value }}" @selected(old('license') == $license->value)>{{ $license->label() }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="city_name">Nama Kota</label>
-                            <input type="text" name="city_name" id="city_name" class="form-control" required>
+                            <label class="form-label" for="current_city">Nama Kota</label>
+                            <input type="text" name="current_city" id="current_city" class="form-control" required>
                         </div>
                     </div>
                     <div class="col-sm-4 col-md-5 col-6">
@@ -145,17 +147,9 @@
                 </div>
             </div>
             <div class="mb-3">
-                <label class="form-label" for="province_name">Nama Provinsi</label>
-                <input type="text" class="form-control" name="province_name" id="province_name" required>
+                <label class="form-label" for="current_province">Nama Provinsi</label>
+                <input type="text" class="form-control" name="current_province" id="current_province" required>
             </div>
-            <div class="mb-3">
-                <label class="form-label" for="school_name">Nama Sekolah</label>
-                <input type="text" class="form-control" name="school_name" id="school_name" required>
-            </div>
-            {{-- <div class="mb-3">
-                <label class="form-label">Nama Klub</label>
-                <input type="text" class="form-control" required>
-            </div> --}}
           </div>
           <div class="modal-footer">
             <button type="submit" class="btn btn-primary">Simpan</button>
@@ -170,25 +164,23 @@
 <script>
     var table;
     $(document).ready(function(){
-        table = $('#atletTable').DataTable({
+        table = $('#officialTable').DataTable({
             processing:true,
             serverSide:true,
             columnDefs: [
                 { targets: 0, className: 'dt-actions',  }, // kolom Aksi
                 { targets: 1, className: 'dt-fotos',  } // kolom foto
             ],
-            ajax:"{{ route('atlet.data') }}",
+            ajax:"{{ route('official.data') }}",
             columns:[
                 {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
                 {data:'foto', name:'foto', className:'text-center', orderable:false, searchable:false},
-                {data:'codeName', name:'name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'clubDesc', name:'clubDesc', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'bod', name:'bod', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'name', name:'name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 {data:'genderAttr', name:'gender', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'school_name', name:'school_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'club_name', name:'club_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'city_name', name:'city_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'province_name', name:'province_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'licenseAttr', name:'licenseAttr', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'clubDesc', name:'clubDesc', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'current_city', name:'current_city', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'current_province', name:'current_province', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
             ],
             order:[[2,'asc']]
         });
@@ -197,14 +189,14 @@
             width:'100%',
             placeholder:'Pilih Kategori Klub',
             allowClear:true,
-            dropdownParent: $('#modalAthlete') // id modal kamu
+            dropdownParent: $('#modalOfficial') // id modal kamu
         });
 
         const clubSelect = $('#club_id').select2({
             width:'100%',
             placeholder:'Pilih Klub',
             allowClear:true,
-            dropdownParent: $('#modalAthlete'),
+            dropdownParent: $('#modalOfficial'),
             minimumInputLength:0,
             ajax:{
                 url:"{{ route('getClubByCategory') }}",
@@ -294,16 +286,16 @@
         reader.readAsDataURL(file);
     }
 
-    async function edit(id_atlet){
+    async function edit(id_official){
         try {
-            const res = await fetch(`{{ url('findAtletById') }}/${id_atlet}`, {
+            const res = await fetch(`{{ url('findOfficialById') }}/${id_official}`, {
                 method:'GET'
             });
             if(!res.ok) throw new Error('Terjadi kesalahan pada server');
 
             const result = await res.json();
             if(!result.status) throw new Error(result.message || 'Gagal mendapatkan data');
-            const atlet = result.data.athlete;
+            const official = result.data.official;
             const categoryId = result.data.category_id;
             const club = result.data.club;
             // isi data ke form
@@ -314,23 +306,22 @@
                 $('#club_id').append(option).trigger('change');
                 $('#club_id').prop('disabled', false);
             }
-            $('#name').val(atlet.name);
-            $('#gender').val(atlet.gender);
-            $('#bod')[0]._flatpickr.setDate(atlet.bod);
-            $('#city_name').val(atlet.city_name);
-            $('#province_name').val(atlet.province_name);
-            $('#school_name').val(atlet.school_name);
-            $('#athlete_id').val(id_atlet);
+            $('#name').val(official.name);
+            $('#gender').val(official.gender);
+            $('#current_city').val(official.current_city);
+            $('#current_province').val(official.current_province);
+            $('#license').val(official.license);
+            $('#official_id').val(id_official);
             // preview foto
-            if(atlet.foto){
+            if(official.foto){
                 const img = document.getElementById('fotoPreview');
                 const placeholder = document.getElementById('galleryPlaceholder');
-                img.src = '/storage/'+atlet.foto;
+                img.src = '/storage/'+official.foto;
                 img.classList.remove('d-none');
                 if(placeholder) placeholder.classList.add('d-none');
             }
-            $('#modalTitle').text('Edit Atlet');
-            $('#modalAthlete').modal('show');
+            $('#modalTitle').text('Edit Official');
+            $('#modalOfficial').modal('show');
         } catch (error) {
             Toast.fire({
                 icon:'error',
@@ -339,10 +330,10 @@
         }
     }
 
-    function destroy(id_atlet){
+    function destroy(id_official){
         Swal.fire({
             title:'Konfirmasi Hapus',
-            text:'Apakah anda yakin ingin menghapus data atlet ini?',
+            text:'Apakah anda yakin ingin menghapus data official ini?',
             icon:'warning',
             showCancelButton:true,
             confirmButtonText:'Ya, Hapus',
@@ -351,7 +342,7 @@
             if(result.isConfirmed){
                 showSpinner();
                 try {
-                    const res = await fetch("{{ route('atlet.destroy','id:') }}".replace('id:', id_atlet), {
+                    const res = await fetch("{{ route('official.destroy','id:') }}".replace('id:', id_official), {
                         method:'DELETE',
                         headers:{
                             'X-CSRF-TOKEN':"{{ csrf_token() }}",
@@ -380,9 +371,9 @@
         });
     }
 
-    $('#modalAthlete').on('hidden.bs.modal', function(){
+    $('#modalOfficial').on('hidden.bs.modal', function(){
         // reset form saat modal ditutup
-        const form = document.getElementById('formAthlete');
+        const form = document.getElementById('formOfficial');
         form.reset();
 
         // reset preview gambar
@@ -398,13 +389,13 @@
         $('#club_id').val(null).trigger('change').prop('disabled', true);
     });
 
-    $('#formAthlete').on('submit', async function(e){
+    $('#formOfficial').on('submit', async function(e){
         e.preventDefault();
         showSpinner();
 
         let formData = new FormData(this);
         try {
-            const res = await fetch("{{ route('atlet.store') }}", {
+            const res = await fetch("{{ route('official.store') }}", {
                 method:'POST',
                 headers:{
                     'X-CSRF-TOKEN':"{{ csrf_token() }}",
@@ -423,7 +414,7 @@
                 title:result.message || 'Sukses menyimpan data'
             });
             table.ajax.reload(null, false);
-            $('#modalAthlete').modal('hide');
+            $('#modalOfficial').modal('hide');
         } catch (error) {
             hideSpinner();
             Toast.fire({

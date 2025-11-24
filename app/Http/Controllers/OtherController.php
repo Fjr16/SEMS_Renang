@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Athlete;
 use App\Models\Club;
+use App\Models\Official;
 use Illuminate\Http\Request;
 
 class OtherController extends Controller
@@ -48,6 +49,31 @@ class OtherController extends Controller
                 'status' => true,
                 'data' => [
                     'athlete' => $item,
+                    'category_id' => $categoryId ?? null,
+                    'club' => $club ?? null
+                ]
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'data' => [],
+                'message' => substr($th->getMessage(), 0,100) || 'Data tidak ditemukan'
+            ]);
+        }
+    }
+    public function findOfficialById($id){
+        try {
+            $item = Official::findOrFail($id);
+            $categoryId = null;
+            $club = null;
+            if($item && $item->club_id){
+                $categoryId = $item->club->club_role_category_id;
+                $club = $item->club;
+            }
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'official' => $item,
                     'category_id' => $categoryId ?? null,
                     'club' => $club ?? null
                 ]

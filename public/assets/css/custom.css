@@ -55,13 +55,13 @@
 
 /* Footer Mode default (light) */
 footer {
-  background: #f8f9fa; 
+  background: #f8f9fa;
   color: #212529;
 }
 
 /* Saat dark mode aktif */
 body.dark-mode footer {
-  background: #212529; 
+  background: #212529;
   color: #f8f9fa;
 }
 
@@ -105,12 +105,12 @@ body.dark-mode .darkmode-toggle .btn {
   color: #212529;
 }
 
-td.dt-actions, 
+td.dt-actions,
 th.dt-actions {
   white-space: nowrap;   /* tombol tetap satu baris */
   width: 1%;             /* trik "shrink-to-fit" */
 }
-td.dt-fotos, 
+td.dt-fotos,
 th.dt-fotos {
   white-space: nowrap;   /* tombol tetap satu baris */
   width: 1%;             /* trik "shrink-to-fit" */

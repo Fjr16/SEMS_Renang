@@ -12,14 +12,14 @@ class Official extends Model
         'name',
         'gender',
         'license',
-        'current_club',
+        // 'current_club',
         'current_city',
         'current_province',
-        'certificate',
+        // 'certificate',
     ];
 
     public function club() {
         return $this->belongsTo(Club::class);
     }
-      
+
 }

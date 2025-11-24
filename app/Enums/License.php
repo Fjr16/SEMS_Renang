@@ -19,4 +19,13 @@ enum License:string
             self::Z => 'Other',
         };
     }
+    public function class() : string {
+        return match($this) {
+            self::A => 'bg-primary text-white',
+            self::B => 'bg-danger text-white',
+            self::C => 'bg-success text-white',
+            self::D => 'bg-info text-white',
+            self::Z => 'bg-secondary text-white',
+        };
+    }
 }

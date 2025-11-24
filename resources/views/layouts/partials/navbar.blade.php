@@ -12,6 +12,7 @@
             <div class="d-flex flex-column flex-lg-row w-100 align-items-lg-center justify-content-between">
                 <ul class="navbar-nav mx-lg-auto order-2 order-lg-1 my-3 my-lg-0 gap-lg-2">
                     <li class="nav-item"><a class="nav-link {{ Route::is('atlet*') ? 'active fw-semibold' : '' }} " href="{{ route('atlet.index') }}">Atlet</a></li>
+                    <li class="nav-item"><a class="nav-link {{ Route::is('official*') ? 'active fw-semibold' : '' }} " href="{{ route('official.index') }}">Official</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('club*') ? 'active fw-semibold' : '' }}" href="{{ route('club.index') }}">Klub</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('competition*') ? 'active fw-semibold' : '' }}" href="{{ route('competition') }}">Kompetisi</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('startlist*') ? 'active fw-semibold' : '' }}" href="{{ route('startlist') }}">Startlist</a></li>

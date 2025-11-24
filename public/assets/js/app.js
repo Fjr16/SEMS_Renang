@@ -25,14 +25,14 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Data tables.js
-$(document).ready(function() {
-  $('#dataTable').DataTable({
-    responsive: true,
-    language: {
-      url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
-    }
-  });
-});
+// $(document).ready(function() {
+//   $('#dataTable').DataTable({
+//     responsive: true,
+//     language: {
+//       url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+//     }
+//   });
+// });
 
 const Toast = Swal.mixin({
   toast: true,

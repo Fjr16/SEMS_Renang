@@ -17,7 +17,7 @@
           <div class="card-body text-center">
             <h5 class="card-title">Klub</h5>
             <p class="card-text">Kelola data klub & tim</p>
-            <a href="{{ route('club') }}" class="btn btn-primary">Lihat</a>
+            <a href="{{ route('club.index') }}" class="btn btn-primary">Lihat</a>
           </div>
         </div>
       </div>

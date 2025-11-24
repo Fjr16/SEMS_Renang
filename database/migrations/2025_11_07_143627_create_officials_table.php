@@ -18,10 +18,10 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->string('gender', 50)->nullable();
             $table->string('license', 50)->nullable();
-            $table->string('current_club')->nullable();
+            // $table->string('current_club')->nullable();
             $table->string('current_city')->nullable();
             $table->string('current_province')->nullable();
-            $table->string('certificate')->nullable();
+            // $table->string('certificate')->nullable();
             $table->timestamps();
         });
     }

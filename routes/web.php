@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AthleteController;
 use App\Http\Controllers\ClubController;
+use App\Http\Controllers\OfficialController;
 use App\Http\Controllers\OtherController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,12 @@ Route::prefix('/master/atlet')->group(function(){
     Route::get('/data', [AthleteController::class, 'data'])->name('atlet.data');
     Route::post('/store', [AthleteController::class, 'store'])->name('atlet.store');
     Route::delete('/destroy/{id}', [AthleteController::class, 'destroy'])->name('atlet.destroy');
+});
+Route::prefix('/master/official')->group(function(){
+    Route::get('/', [OfficialController::class, 'index'])->name('official.index');
+    Route::get('/data', [OfficialController::class, 'data'])->name('official.data');
+    Route::post('/store', [OfficialController::class, 'store'])->name('official.store');
+    Route::delete('/destroy/{id}', [OfficialController::class, 'destroy'])->name('official.destroy');
 });
 
 Route::get('/club', function(){
@@ -62,3 +69,4 @@ Route::get('/users/detail', function () {
 
 Route::get('/select2/getClubByCategory', [OtherController::class, 'getClubByCategory'])->name('getClubByCategory');
 Route::get('/findAtletById/{id}', [OtherController::class, 'findAtletById'])->name('findAtletById');
+Route::get('/findOfficialById/{id}', [OtherController::class, 'findOfficialById'])->name('findOfficialById');
