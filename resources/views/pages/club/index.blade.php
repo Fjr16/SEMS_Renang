@@ -1,29 +1,34 @@
 @extends('layouts.main')
 
 @section('content')
-    <div class="card">
-        <div class="card-header">
-            <h2>Manajemen Klub</h2>
-            <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalClub">+ Tambah Klub</button>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Manajemen Klub</h2>
+            <p class="text-muted mb-0">Kelola data Klub yang terdaftar dalam sistem</p>
         </div>
+        <div class="mt-3 mt-md-0">
+            <button data-bs-toggle="modal" data-bs-target="#modalClub" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Klub'); $('#club_id').val('');">
+                <i class="bi bi-plus-circle me-1"></i> Tambah Klub
+            </button>
+        </div>
+    </div>
+    <div class="card shadow-sm border-0">
         <div class="card-body">
-            <div class="table-responsive">
-                <table id="clubTable" class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Aksi</th>
-                            <th>Logo</th>
-                            <th>Kategori</th>
-                            <th>Kode</th>
-                            <th>Nama</th>
-                            <th>Alamat</th>
-                            <th>Provinsi</th>
-                            <th>Penanggung Jawab (PJ)</th>
-                            <th>HP PJ</th>
-                        </tr>
-                    </thead>
-                </table>
-            </div>
+            <table id="clubTable" class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Aksi</th>
+                        <th>Logo</th>
+                        <th>Kategori</th>
+                        <th>Kode</th>
+                        <th>Nama</th>
+                        <th>Alamat</th>
+                        <th>Provinsi</th>
+                        <th>Penanggung Jawab (PJ)</th>
+                        <th>HP PJ</th>
+                    </tr>
+                </thead>
+            </table>
         </div>
     </div>
 
@@ -32,7 +37,10 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
             <form id="form-submit">
-                <div class="modal-header"><h5 class="modal-title">Tambah Klub</h5></div>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Tambah Klub</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <input type="hidden" name="club_id" id="club_id">

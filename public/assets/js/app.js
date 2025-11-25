@@ -54,6 +54,12 @@ flatpickr(".tanggal", {
   altFormat: "d-m-Y",
   allowInput: true
 });
+flatpickr(".mark-date", {
+  dateFormat: "Y-m-d",
+  altInput: true,
+  altFormat: "d-m-Y",
+  allowInput: true
+});
 
 // setting default datatables
 $.extend(true, $.fn.dataTable.defaults, {

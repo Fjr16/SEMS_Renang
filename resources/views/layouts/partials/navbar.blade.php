@@ -14,7 +14,7 @@
                     <li class="nav-item"><a class="nav-link {{ Route::is('atlet*') ? 'active fw-semibold' : '' }} " href="{{ route('atlet.index') }}">Atlet</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('official*') ? 'active fw-semibold' : '' }} " href="{{ route('official.index') }}">Official</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('club*') ? 'active fw-semibold' : '' }}" href="{{ route('club.index') }}">Klub</a></li>
-                    <li class="nav-item"><a class="nav-link {{ Route::is('competition*') ? 'active fw-semibold' : '' }}" href="{{ route('competition') }}">Kompetisi</a></li>
+                    <li class="nav-item"><a class="nav-link {{ Route::is('competition*') ? 'active fw-semibold' : '' }}" href="{{ route('competition.index') }}">Kompetisi</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('startlist*') ? 'active fw-semibold' : '' }}" href="{{ route('startlist') }}">Startlist</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('results*') ? 'active fw-semibold' : '' }}" href="{{ route('results') }}">Hasil</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('entries*') ? 'active fw-semibold' : '' }}" href="{{ route('entries') }}">Entries</a></li>

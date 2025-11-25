@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AthleteController;
 use App\Http\Controllers\ClubController;
+use App\Http\Controllers\CompetitionController;
 use App\Http\Controllers\OfficialController;
 use App\Http\Controllers\OtherController;
 use Illuminate\Support\Facades\Route;
@@ -28,13 +29,16 @@ Route::prefix('/master/official')->group(function(){
     Route::post('/store', [OfficialController::class, 'store'])->name('official.store');
     Route::delete('/destroy/{id}', [OfficialController::class, 'destroy'])->name('official.destroy');
 });
+Route::prefix('/master/competition')->group(function(){
+    Route::get('/', [CompetitionController::class, 'index'])->name('competition.index');
+    Route::get('/data', [CompetitionController::class, 'data'])->name('competition.data');
+    Route::post('/store', [CompetitionController::class, 'store'])->name('competition.store');
+    Route::delete('/destroy/{id}', [CompetitionController::class, 'destroy'])->name('competition.destroy');
+});
 
 Route::get('/club', function(){
     return view('pages.club.index');
 })->name('club');
-Route::get('/competition', function(){
-    return view('pages.competition.index');
-})->name('competition');
 Route::get('/competition/show', function(){
     return view('pages.competition.show');
 })->name('competition.show');
