@@ -2,46 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\CompetitionStatus;
 use App\Models\Competition;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rules\Enum;
-use Yajra\DataTables\Facades\DataTables;
 
-class CompetitionController extends Controller
+class CompetitionSessionController extends Controller
 {
-    public function data(){
+     public function data(){
         $data = Competition::query();
 
         return DataTables::of($data)
         ->addColumn('action', function($row){
-            $routeShow = route('competition.show', $row);
-            $edit = '<button class="btn btn-warning btn-sm" onclick="edit(this)"><i class="bi bi-pencil"></i></button>';
-            $dlt = '<button class="btn btn-danger btn-sm" data-id="'.$row->id.'" onclick="destroy(this)"><i class="bi bi-trash"></i></button>';
-            $show = '<a href="'.$routeShow.'" class="btn btn-info btn-sm text-white"><i class="bi bi-eye"></i></a>';
-
-            return '<div class="btn-group">
-                        '.
-                        $show .
-                        $edit .
-                        $dlt
-                        .'
-                    </div>';
+            $edit = '<button class="btn btn-warning btn-sm" onclick="edit(this)">Edit</button>';
+            $dlt = '<button class="btn btn-danger btn-sm" data-id="'.$row->id.'" onclick="destroy(this)">Hapus</button>';
+            return $edit .' '. $dlt;
         })
         ->addColumn('comp_date',function($row){
             if(!$row->start_date || !$row->end_date){
                 return '-';
             }
-            return ((Carbon::parse($row->start_date)->format('d/m/Y') ?? '') .' - ' . (Carbon::parse($row->end_date)->format('d/m/y') ?? ''));
+            return ((Carbon::parse($row->start_date)->format('d-m-Y') ?? '') .' - ' . (Carbon::parse($row->end_date)->format('d-m-y') ?? ''));
         })
         ->addColumn('registration_date',function($row){
             if (!$row->registration_start || !$row->registration_end) {
                 return '-';
             }
-            return ((Carbon::parse($row->registration_start)->format('d/m/Y') ?? '') .' - ' . (Carbon::parse($row->registration_end)->format('d/m/Y') ?? ''));
+            return ((Carbon::parse($row->registration_start)->format('d-m-Y') ?? '') .' - ' . (Carbon::parse($row->registration_end)->format('d-m-Y') ?? ''));
         })
         ->addColumn('statusAttr', function($row){
             if ($row->status) {
@@ -56,14 +41,13 @@ class CompetitionController extends Controller
             }
         })
         ->editColumn('created_at', function($row){
-            return $row?->created_at->format('d/m/Y');
+            return $row?->created_at->format('d-m-Y');
         })
         ->rawColumns(['action','statusAttr'])
         ->make(true);
     }
-    public function index(){
-        $data = CompetitionStatus::cases();
-        return view('pages.competition.index', compact('data'));
+    public function index(Competition $competition){
+        return view('pages.competition.tabs.sessions', compact('competition'));
     }
     public function store(Request $r){
         $validators = Validator::make($r->all(), [
@@ -131,21 +115,5 @@ class CompetitionController extends Controller
                 'message' => substr($th->getMessage(),0,100) || 'Gagal Hapus data'
             ]);
         }
-    }
-    // manajemen competition || show detail kompetisi
-    public function show(Competition $competition){
-        Carbon::setLocale('id');
-        $enumStts = CompetitionStatus::class;
-        $counts = [
-            'sessions'  => $competition->sessions()->count(),
-            // 'events'    => $competition->events()->count(),
-            // 'entries'   => $competition->entries()->count(),
-            // 'heats'     => $competition->heats()->count(),
-            // 'results'   => $competition->results()->count(),
-            // 'points'    => $competition->teamPoints()->count(),
-            // 'officials' => $competition->officials()->count(),
-            // 'payments'  => $competition->payments()->count(),
-        ];
-        return view('pages.competition.show', compact('competition', 'counts', 'enumStts'));
     }
 }

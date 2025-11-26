@@ -16,4 +16,8 @@ class Competition extends Model
         'registration_end',
         'status',
     ];
+
+    public function sessions(){
+        return $this->hasMany(CompetitionSession::class);
+    }
 }

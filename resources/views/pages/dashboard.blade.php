@@ -26,7 +26,7 @@
           <div class="card-body text-center">
             <h5 class="card-title">Kompetisi</h5>
             <p class="card-text">Daftar & kelola kompetisi</p>
-            <a href="{{ route('competition') }}" class="btn btn-primary">Lihat</a>
+            <a href="{{ route('competition.index') }}" class="btn btn-primary">Lihat</a>
           </div>
         </div>
       </div>

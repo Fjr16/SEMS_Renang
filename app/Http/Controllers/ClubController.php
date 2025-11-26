@@ -22,9 +22,14 @@ class ClubController extends Controller
 
         return DataTables::of($data)
         ->addColumn('action', function($row){
-            $edit = '<button class="btn btn-warning btn-sm" onclick="edit(this)">Edit</button>';
-            $dlt = '<button class="btn btn-danger btn-sm" data-id="'.$row->id.'" onclick="destroy(this)">Hapus</button>';
-            return $edit .' '. $dlt;
+            $edit = '<button class="btn btn-warning btn-sm" onclick="edit(this)"><i class="bi bi-pencil"></i></button>';
+            $dlt = '<button class="btn btn-danger btn-sm" data-id="'.$row->id.'" onclick="destroy(this)"><i class="bi bi-trash"></i></button>';
+            return '<div class="btn-group">
+                        '.
+                        $edit .
+                        $dlt
+                        .'
+                    </div>';
         })
         ->editColumn('club_role_category_id', function($row){
             return '['. $row->category_code .'] ' . $row->category_name;

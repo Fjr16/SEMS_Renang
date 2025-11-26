@@ -20,9 +20,14 @@ class OfficialController extends Controller
 
         return DataTables::of($data)
         ->addColumn('action', function($row){
-            $edit = '<button class="btn btn-warning btn-sm" onclick="edit('.$row->id.')">Edit</button>';
-            $dlt = '<button class="btn btn-danger btn-sm" onclick="destroy('.$row->id.')">Hapus</button>';
-            return $edit .' '. $dlt;
+            $edit = '<button class="btn btn-warning btn-sm" onclick="edit('.$row->id.')"><i class="bi bi-pencil"></i></button>';
+            $dlt = '<button class="btn btn-danger btn-sm" onclick="destroy('.$row->id.')"><i class="bi bi-trash"></i></button>';
+            return '<div class="btn-group">
+                        '.
+                        $edit .
+                        $dlt
+                        .'
+                    </div>';
         })
         ->addColumn('clubDesc',function($row){
             return '[' . $row->club->club_code .'] ' . $row->club->club_name;
