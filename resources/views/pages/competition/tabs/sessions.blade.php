@@ -5,7 +5,7 @@
     <p class="text-muted mb-0">Kelola sesi yang ada dalam kompetisi ini</p>
   </div>
   <div class="mt-3 mt-md-0">
-    <button data-bs-toggle="modal" data-bs-target="#modalEvent" class="btn btn-primary">
+    <button data-bs-toggle="modal" data-bs-target="#modalSessions" class="btn btn-primary">
       <i class="bi bi-plus-circle me-1"></i> Tambah Sesi
     </button>
   </div>
@@ -14,114 +14,54 @@
 <!-- Card Table -->
 <div class="card shadow-sm border-0">
   <div class="card-body">
-    <div class="table-responsive">
-      <table id="eventsTable" class="table table-striped align-middle">
+      <table id="sessionsTable" class="table table-striped align-middle">
         <thead class="table-light">
           <tr>
             <th>#</th>
-            <th>Nama Event</th>
-            <th>Stroke</th>
-            <th>Distance</th>
-            <th>Gender</th>
-            <th>Kategori Umur</th>
-            <th>Lanes</th>
+            <th>Nama Sesi</th>
+            <th>Tanggal Sesi</th>
+            <th>Jam Mulai</th>
+            <th>Jam Selesai</th>
             <th>Aksi</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>100m Freestyle</td>
-            <td>Freestyle</td>
-            <td>100m</td>
-            <td>Putra</td>
-            <td>U-18</td>
-            <td>8</td>
-            <td>
-              <div class="btn-group">
-                <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
-                <a href="#" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>200m Butterfly</td>
-            <td>Butterfly</td>
-            <td>200m</td>
-            <td>Putri</td>
-            <td>Senior</td>
-            <td>6</td>
-            <td>
-              <div class="btn-group">
-                <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
-                <a href="#" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
       </table>
-    </div>
   </div>
 </div>
 
 <!-- Modal Create/Edit Event -->
-<div class="modal fade" id="modalEvent" tabindex="-1">
+<div class="modal fade" id="modalSessions" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <form>
         <div class="modal-header">
-          <h5 class="modal-title">Tambah Event</h5>
+          <h5 class="modal-title">Tambah Sesi</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <div class="mb-3">
-            <label>Nama Event</label>
-            <input type="text" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label>Stroke</label>
-            <select class="form-select" required>
-              <option value="freestyle">Freestyle</option>
-              <option value="backstroke">Backstroke</option>
-              <option value="breaststroke">Breaststroke</option>
-              <option value="butterfly">Butterfly</option>
-              <option value="medley">Medley</option>
+            <label>Kompetisi</label>
+            <select class="form-control" name="competition_id" id="competition_id" disabled>
+              <option value="{{ $competition->id }}" selected>{{ $competition->name ?? '' }}</option>
             </select>
           </div>
           <div class="mb-3">
-            <label>Distance</label>
-            <select class="form-select" required>
-              <option value="50">50m</option>
-              <option value="100">100m</option>
-              <option value="200">200m</option>
-              <option value="400">400m</option>
-              <option value="800">800m</option>
-              <option value="1500">1500m</option>
-            </select>
+            <label>Nama Sesi</label>
+            <input type="text" class="form-control" name="name" id="name" required>
           </div>
           <div class="mb-3">
-            <label>Gender</label>
-            <select class="form-select" required>
-              <option value="male">Putra</option>
-              <option value="female">Putri</option>
-              <option value="mixed">Campuran</option>
-            </select>
+            <label>Tanggal Sesi</label>
+            <input type="text" class="form-control mark-date" placeholder="Pilih Tanggal" name="date" id="date" required>
           </div>
-          <div class="mb-3">
-            <label>Kategori Umur</label>
-            <select class="form-select" required>
-              <option value="u12">U-12</option>
-              <option value="u15">U-15</option>
-              <option value="u18">U-18</option>
-              <option value="senior">Senior</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label>Jumlah Lanes</label>
-            <input type="number" class="form-control" min="4" max="10" value="8" required>
+          <div class="row mb-3">
+            <div class="col-6">
+              <label>Jam Mulai</label>
+              <input class="form-control waktu-picker" placeholder="Pilih Jam" name="start_time" id="start_time" required>
+            </div>
+            <div class="col-6">
+              <label>Jam Selesai</label>
+              <input class="form-control waktu-picker" placeholder="Pilih Jam" name="end_time" id="end_time" required>
+            </div>
           </div>
         </div>
         <div class="modal-footer">

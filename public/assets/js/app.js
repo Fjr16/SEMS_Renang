@@ -60,6 +60,35 @@ flatpickr(".mark-date", {
   altFormat: "d-m-Y",
   allowInput: true
 });
+flatpickr(".waktu-picker", {
+  noCalendar:true,
+  enableTime:true,
+  dateFormat: "H:i",
+  time_24hr:true,
+  minuteIncrement:1,
+  allowInput: true,
+  disableMobile:true,
+});
+
+$(document).on('input', '.tanggal, .mark-date', function () {
+  let v = this.value.replace(/[^0-9-]/g, '');
+
+  const first = v.indexOf('-');
+  if (first !== -1) {
+    const second = v.indexOf('-', first + 1);
+    if (second !== -1) {
+      v = v.slice(0, second + 1) + v.slice(second + 1).replace(/-/g, '');
+    }
+  }
+  this.value = v;
+});
+
+$('.waktu-picker').on('input', function(){
+  let v = this.value.replace(/[^0-9:]/g, '');
+  const i = v.indexOf(':');
+  if (i !== -1) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/:/g, '');
+  this.value = v;
+});
 
 // setting default datatables
 $.extend(true, $.fn.dataTable.defaults, {

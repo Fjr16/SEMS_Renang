@@ -98,13 +98,12 @@
     </div>
 
     <!-- Sessions -->
-    <div class="tab-pane fade" id="sessions" role="tabpanel" data-url="{{ route('competition.tab.sessions', $competition) }}"></div>
-    {{-- <div class="tab-pane fade" id="sessions" role="tabpanel">
+    <div class="tab-pane fade" id="sessions" role="tabpanel" data-table="sessionsTable">
       @include('pages.competition.tabs.sessions')
-    </div> --}}
+    </div>
 
     <!-- Events -->
-    <div class="tab-pane fade" id="events" role="tabpanel" data-url="{{ route('competition.tab.events', $competition) }}"></div>
+    <div class="tab-pane fade" id="events" role="tabpanel" data-table="eventsTable"></div>
     {{-- <div class="tab-pane fade" id="events" role="tabpanel">
       @include('pages.competition.tabs.events')
     </div> --}}
@@ -156,30 +155,70 @@
             if (paneSelector === '#overview') return;
             const paneSelected = document.querySelector(paneSelector);
 
-            if (!paneSelected || paneSelected.dataset.loaded === '1') return;
+            if (!paneSelected){
+              Toast.fire({
+                icon:'error',
+                title:'Gagal Memuat Data'
+              });
+              return;
+            };
 
-            const url = paneSelected.dataset.url;
-            if (!url){
-                Toast.fire({
-                    icon:'error',
-                    title:'Data source Not Found'
-                });
-                return;
-            }
-
-            showSpinner();
-
-             try {
-                const res = await fetch(url);
-                paneSelected.innerHTML = await res.text();
-                paneSelected.dataset.loaded = '1';
-
-                // contoh: inisialisasi DataTables/JS khusus tab di sini
-                // if (pane.id === 'entries') initEntriesTable();
+             try {                
+                if(paneSelected.dataset.loaded === '1') {
+                  $('#'+paneSelected.dataset.table).DataTable().ajax.reload(null,false);
+                }else{
+                  if (paneSelected.id === 'sessions') {
+                    getDataSessions();
+                    paneSelected.dataset.loaded = '1';
+                  }
+                }
             } catch (e) {
                 paneSelected.innerHTML = '<div class="py-4 text-danger text-center">Gagal memuat konten.</div>';
             }
-            hideSpinner();
         });
+    </script>
+
+    <script>
+      //get data for datatable
+      function getDataSessions(){
+        $('#sessionsTable').DataTable({
+          processing:true,
+          serverSide:true,
+          ajax:"{{ route('competition.tab.sessions.data', $competition) }}",
+          columns:[
+            {data:"DT_RowIndex", name:"DT_RowIndex", searchable:false, orderable:false},
+            {data:"name", name:"name", className:"text-center", searchable:true, orderable:true},
+            {data:"session_date", name:"date", className:"text-center", searchable:true, orderable:true},
+            {data:"start_time", name:"start_time", className:"text-center", searchable:true, orderable:true},
+            {data:"end_time", name:"end_time", className:"text-center", searchable:true, orderable:true},
+            {data:"action", name:"action", className:"text-center dt-actions", searchable:false, orderable:false},
+          ],
+          order:[[2,'asc']]
+        });
+      }
+      function getDataEvents(){
+        $('#eventsTable').DataTable({
+          processing:true,
+          serverSide:true,
+          ajax:"{{ route('competition.tab.events.data', $competition) }}",
+          columns:[
+            {data:"DT_RowIndex", name:"DT_RowIndex", searchable:false, orderable:false},
+            {data:"session_name", name:"session_name", className:"text-center", searchable:true, orderable:true},
+            {data:"event_number", name:"event_number", className:"text-center", searchable:true, orderable:true},
+            {data:"stroke", name:"stroke", className:"text-center", searchable:true, orderable:true},
+            {data:"distance", name:"distance", className:"text-center", searchable:true, orderable:true},
+            {data:"genderAttr", name:"genderAttr", className:"text-center", searchable:true, orderable:true},
+            {data:"kelompok_umur", name:"kelompok_umur", className:"text-center", searchable:true, orderable:true},
+            {data:"event_type", name:"event_type", className:"text-center", searchable:true, orderable:true},
+            {data:"event_system", name:"event_system", className:"text-center", searchable:true, orderable:true},
+            {data:"remarks", name:"remarks", className:"text-center", searchable:true, orderable:true},
+            {data:"min_dob", name:"min_dob", className:"text-center", searchable:true, orderable:true},
+            {data:"max_dob", name:"max_dob", className:"text-center", searchable:true, orderable:true},
+            {data:"registration_fee", name:"registration_fee", className:"text-center", searchable:true, orderable:true},
+            {data:"action", name:"action", className:"text-center dt-actions", searchable:false, orderable:false},
+          ],
+          order:[[2,'asc']]
+        });
+      }
     </script>
 @endpush

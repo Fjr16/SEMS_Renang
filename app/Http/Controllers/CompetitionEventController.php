@@ -3,16 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Competition;
-use App\Models\CompetitionSession;
+use App\Models\CompetitionEvent;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
-class CompetitionSessionController extends Controller
+class CompetitionEventController extends Controller
 {
     public function data(Competition $competition){
-        Carbon::setLocale('id');
-        $data = CompetitionSession::query()
+        $data = CompetitionEvent::query()
         ->where('competition_id', $competition->id);
 
         return DataTables::of($data)

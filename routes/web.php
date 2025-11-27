@@ -3,6 +3,7 @@
 use App\Http\Controllers\AthleteController;
 use App\Http\Controllers\ClubController;
 use App\Http\Controllers\CompetitionController;
+use App\Http\Controllers\CompetitionEventController;
 use App\Http\Controllers\CompetitionSessionController;
 use App\Http\Controllers\OfficialController;
 use App\Http\Controllers\OtherController;
@@ -41,11 +42,14 @@ Route::prefix('/competition/{competition}')->group(function(){
     Route::get('/', [CompetitionController::class, 'show'])->name('competition.show');
 
     // tiap tab sebagai partial HTML (untuk Bootstrap tab)
-    Route::get('/tab/sessions', [CompetitionSessionController::class, 'index'])->name('competition.tab.sessions');
+    Route::get('/tab/sessions/data', [CompetitionSessionController::class, 'data'])->name('competition.tab.sessions.data');
     Route::get('/tab/sessions/store', [CompetitionSessionController::class, 'store'])->name('competition.tab.sessions.store');
     Route::get('/tab/sessions/destroy/{id}', [CompetitionSessionController::class, 'destroy'])->name('competition.tab.sessions.destroy');
+    
+    Route::get('/tab/events/data', [CompetitionEventController::class, 'data'])->name('competition.tab.events.data');
+    Route::get('/tab/events/store', [CompetitionEventController::class, 'store'])->name('competition.tab.events.store');
+    Route::get('/tab/events/destroy', [CompetitionEventController::class, 'destroy'])->name('competition.tab.events.destroy');
 
-    Route::get('/tab/events',   [CompetitionSessionController::class, 'events'])->name('competition.tab.events');
     Route::get('/tab/entries',  [CompetitionSessionController::class, 'entries'])->name('competition.tab.entries');
     Route::get('/tab/heats',    [CompetitionSessionController::class, 'heats'])->name('competition.tab.heats');
     Route::get('/tab/results',  [CompetitionSessionController::class, 'results'])->name('competition.tab.results');
