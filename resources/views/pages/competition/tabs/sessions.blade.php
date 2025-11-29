@@ -33,7 +33,7 @@
 <div class="modal fade" id="modalSessions" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form>
+      <form id="sessionForm" data-url="{{ route('competition.tab.sessions.store', $competition) }}" onsubmit="return storeAndUpdateGlobal(event,this,'sessionsTable','modalSessions')">
         <div class="modal-header">
           <h5 class="modal-title">Tambah Sesi</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -41,7 +41,7 @@
         <div class="modal-body">
           <div class="mb-3">
             <label>Kompetisi</label>
-            <select class="form-control" name="competition_id" id="competition_id" disabled>
+            <select class="form-control" name="competition_id" id="competition_id" @readonly(true)>
               <option value="{{ $competition->id }}" selected>{{ $competition->name ?? '' }}</option>
             </select>
           </div>

@@ -6,6 +6,8 @@ use App\Models\Competition;
 use App\Models\CompetitionSession;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 
 class CompetitionSessionController extends Controller
@@ -37,20 +39,12 @@ class CompetitionSessionController extends Controller
     }
     public function store(Request $r){
         $validators = Validator::make($r->all(), [
+            'competition_id' => 'nullable|integer|exists:competitions,id',
             'name' => 'required|string|max:255',
-            'organizer' => 'required|string|max:255',
-            'start_date' => 'required|date|before_or_equal:end_date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'location' => 'required|string|max:255',
-            'registration_start' => 'required|date|before_or_equal:registration_end',
-            'registration_end' => 'required|date|after_or_equal:registration_start',
-            'status' => ['required', new Enum(CompetitionStatus::class)],
-            'competition_id' => 'nullable|integer|exists:officials,id',
-        ],[
-            'start_date.before_or_equal' => 'Tanggal Mulai Kompetisi harus kecil dari tanggal selesai kompetisi',
-            'end_date.after_or_equal' => 'Tanggal Selesai Kompetisi harus besar dari tanggal mulai kompetisi',
-            'registration_start.before_or_equal' => 'Tanggal buka registrasi harus kecil dari tanggal tutup registrasi',
-            'registration_end.after_or_equal' => 'Tanggal tutup registrasi harus besar dari tanggal buka registrasi',
+            'date' => 'required|date',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i',
+            'competition_session_id' => 'nullable|integer|exists:competition_sessions,id',
         ]);
 
         if ($validators->fails()) {
@@ -60,15 +54,11 @@ class CompetitionSessionController extends Controller
             ]);
         }
 
-        $item = $r->input('competition_id') ? Competition::find($r->input('competition_id')) : new Competition;
+        $item = $r->input('competition_session_id') ? CompetitionSession::find($r->input('competition_session_id')) : new CompetitionSession();
         $item->name = $r->name;
-        $item->organizer = $r->organizer;
-        $item->start_date = $r->start_date;
-        $item->end_date = $r->end_date;
-        $item->location = $r->location;
-        $item->registration_start = $r->registration_start;
-        $item->registration_end = $r->registration_end;
-        $item->status = $r->status;
+        $item->date = $r->date;
+        $item->start_time = $r->start_time;
+        $item->end_time = $r->end_time;
 
         try {
             DB::beginTransaction();
@@ -77,7 +67,7 @@ class CompetitionSessionController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => $r->input('competition_id') ? 'Sukses Update Data' : 'Sukses Simpan Data',
+                'message' => $r->input('competition_session_id') ? 'Sukses Update Data' : 'Sukses Simpan Data',
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -89,7 +79,7 @@ class CompetitionSessionController extends Controller
     }
     public function destroy($id){
         try {
-            $item = Competition::findOrFail($id);
+            $item = CompetitionSession::findOrFail($id);
             $item->delete();
             return response()->json([
                 'status' => true,

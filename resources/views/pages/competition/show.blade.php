@@ -163,7 +163,7 @@
               return;
             };
 
-             try {                
+            try {
                 if(paneSelected.dataset.loaded === '1') {
                   $('#'+paneSelected.dataset.table).DataTable().ajax.reload(null,false);
                 }else{
@@ -220,5 +220,52 @@
           order:[[2,'asc']]
         });
       }
+    </script>
+
+    <script>
+        async function storeAndUpdateGlobal(e, form, tableId = null, modalId = null){
+            e.preventDefault();
+            const url = form.dataset.url;
+            const data = new FormData(form);
+
+            showSpinner();
+            try {
+                const res = await fetch(url, {
+                    method:'POST',
+                    headers:{
+                        'X-CSRF-TOKEN' : "{{ csrf_token() }}",
+                    },
+                    body:data,
+                });
+
+                if (res.ok) throw new Error('Terjadi Kesalahan Pada server');
+
+                const result = await res.json();
+                hideSpinner();
+
+                if (result.status) {
+                    if (tableId) $('#'+tableId).ajax.reload(null,false);
+                    if (modalId) $('#'+modalId).hide();
+                    form.reset;
+                    Toast.fire({
+                        icon:'success',
+                        title:result.message || 'Success'
+                    });
+                }else{
+                    console.log(result.message);
+                    Toast.fire({
+                        icon:'error',
+                        title: result.message || 'Error'
+                    });
+                }
+            } catch (error) {
+                hideSpinner();
+                console.log(error.message);
+                Toast.fire({
+                    icon:'error',
+                    title:error.message || 'Terjadi Kesalahan'
+                });
+            }
+        }
     </script>
 @endpush

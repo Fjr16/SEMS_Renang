@@ -43,9 +43,9 @@ Route::prefix('/competition/{competition}')->group(function(){
 
     // tiap tab sebagai partial HTML (untuk Bootstrap tab)
     Route::get('/tab/sessions/data', [CompetitionSessionController::class, 'data'])->name('competition.tab.sessions.data');
-    Route::get('/tab/sessions/store', [CompetitionSessionController::class, 'store'])->name('competition.tab.sessions.store');
+    Route::post('/tab/sessions/store', [CompetitionSessionController::class, 'store'])->name('competition.tab.sessions.store');
     Route::get('/tab/sessions/destroy/{id}', [CompetitionSessionController::class, 'destroy'])->name('competition.tab.sessions.destroy');
-    
+
     Route::get('/tab/events/data', [CompetitionEventController::class, 'data'])->name('competition.tab.events.data');
     Route::get('/tab/events/store', [CompetitionEventController::class, 'store'])->name('competition.tab.events.store');
     Route::get('/tab/events/destroy', [CompetitionEventController::class, 'destroy'])->name('competition.tab.events.destroy');

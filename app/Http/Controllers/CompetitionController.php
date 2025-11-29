@@ -75,7 +75,7 @@ class CompetitionController extends Controller
             'registration_start' => 'required|date|before_or_equal:registration_end',
             'registration_end' => 'required|date|after_or_equal:registration_start',
             'status' => ['required', new Enum(CompetitionStatus::class)],
-            'competition_id' => 'nullable|integer|exists:officials,id',
+            'competition_id' => 'nullable|integer|exists:competitions,id',
         ],[
             'start_date.before_or_equal' => 'Tanggal Mulai Kompetisi harus kecil dari tanggal selesai kompetisi',
             'end_date.after_or_equal' => 'Tanggal Selesai Kompetisi harus besar dari tanggal mulai kompetisi',
