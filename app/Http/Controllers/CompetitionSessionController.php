@@ -18,9 +18,11 @@ class CompetitionSessionController extends Controller
         ->where('competition_id', $competition->id);
 
         return DataTables::of($data)
-        ->addColumn('action', function($row){
-            $edit = '<button class="btn btn-warning btn-sm" onclick="edit(this)"><i class="bi bi-pencil"></i></button>';
-            $dlt = '<button class="btn btn-danger btn-sm" data-id="'.$row->id.'" onclick="destroy(this)"><i class="bi bi-trash"></i></button>';
+        ->addColumn('action', function($row) use ($competition){
+            $urlDlt = route('competition.tab.sessions.destroy', ['competition' => $competition, 'id' => $row->id]);
+
+            $edit = '<button class="btn btn-warning btn-sm" data-modal="modalSessions" data-form="sessionForm" data-table="sessionsTable" onclick="editSession(this)"><i class="bi bi-pencil"></i></button>';
+            $dlt = '<button class="btn btn-danger btn-sm" data-url="'.$urlDlt.'" data-table="sessionsTable" onclick="destroyGlobal(this)"><i class="bi bi-trash"></i></button>';
             return '<div class="btn-group">
                         '.
                         $edit .
@@ -39,7 +41,7 @@ class CompetitionSessionController extends Controller
     }
     public function store(Request $r){
         $validators = Validator::make($r->all(), [
-            'competition_id' => 'nullable|integer|exists:competitions,id',
+            'competition_id' => 'required|integer|exists:competitions,id',
             'name' => 'required|string|max:255',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
@@ -55,6 +57,7 @@ class CompetitionSessionController extends Controller
         }
 
         $item = $r->input('competition_session_id') ? CompetitionSession::find($r->input('competition_session_id')) : new CompetitionSession();
+        $item->competition_id = $r->competition_id;
         $item->name = $r->name;
         $item->date = $r->date;
         $item->start_time = $r->start_time;
@@ -77,7 +80,7 @@ class CompetitionSessionController extends Controller
             ]);
         }
     }
-    public function destroy($id){
+    public function destroy(Competition $competition, $id){
         try {
             $item = CompetitionSession::findOrFail($id);
             $item->delete();

@@ -186,7 +186,6 @@
           serverSide:true,
           ajax:"{{ route('competition.tab.sessions.data', $competition) }}",
           columns:[
-            {data:"DT_RowIndex", name:"DT_RowIndex", searchable:false, orderable:false},
             {data:"name", name:"name", className:"text-center", searchable:true, orderable:true},
             {data:"session_date", name:"date", className:"text-center", searchable:true, orderable:true},
             {data:"start_time", name:"start_time", className:"text-center", searchable:true, orderable:true},
@@ -238,15 +237,15 @@
                     body:data,
                 });
 
-                if (res.ok) throw new Error('Terjadi Kesalahan Pada server');
+                if (!res.ok) throw new Error('Terjadi Kesalahan Pada server');
 
                 const result = await res.json();
                 hideSpinner();
 
                 if (result.status) {
-                    if (tableId) $('#'+tableId).ajax.reload(null,false);
-                    if (modalId) $('#'+modalId).hide();
-                    form.reset;
+                    if (tableId) $('#'+tableId).DataTable().ajax.reload(null,false);
+                    if (modalId) $('#'+modalId).modal('hide');
+                    form.reset();
                     Toast.fire({
                         icon:'success',
                         title:result.message || 'Success'
@@ -265,6 +264,43 @@
                     icon:'error',
                     title:error.message || 'Terjadi Kesalahan'
                 });
+            }
+        }
+
+        async function destroyGlobal(element) {
+            const tableId = '#'+element.dataset.table;
+            const url = element.dataset.url;
+            try {
+                const res = await fetch(url, {
+                    method:'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN' : '{{ csrf_token() }}',
+                    }
+                });
+                if (!res.ok) {
+                    throw new Error("Terjadi Kesalahan Server");
+                }
+                const result = await res.json();
+
+                if (result.status) {
+                    Toast.fire({
+                        icon:'success',
+                        title:result.message || 'Berhasil hapus data'
+                    });
+                }else{
+                    Toast.fire({
+                        icon:'error',
+                        title:result.message ?? 'Gagal Hapus Data'
+                    });
+                }
+                $(tableId).DataTable().ajax.reload();
+            } catch (error) {
+                console.log(error.message);
+                Toast.fire({
+                    icon:'error',
+                    title:error.message || 'Terjadi kesalahan server'
+                });
+                $(tableId).DataTable().ajax.reload();
             }
         }
     </script>

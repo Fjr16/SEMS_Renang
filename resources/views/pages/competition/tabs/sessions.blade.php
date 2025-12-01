@@ -17,7 +17,6 @@
       <table id="sessionsTable" class="table table-striped align-middle">
         <thead class="table-light">
           <tr>
-            <th>#</th>
             <th>Nama Sesi</th>
             <th>Tanggal Sesi</th>
             <th>Jam Mulai</th>
@@ -39,11 +38,11 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+            <input type="hidden" name="competition_session_id" id="competition_session_id">
           <div class="mb-3">
             <label>Kompetisi</label>
-            <select class="form-control" name="competition_id" id="competition_id" @readonly(true)>
-              <option value="{{ $competition->id }}" selected>{{ $competition->name ?? '' }}</option>
-            </select>
+            <input type="text" class="form-control" id="competition_name" value="{{ $competition->name ?? '' }}" disabled>
+            <input type="hidden" value="{{ $competition->id ?? '' }}" name="competition_id" id="competition_id">
           </div>
           <div class="mb-3">
             <label>Nama Sesi</label>
@@ -71,3 +70,26 @@
     </div>
   </div>
 </div>
+
+@push('scripts')
+    <script>
+        async function editSession(element) {
+            const tableId = '#'+element.dataset.table;
+            const modalId = '#'+element.dataset.modal;
+
+            const form = document.getElementById(element.dataset.form);
+            form.reset();
+
+            const tr = $(element).closest('tr');
+            const data = $(tableId).DataTable().row(tr).data();
+
+            $('#competition_session_id').val(data.id);
+            $('#name').val(data.name);
+            $('#date').flatpickr().setDate(data.date);
+            $('#start_time')[0]._flatpickr.setDate(data.start_time, true, 'H:i');
+            $('#end_time')[0]._flatpickr.setDate(data.end_time, true, 'H:i');
+
+            $(modalId).modal('show');
+        }
+    </script>
+@endpush
