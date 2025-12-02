@@ -14,56 +14,20 @@
 <!-- Card Table -->
 <div class="card shadow-sm border-0">
   <div class="card-body">
-    <div class="table-responsive">
-      <table id="eventsTable" class="table table-striped align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>#</th>
-            <th>Nama Event</th>
-            <th>Stroke</th>
-            <th>Distance</th>
-            <th>Gender</th>
-            <th>Kategori Umur</th>
-            <th>Lanes</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>100m Freestyle</td>
-            <td>Freestyle</td>
-            <td>100m</td>
-            <td>Putra</td>
-            <td>U-18</td>
-            <td>8</td>
-            <td>
-              <div class="btn-group">
-                <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
-                <a href="#" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>200m Butterfly</td>
-            <td>Butterfly</td>
-            <td>200m</td>
-            <td>Putri</td>
-            <td>Senior</td>
-            <td>6</td>
-            <td>
-              <div class="btn-group">
-                <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
-                <a href="#" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+        <table id="eventsTable" class="table table-striped align-middle">
+            <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Nama Event</th>
+                <th>Stroke</th>
+                <th>Distance</th>
+                <th>Gender</th>
+                <th>Kategori Umur</th>
+                <th>Lanes</th>
+                <th>Aksi</th>
+            </tr>
+            </thead>
+        </table>
   </div>
 </div>
 
@@ -71,7 +35,7 @@
 <div class="modal fade" id="modalEvent" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form>
+      <form id="eventForm" data-url="{{ route('competition.tab.events.store', $competition) }}" onsubmit="storeAndUpdateGlobal(event,this,'eventsTable','modalEvent')">
         <div class="modal-header">
           <h5 class="modal-title">Tambah Event</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -131,3 +95,9 @@
     </div>
   </div>
 </div>
+
+{{-- @push('scripts')
+    <script>
+
+    </script>
+@endpush --}}

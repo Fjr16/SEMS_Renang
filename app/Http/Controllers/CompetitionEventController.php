@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Gender;
+use App\Enums\Stroke;
 use App\Models\Competition;
 use App\Models\CompetitionEvent;
 use Carbon\Carbon;
@@ -12,9 +14,11 @@ class CompetitionEventController extends Controller
 {
     public function data(Competition $competition){
         $data = CompetitionEvent::query()
+        ->with(['ageGroup','session'])
         ->where('competition_id', $competition->id);
 
         return DataTables::of($data)
+        ->addIndexColumn()
         ->addColumn('action', function($row){
             $edit = '<button class="btn btn-warning btn-sm" onclick="edit(this)"><i class="bi bi-pencil"></i></button>';
             $dlt = '<button class="btn btn-danger btn-sm" data-id="'.$row->id.'" onclick="destroy(this)"><i class="bi bi-trash"></i></button>';
@@ -25,11 +29,71 @@ class CompetitionEventController extends Controller
                         .'
                     </div>';
         })
-        ->addColumn('session_date',function($row){
-            if(!$row->date){
+        ->addColumn('strokeAttr',function($row){
+            if ($row->stroke) {
+                $enumStroke = Stroke::from($row->stroke);
+                $classList = $enumStroke->class();
+                $label = $enumStroke->label();
+                return $enumStroke
+                ? '<span class="badge '. $classList .'">'. $label .'</span>'
+                : '<span class="badge bg-danger text-white">Tidak Dikenali</span>';
+            }else{
+                return null;
+            }
+        })
+        ->addColumn('genderAttr', function($row){
+            if ($row->gender) {
+                $enumGender = Gender::from($row->gender);
+                $classList = $enumGender->class();
+                $label = $enumGender->label();
+                return $enumGender
+                ? '<span class="badge '. $classList .'">'. $label .'</span>'
+                : '<span class="badge bg-danger text-white">Tidak Dikenali</span>';
+            }else{
+                return null;
+            }
+        })
+        ->addColumn('eventTypeAttr', function($row){
+            if ($row->event_type) {
+                $enumEtype = Gender::from($row->event_type);
+                $classList = $enumEtype->class();
+                $label = $enumEtype->label();
+                return $enumEtype
+                ? '<span class="badge '. $classList .'">'. $label .'</span>'
+                : '<span class="badge bg-danger text-white">Tidak Dikenali</span>';
+            }else{
+                return null;
+            }
+        })
+        ->addColumn('eventSystemAttr', function($row){
+            if ($row->event_system) {
+                $enumEsystem = Gender::from($row->event_system);
+                $classList = $enumEsystem->class();
+                $label = $enumEsystem->label();
+                return $enumEsystem
+                ? '<span class="badge '. $classList .'">'. $label .'</span>'
+                : '<span class="badge bg-danger text-white">Tidak Dikenali</span>';
+            }else{
+                return null;
+            }
+        })
+        ->addColumn('minDOB',function($row){
+            if(!$row->min_dob){
                 return '-';
             }
-            return Carbon::parse($row->date)->translatedFormat('d F Y');
+            return Carbon::parse($row->min_dob)->translatedFormat('d F Y');
+        })
+        ->addColumn('maxDOB',function($row){
+            if(!$row->max_dob){
+                return '-';
+            }
+            return Carbon::parse($row->max_dob)->translatedFormat('d F Y');
+        })
+        ->addColumn('jarak',function($row){
+            return $row->distance . ' m';
+        })
+        ->addColumn('biaya_pendaftaran',function($row){
+            return $row->registration_fee ? number_format($row->registration_fee,0,',','.') : null;
         })
         ->rawColumns(['action'])
         ->make(true);
