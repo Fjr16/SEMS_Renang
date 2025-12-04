@@ -35,7 +35,7 @@ class AgeGroupSeeder extends Seeder
                 'max_age' => '11',
             ],
             [
-                'label' => 'KU IV',
+                'label' => 'KU V',
                 'min_age' => null,
                 'max_age' => '9',
             ],

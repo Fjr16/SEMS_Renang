@@ -19,14 +19,14 @@
             <tr>
                 <th>#</th>
                 <th>Nomor Event</th>
-                <th>Stroke</th>
-                <th>Distance</th>
-                <th>Gender</th>
+                <th>Gaya Perlombaan</th>
+                <th>Jarak</th>
+                <th>Jenis Kelamin</th>
                 <th>Kelompok Umur</th>
-                <th>Tipe Event</th>
-                <th>Sistem Event</th>
-                <th>Minimal DOB</th>
-                <th>Maksimal DOB</th>
+                <th>Tipe Perlombaan</th>
+                <th>Sistem Perlombaan</th>
+                {{-- <th>Minimal DOB</th> --}}
+                {{-- <th>Maksimal DOB</th> --}}
                 <th>Biaya Pendaftaran</th>
                 <th>Catatan</th>
                 {{-- <th>Lanes</th> --}}
@@ -39,7 +39,7 @@
 
 <!-- Modal Create/Edit Event -->
 <div class="modal fade" id="modalEvent" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <form id="eventForm" data-url="{{ route('competition.tab.events.store', $competition) }}" onsubmit="storeAndUpdateGlobal(event,this,'eventsTable','modalEvent')">
         <div class="modal-header">
@@ -47,46 +47,80 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-3">
-            <label>Nomor Event</label>
-            <input type="text" class="form-control" id="event_number" name="event_number" required>
-          </div>
-          <div class="mb-3">
-            <label>Stroke</label>
-            <select class="form-control" id="stroke" name="stroke" required>
-              @foreach ($enumStroke as $stroke)
-                <option value="{{ $stroke->value }}" @selected(old('stroke') === $stroke->value)>{{ $stroke->label() }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="mb-3">
-            <label>Jarak</label>
-            <div class="input-group">
-              <input type="number" class="form-control" id="distance" name="distance" required>
-              <span class="input-group-text">m</span>
+            <div class="row g-3">
+                <div class="col-md-4 col-12">
+                    <label>Nomor Event</label>
+                    <input type="text" class="form-control" id="event_number" name="event_number" required>
+                </div>
+
+                <div class="col-md-4 col-12">
+                    <label>Gaya Perlombaan</label>
+                    <select class="form-control" id="stroke" name="stroke" required>
+                        @foreach ($enumStroke as $stroke)
+                            <option value="{{ $stroke->value }}">{{ $stroke->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-4 col-12">
+                    <label>Jarak</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="distance" name="distance" required>
+                        <span class="input-group-text">m</span>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-12">
+                    <label>Jenis Kelamin</label>
+                    <select class="form-control" id="gender" name="gender" required>
+                        @foreach ($enumGender as $gender)
+                            <option value="{{ $gender->value }}">{{ $gender->label() }}</option>
+                        @endforeach
+                        <option value="mixed">Mixed</option>
+                    </select>
+                </div>
+
+                <div class="col-md-8 col-12">
+                    <label>Kelompok Umur</label>
+                    <select class="form-control" id="age_group_id" name="age_group_id" required>
+                        @foreach ($ageGroups as $ku)
+                            <option value="{{ $ku->id }}">{{ $ku->label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-4 col-12">
+                    <label>Tipe Perlombaan</label>
+                    <select class="form-control" id="event_type" name="event_type" required>
+                        @foreach ($enumEType as $type)
+                            <option value="{{ $type->value }}">{{ $type->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-4 col-12">
+                    <label>Sistem Perlombaan</label>
+                    <select class="form-control" id="event_system" name="event_system" required>
+                        @foreach ($enumESystem as $system)
+                            <option value="{{ $system->value }}">{{ $system->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-4 col-12">
+                    <label>Biaya Pendaftaran</label>
+                    <div class="input-group">
+                        <span class="input-group-text">Rp</span>
+                        <input type="text" class="form-control" id="registration_fee" name="registration_fee" required>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <label>Catatan</label>
+                    <textarea class="form-control" name="remarks" id="remarks" rows="2"></textarea>
+                </div>
+
             </div>
-          </div>
-          <div class="mb-3">
-            <label>Gender</label>
-            <select class="form-select" required>
-              <option value="male">Putra</option>
-              <option value="female">Putri</option>
-              <option value="mixed">Campuran</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label>Kategori Umur</label>
-            <select class="form-select" required>
-              <option value="u12">U-12</option>
-              <option value="u15">U-15</option>
-              <option value="u18">U-18</option>
-              <option value="senior">Senior</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label>Jumlah Lanes</label>
-            <input type="number" class="form-control" min="4" max="10" value="8" required>
-          </div>
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary">Simpan</button>

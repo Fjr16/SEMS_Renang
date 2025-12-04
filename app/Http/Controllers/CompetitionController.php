@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CompetitionStatus;
+use App\Enums\EventSystem;
+use App\Enums\EventType;
+use App\Enums\Gender;
 use App\Enums\Stroke;
+use App\Models\AgeGroup;
 use App\Models\Competition;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -138,6 +142,10 @@ class CompetitionController extends Controller
         Carbon::setLocale('id');
         $enumStts = CompetitionStatus::class;
         $enumStroke = Stroke::cases();
+        $enumGender = Gender::cases();
+        $enumEType = EventType::cases();
+        $enumESystem = EventSystem::cases();
+        $ageGroups = AgeGroup::all();
         $counts = [
             'sessions'  => $competition->sessions()->count(),
             // 'events'    => $competition->events()->count(),
@@ -148,6 +156,6 @@ class CompetitionController extends Controller
             // 'officials' => $competition->officials()->count(),
             // 'payments'  => $competition->payments()->count(),
         ];
-        return view('pages.competition.show', compact('competition', 'counts', 'enumStts', 'enumStroke'));
+        return view('pages.competition.show', compact('competition', 'counts', 'enumStts', 'enumStroke', 'enumGender', 'enumEType', 'enumESystem', 'ageGroups'));
     }
 }
