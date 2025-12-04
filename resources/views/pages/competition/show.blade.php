@@ -175,6 +175,7 @@
                     }
                 }
             } catch (e) {
+              console.log(e.message);
                 paneSelected.innerHTML = '<div class="py-4 text-danger text-center">Gagal memuat konten.</div>';
             }
         });
@@ -198,31 +199,27 @@
         });
       }
       function getDataEvents(){
-        // try {
-            $('#eventsTable').DataTable({
-              processing:true,
-              serverSide:true,
-              ajax:"{{ route('competition.tab.events.data', $competition) }}",
-              columns:[
-                // {data:"DT_RowIndex", name:"DT_RowIndex", searchable:false, orderable:false},
-                // {data:"event_number", name:"event_number", className:"text-center", searchable:true, orderable:true},
-                // {data:"strokeAttr", name:"stroke", className:"text-center", searchable:true, orderable:true},
-                // {data:"jarak", name:"distance", className:"text-center", defaultContent:'-', searchable:true, orderable:true},
-                // {data:"genderAttr", name:"genderAttr", className:"text-center", searchable:true, orderable:true},
-                // {data:"kelompok_umur", name:"kelompok_umur", className:"text-center", searchable:true, orderable:true},
-                // {data:"eventTypeAttr", name:"event_type", className:"text-center", searchable:true, orderable:true},
-                // {data:"eventSystemAttr", name:"event_system", className:"text-center", searchable:true, orderable:true},
-                // {data:"remarks", name:"remarks", className:"text-center", searchable:true, orderable:true},
-                // {data:"minDOB", name:"min_dob", className:"text-center", searchable:true, orderable:true},
-                // {data:"maxDOB", name:"max_dob", className:"text-center", searchable:true, orderable:true},
-                // {data:"registration_fee", name:"registration_fee", className:"text-center", defaultContent:'-', searchable:true, orderable:true},
-                // {data:"action", name:"action", className:"text-center dt-actions", searchable:false, orderable:false},
-              ],
-              order:[[2,'asc']],
-            });
-        // } catch (error) {
-            // console.log(error.message)
-        // }
+        $('#eventsTable').DataTable({
+          processing:true,
+          serverSide:true,
+          ajax:"{{ route('competition.tab.events.data', $competition) }}",
+          columns:[
+            {data:"DT_RowIndex", name:"DT_RowIndex", searchable:false, orderable:false},
+            {data:"event_number", name:"event_number", className:"text-center", searchable:true, orderable:true},
+            {data:"strokeAttr", name:"stroke", className:"text-center", searchable:true, orderable:true},
+            {data:"jarak", name:"distance", className:"text-center", defaultContent:'-', searchable:true, orderable:true},
+            {data:"genderAttr", name:"genderAttr", className:"text-center", searchable:true, orderable:true},
+            {data:"kelompok_umur", name:"kelompok_umur", className:"text-center", searchable:true, orderable:true},
+            {data:"eventTypeAttr", name:"event_type", className:"text-center", searchable:true, orderable:true},
+            {data:"eventSystemAttr", name:"event_system", className:"text-center", searchable:true, orderable:true},
+            {data:"minDOB", name:"min_dob", className:"text-center", searchable:true, orderable:true},
+            {data:"maxDOB", name:"max_dob", className:"text-center", searchable:true, orderable:true},
+            {data:"registration_fee", name:"registration_fee", className:"text-center", defaultContent:'-', searchable:true, orderable:true},
+            {data:"remarks", name:"remarks", className:"text-center", searchable:true, orderable:true},
+            {data:"action", name:"action", className:"text-center dt-actions", searchable:false, orderable:false},
+          ],
+          order:[[2,'asc']]
+        });
       }
     </script>
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CompetitionStatus;
+use App\Enums\Stroke;
 use App\Models\Competition;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -136,6 +137,7 @@ class CompetitionController extends Controller
     public function show(Competition $competition){
         Carbon::setLocale('id');
         $enumStts = CompetitionStatus::class;
+        $enumStroke = Stroke::cases();
         $counts = [
             'sessions'  => $competition->sessions()->count(),
             // 'events'    => $competition->events()->count(),
@@ -146,6 +148,6 @@ class CompetitionController extends Controller
             // 'officials' => $competition->officials()->count(),
             // 'payments'  => $competition->payments()->count(),
         ];
-        return view('pages.competition.show', compact('competition', 'counts', 'enumStts'));
+        return view('pages.competition.show', compact('competition', 'counts', 'enumStts', 'enumStroke'));
     }
 }

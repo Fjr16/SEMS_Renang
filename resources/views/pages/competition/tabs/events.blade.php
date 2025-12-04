@@ -18,12 +18,18 @@
             <thead class="table-light">
             <tr>
                 <th>#</th>
-                <th>Nama Event</th>
+                <th>Nomor Event</th>
                 <th>Stroke</th>
                 <th>Distance</th>
                 <th>Gender</th>
-                <th>Kategori Umur</th>
-                <th>Lanes</th>
+                <th>Kelompok Umur</th>
+                <th>Tipe Event</th>
+                <th>Sistem Event</th>
+                <th>Minimal DOB</th>
+                <th>Maksimal DOB</th>
+                <th>Biaya Pendaftaran</th>
+                <th>Catatan</th>
+                {{-- <th>Lanes</th> --}}
                 <th>Aksi</th>
             </tr>
             </thead>
@@ -42,29 +48,23 @@
         </div>
         <div class="modal-body">
           <div class="mb-3">
-            <label>Nama Event</label>
-            <input type="text" class="form-control" required>
+            <label>Nomor Event</label>
+            <input type="text" class="form-control" id="event_number" name="event_number" required>
           </div>
           <div class="mb-3">
             <label>Stroke</label>
-            <select class="form-select" required>
-              <option value="freestyle">Freestyle</option>
-              <option value="backstroke">Backstroke</option>
-              <option value="breaststroke">Breaststroke</option>
-              <option value="butterfly">Butterfly</option>
-              <option value="medley">Medley</option>
+            <select class="form-control" id="stroke" name="stroke" required>
+              @foreach ($enumStroke as $stroke)
+                <option value="{{ $stroke->value }}" @selected(old('stroke') === $stroke->value)>{{ $stroke->label() }}</option>
+              @endforeach
             </select>
           </div>
           <div class="mb-3">
-            <label>Distance</label>
-            <select class="form-select" required>
-              <option value="50">50m</option>
-              <option value="100">100m</option>
-              <option value="200">200m</option>
-              <option value="400">400m</option>
-              <option value="800">800m</option>
-              <option value="1500">1500m</option>
-            </select>
+            <label>Jarak</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="distance" name="distance" required>
+              <span class="input-group-text">m</span>
+            </div>
           </div>
           <div class="mb-3">
             <label>Gender</label>
