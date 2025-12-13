@@ -17,8 +17,8 @@ class CompetitionEvent extends Model
         'event_type',
         'event_system',
         'remarks',
-        'min_dob',
-        'max_dob',
+        // 'min_dob',
+        // 'max_dob',
         'registration_fee',
     ];
 
@@ -40,7 +40,7 @@ class CompetitionEvent extends Model
     public function competition(){
         return $this->belongsTo(Competition::class);
     }
-    public function session(){
+    public function competitionSession(){
         return $this->belongsTo(CompetitionSession::class);
     }
     public function ageGroup(){

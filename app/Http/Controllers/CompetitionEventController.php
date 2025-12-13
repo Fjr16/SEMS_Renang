@@ -2,26 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EventSystem;
+use App\Enums\EventType;
 use App\Enums\Gender;
 use App\Enums\Stroke;
 use App\Models\Competition;
 use App\Models\CompetitionEvent;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 
 class CompetitionEventController extends Controller
 {
     public function data(Competition $competition){
         $data = CompetitionEvent::query()
-        ->with(['ageGroup','session'])
+        ->with(['ageGroup','competitionSession'])
         ->where('competition_id', $competition->id);
 
         return DataTables::of($data)
         ->addIndexColumn()
-        ->addColumn('action', function($row){
-            $edit = '<button class="btn btn-warning btn-sm" onclick="edit(this)"><i class="bi bi-pencil"></i></button>';
-            $dlt = '<button class="btn btn-danger btn-sm" data-id="'.$row->id.'" onclick="destroy(this)"><i class="bi bi-trash"></i></button>';
+        ->addColumn('action', function($row) use ($competition){
+            $urlDlt = route('competition.tab.events.destroy', ['competition' => $competition, 'id' => $row->id]);
+            $edit = '<button class="btn btn-warning btn-sm" data-table="eventsTable" data-modal="modalEvent" data-form="eventForm" onclick="editEvent(this)"><i class="bi bi-pencil"></i></button>';
+            $dlt = '<button class="btn btn-danger btn-sm" data-url="'.$urlDlt.'" data-table="eventsTable" onclick="destroyGlobal(this)"><i class="bi bi-trash"></i></button>';
             return '<div class="btn-group">
                         '.
                         $edit .
@@ -42,20 +47,22 @@ class CompetitionEventController extends Controller
             }
         })
         ->addColumn('genderAttr', function($row){
-            if ($row->gender) {
+            if (!$row->gender || $row->gender == 'mixed') {
+                return $row->gender
+                ? '<span class="badge bg-secondary text-white">'.$row->gender.'</span>'
+                : '<span class="badge bg-danger text-white">Tidak Dikenali</span>';
+            }else{
                 $enumGender = Gender::from($row->gender);
                 $classList = $enumGender->class();
                 $label = $enumGender->label();
                 return $enumGender
                 ? '<span class="badge '. $classList .'">'. $label .'</span>'
                 : '<span class="badge bg-danger text-white">Tidak Dikenali</span>';
-            }else{
-                return null;
             }
         })
         ->addColumn('eventTypeAttr', function($row){
             if ($row->event_type) {
-                $enumEtype = Gender::from($row->event_type);
+                $enumEtype = EventType::from($row->event_type);
                 $classList = $enumEtype->class();
                 $label = $enumEtype->label();
                 return $enumEtype
@@ -67,7 +74,7 @@ class CompetitionEventController extends Controller
         })
         ->addColumn('eventSystemAttr', function($row){
             if ($row->event_system) {
-                $enumEsystem = Gender::from($row->event_system);
+                $enumEsystem = EventSystem::from($row->event_system);
                 $classList = $enumEsystem->class();
                 $label = $enumEsystem->label();
                 return $enumEsystem
@@ -77,43 +84,51 @@ class CompetitionEventController extends Controller
                 return null;
             }
         })
-        ->addColumn('minDOB',function($row){
-            if(!$row->min_dob){
-                return '-';
-            }
-            return Carbon::parse($row->min_dob)->translatedFormat('d F Y');
+        ->addColumn('kelompok_umur', function($row){
+            return $row->ageGroup?->label ?? '-';
         })
-        ->addColumn('maxDOB',function($row){
-            if(!$row->max_dob){
-                return '-';
-            }
-            return Carbon::parse($row->max_dob)->translatedFormat('d F Y');
-        })
+        // ->addColumn('minDOB',function($row){
+        //     if(!$row->min_dob){
+        //         return '-';
+        //     }
+        //     return Carbon::parse($row->min_dob)->translatedFormat('d F Y');
+        // })
+        // ->addColumn('maxDOB',function($row){
+        //     if(!$row->max_dob){
+        //         return '-';
+        //     }
+        //     return Carbon::parse($row->max_dob)->translatedFormat('d F Y');
+        // })
         ->addColumn('jarak',function($row){
             return $row->distance . ' m';
         })
         ->addColumn('biaya_pendaftaran',function($row){
-            return $row->registration_fee ? number_format($row->registration_fee,0,',','.') : null;
+            return 'Rp ' . ($row->registration_fee ? number_format($row->registration_fee,0,',','.') : '0');
         })
-        ->rawColumns(['action'])
+        ->addColumn('session_date', function($row){
+            return $row->competitionSession?->date ?? '-';
+        })
+        ->addColumn('session_name', function($row){
+            $nm = $row->competitionSession?->name ?? '-';
+            $rentang = ' [' . ($row->competitionSession?->start_time ?? '') . ' - ' . ($row->competitionSession?->end_time ?? '') . ']';
+            return $nm . $rentang;
+        })
+        ->rawColumns(['action', 'strokeAttr', 'genderAttr', 'eventTypeAttr', 'eventSystemAttr'])
         ->make(true);
     }
     public function store(Request $r){
         $validators = Validator::make($r->all(), [
-            'name' => 'required|string|max:255',
-            'organizer' => 'required|string|max:255',
-            'start_date' => 'required|date|before_or_equal:end_date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'location' => 'required|string|max:255',
-            'registration_start' => 'required|date|before_or_equal:registration_end',
-            'registration_end' => 'required|date|after_or_equal:registration_start',
-            'status' => ['required', new Enum(CompetitionStatus::class)],
-            'competition_id' => 'nullable|integer|exists:officials,id',
-        ],[
-            'start_date.before_or_equal' => 'Tanggal Mulai Kompetisi harus kecil dari tanggal selesai kompetisi',
-            'end_date.after_or_equal' => 'Tanggal Selesai Kompetisi harus besar dari tanggal mulai kompetisi',
-            'registration_start.before_or_equal' => 'Tanggal buka registrasi harus kecil dari tanggal tutup registrasi',
-            'registration_end.after_or_equal' => 'Tanggal tutup registrasi harus besar dari tanggal buka registrasi',
+            'competition_event_id' => 'nullable|integer|exists:competition_events,id',
+            'competition_id' => 'required|integer|exists:competitions,id',
+            'competition_session_id' => 'required|integer|exists:competition_sessions,id',
+            'age_group_id' => 'required|exists:age_groups,id',
+            'distance' => 'required|integer',
+            'stroke' => 'required|string|max:50',
+            'gender' => 'required|string|max:10',
+            'event_type' => 'required|string|max:20',
+            'event_system' => 'required|string|max:20',
+            'remarks' => 'nullable',
+            'registration_fee' => 'required|numeric|min:0',
         ]);
 
         if ($validators->fails()) {
@@ -123,15 +138,17 @@ class CompetitionEventController extends Controller
             ]);
         }
 
-        $item = $r->input('competition_id') ? Competition::find($r->input('competition_id')) : new Competition;
-        $item->name = $r->name;
-        $item->organizer = $r->organizer;
-        $item->start_date = $r->start_date;
-        $item->end_date = $r->end_date;
-        $item->location = $r->location;
-        $item->registration_start = $r->registration_start;
-        $item->registration_end = $r->registration_end;
-        $item->status = $r->status;
+        $item = $r->input('competition_event_id') ? CompetitionEvent::find($r->input('competition_event_id')) : new CompetitionEvent;
+        $item->competition_id = $r->competition_id;
+        $item->competition_session_id = $r->competition_session_id;
+        $item->age_group_id = $r->age_group_id;
+        $item->distance = $r->distance;
+        $item->stroke = $r->stroke;
+        $item->gender = $r->gender;
+        $item->event_type = $r->event_type;
+        $item->event_system = $r->event_system;
+        $item->remarks = $r->remarks;
+        $item->registration_fee = $r->registration_fee;
 
         try {
             DB::beginTransaction();
@@ -140,7 +157,7 @@ class CompetitionEventController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => $r->input('competition_id') ? 'Sukses Update Data' : 'Sukses Simpan Data',
+                'message' => $r->input('competition_event_id') ? 'Sukses Update Data' : 'Sukses Simpan Data',
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -150,9 +167,9 @@ class CompetitionEventController extends Controller
             ]);
         }
     }
-    public function destroy($id){
+    public function destroy(Competition $competition, $id){
         try {
-            $item = Competition::findOrFail($id);
+            $item = CompetitionEvent::findOrFail($id);
             $item->delete();
             return response()->json([
                 'status' => true,

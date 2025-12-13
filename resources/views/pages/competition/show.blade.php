@@ -205,6 +205,8 @@
           ajax:"{{ route('competition.tab.events.data', $competition) }}",
           columns:[
             {data:"DT_RowIndex", name:"DT_RowIndex", searchable:false, orderable:false},
+            {data:"session_date", name:"session_date", className:"text-center", searchable:true, orderable:true},
+            {data:"session_name", name:"session_name", className:"text-center", searchable:true, orderable:true},
             {data:"event_number", name:"event_number", className:"text-center", searchable:true, orderable:true},
             {data:"strokeAttr", name:"stroke", className:"text-center", searchable:true, orderable:true},
             {data:"jarak", name:"distance", className:"text-center", defaultContent:'-', searchable:true, orderable:true},
@@ -214,7 +216,7 @@
             {data:"eventSystemAttr", name:"event_system", className:"text-center", searchable:true, orderable:true},
             // {data:"minDOB", name:"min_dob", className:"text-center", searchable:true, orderable:true},
             // {data:"maxDOB", name:"max_dob", className:"text-center", searchable:true, orderable:true},
-            {data:"registration_fee", name:"registration_fee", className:"text-center", defaultContent:'-', searchable:true, orderable:true},
+            {data:"biaya_pendaftaran", name:"registration_fee", className:"text-center", defaultContent:'-', searchable:true, orderable:true},
             {data:"remarks", name:"remarks", className:"text-center", searchable:true, orderable:true},
             {data:"action", name:"action", className:"text-center dt-actions", searchable:false, orderable:false},
           ],

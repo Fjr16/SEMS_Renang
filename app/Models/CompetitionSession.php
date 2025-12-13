@@ -17,4 +17,7 @@ class CompetitionSession extends Model
     public function competition(){
         return $this->belongsTo(Competition::class);
     }
+    public function competitionEvents(){
+        return $this->hasMany(CompetitionEvent::class);
+    }
 }

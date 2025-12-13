@@ -110,3 +110,28 @@ $.extend(true, $.fn.dataTable.defaults, {
       },
   },
 });
+//   for modification fee or money format
+function rupiahWithDecimal(target){
+    const result = new Intl.NumberFormat('id-ID', {
+        style:'currency',
+        currency:'IDR',
+    }).format(target);
+
+    return result;
+}
+function rupiahWithoutDecimal(target){
+    const result = new Intl.NumberFormat('id-ID', {
+        style:'currency',
+        currency:'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(target);
+
+    return result;
+}
+
+function toNum(target) {
+  if (target == null) return 0;
+  const digits = String(target).replace(/\s|\u00A0/g, '').replace(/[^0-9.,]/g, '');
+  return digits ? Number(digits) : 0;
+}

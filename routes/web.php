@@ -47,8 +47,8 @@ Route::prefix('/competition/{competition}')->group(function(){
     Route::delete('/tab/sessions/destroy/{id}', [CompetitionSessionController::class, 'destroy'])->name('competition.tab.sessions.destroy');
 
     Route::get('/tab/events/data', [CompetitionEventController::class, 'data'])->name('competition.tab.events.data');
-    Route::get('/tab/events/store', [CompetitionEventController::class, 'store'])->name('competition.tab.events.store');
-    Route::get('/tab/events/destroy', [CompetitionEventController::class, 'destroy'])->name('competition.tab.events.destroy');
+    Route::post('/tab/events/store', [CompetitionEventController::class, 'store'])->name('competition.tab.events.store');
+    Route::delete('/tab/events/destroy/{id}', [CompetitionEventController::class, 'destroy'])->name('competition.tab.events.destroy');
 
     Route::get('/tab/entries',  [CompetitionSessionController::class, 'entries'])->name('competition.tab.entries');
     Route::get('/tab/heats',    [CompetitionSessionController::class, 'heats'])->name('competition.tab.heats');

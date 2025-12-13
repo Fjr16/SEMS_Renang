@@ -22,6 +22,9 @@ class Competition extends Model
     public function sessions(){
         return $this->hasMany(CompetitionSession::class);
     }
+    public function events(){
+        return $this->hasMany(CompetitionEvent::class);
+    }
 
     // untuk membuat route model binding menampilkan parameter id yang di encrypt
     public function getRouteKey()
