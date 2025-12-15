@@ -7,7 +7,7 @@
             <p class="text-muted mb-0">Kelola data Kompetisi dan Event yang terdaftar dalam sistem</p>
         </div>
         <div class="mt-3 mt-md-0">
-            <button data-bs-toggle="modal" data-bs-target="#modalCompetition" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Kompetisi'); $('#competition_id').val('');">
+            <button data-bs-toggle="modal" data-bs-target="#modalCompetition" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Kompetisi'); $('#competition_id').val(''); document.getElementById('form-submit').reset();">
                 <i class="bi bi-plus-circle me-1"></i> Tambah Kompetisi
             </button>
         </div>
@@ -180,6 +180,7 @@
         });
 
         function edit(element){
+            $('#modalTitle').text('Edit Kompetisi');
             $('#form-submit')[0].reset();
             const tr = $(element).closest('tr');
             const data = table.row(tr).data();
@@ -197,6 +198,17 @@
         }
 
         async function destroy(element){
+            const { isConfirmed } = await Swal.fire({
+                title: "Konfirmasi Hapus",
+                text: "Apakah anda yakin ingin menghapus data ini?",
+                icon: "warning",
+                showCancelButton: true,
+                cancelButtonText:'Batal',
+                confirmButtonText: "Ya, Hapus!"
+            });
+
+            if(!isConfirmed) return;
+
             try {
                 const compId = element.dataset.id;
                 const url = "{{ route('competition.destroy', ':id') }}".replace(':id', compId);

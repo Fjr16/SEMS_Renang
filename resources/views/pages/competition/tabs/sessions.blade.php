@@ -5,7 +5,7 @@
     <p class="text-muted mb-0">Kelola sesi yang ada dalam kompetisi ini</p>
   </div>
   <div class="mt-3 mt-md-0">
-    <button data-bs-toggle="modal" data-bs-target="#modalSessions" class="btn btn-primary">
+    <button data-bs-toggle="modal" data-bs-target="#modalSessions" onclick="document.getElementById('sessionForm').reset()" class="btn btn-primary">
       <i class="bi bi-plus-circle me-1"></i> Tambah Sesi
     </button>
   </div>

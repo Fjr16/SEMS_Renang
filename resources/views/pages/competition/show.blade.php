@@ -272,6 +272,17 @@
         }
 
         async function destroyGlobal(element) {
+            const { isConfirmed } = await Swal.fire({
+                title: "Konfirmasi Hapus",
+                text: "Apakah anda yakin menghapus data ini?",
+                icon: "warning",
+                showCancelButton: true,
+                cancelButtonText:'Batal',
+                confirmButtonText: "Ya, lanjutkan!"
+            });
+
+            if(!isConfirmed) return;
+
             const tableId = '#'+element.dataset.table;
             const url = element.dataset.url;
             try {

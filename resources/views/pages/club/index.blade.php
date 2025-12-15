@@ -7,7 +7,7 @@
             <p class="text-muted mb-0">Kelola data Klub yang terdaftar dalam sistem</p>
         </div>
         <div class="mt-3 mt-md-0">
-            <button data-bs-toggle="modal" data-bs-target="#modalClub" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Klub'); $('#club_id').val('');">
+            <button data-bs-toggle="modal" data-bs-target="#modalClub" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Klub'); $('#club_id').val(''); document.getElementById('form-submit').reset();">
                 <i class="bi bi-plus-circle me-1"></i> Tambah Klub
             </button>
         </div>
@@ -202,6 +202,7 @@
         });
 
         function edit(element){
+            $('#modalTitle').text('Edit Klub');
             $('#form-submit')[0].reset();
             const tr = $(element).closest('tr');
             const data = table.row(tr).data();
@@ -218,6 +219,17 @@
         }
 
         async function destroy(element){
+            const { isConfirmed } = await Swal.fire({
+                title: "Konfirmasi Hapus",
+                text: "Apakah anda yakin ingin menghapus data ini?",
+                icon: "warning",
+                showCancelButton: true,
+                cancelButtonText:'Batal',
+                confirmButtonText: "Ya, Hapus!"
+            });
+
+            if(!isConfirmed) return;
+
             try {
                 const clubId = element.dataset.id;
                 const url = "{{ route('club.destroy', ':id') }}".replace(':id', clubId);

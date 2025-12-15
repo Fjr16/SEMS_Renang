@@ -5,7 +5,7 @@
     <p class="text-muted mb-0">Kelola event yang ada dalam kompetisi ini</p>
   </div>
   <div class="mt-3 mt-md-0">
-    <button data-bs-toggle="modal" data-bs-target="#modalEvent" class="btn btn-primary">
+    <button data-bs-toggle="modal" data-bs-target="#modalEvent" onclick="$('#competition_event_id').val('');document.getElementById('eventForm').reset();" class="btn btn-primary">
       <i class="bi bi-plus-circle me-1"></i> Tambah Event
     </button>
   </div>
@@ -45,7 +45,7 @@
     <div class="modal-content">
       <form id="eventForm" data-url="{{ route('competition.tab.events.store', $competition) }}" onsubmit="storeAndUpdateGlobal(event,this,'eventsTable','modalEvent')">
         <div class="modal-header">
-          <h5 class="modal-title">Tambah Event</h5>
+          <h5 class="modal-title" id="modalTitle">Tambah Event</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -146,6 +146,7 @@
 @push('scripts')
     <script>
         async function editEvent(element) {
+            $('#modalTitle').text('Edit Event');
             const tableId = '#'+element.dataset.table;
             const modalId = '#'+element.dataset.modal;
 
