@@ -189,13 +189,13 @@
           serverSide:true,
           ajax:"{{ route('competition.tab.sessions.data', $competition) }}",
           columns:[
+            {data:"action", name:"action", className:"text-center dt-actions", searchable:false, orderable:false},
             {data:"name", name:"name", className:"text-center", searchable:true, orderable:true},
             {data:"session_date", name:"date", className:"text-center", searchable:true, orderable:true},
             {data:"start_time", name:"start_time", className:"text-center", searchable:true, orderable:true},
             {data:"end_time", name:"end_time", className:"text-center", searchable:true, orderable:true},
-            {data:"action", name:"action", className:"text-center dt-actions", searchable:false, orderable:false},
           ],
-          order:[[2,'asc']]
+          order:[[3,'asc']]
         });
       }
       function getDataEvents(){
@@ -204,7 +204,7 @@
           serverSide:true,
           ajax:"{{ route('competition.tab.events.data', $competition) }}",
           columns:[
-            {data:"DT_RowIndex", name:"DT_RowIndex", searchable:false, orderable:false},
+            {data:"action", name:"action", className:"text-center dt-actions", searchable:false, orderable:false},
             {data:"session_date", name:"session_date", className:"text-center", searchable:true, orderable:true},
             {data:"session_name", name:"session_name", className:"text-center", searchable:true, orderable:true},
             {data:"event_number", name:"event_number", className:"text-center", searchable:true, orderable:true},
@@ -218,9 +218,8 @@
             // {data:"maxDOB", name:"max_dob", className:"text-center", searchable:true, orderable:true},
             {data:"biaya_pendaftaran", name:"registration_fee", className:"text-center", defaultContent:'-', searchable:true, orderable:true},
             {data:"remarks", name:"remarks", className:"text-center", searchable:true, orderable:true},
-            {data:"action", name:"action", className:"text-center dt-actions", searchable:false, orderable:false},
           ],
-          order:[[2,'asc']]
+          order:[[3,'asc']]
         });
       }
     </script>

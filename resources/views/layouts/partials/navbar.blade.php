@@ -15,11 +15,12 @@
                     <li class="nav-item"><a class="nav-link {{ Route::is('official*') ? 'active fw-semibold' : '' }} " href="{{ route('official.index') }}">Official</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('club*') ? 'active fw-semibold' : '' }}" href="{{ route('club.index') }}">Klub</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('competition*') ? 'active fw-semibold' : '' }}" href="{{ route('competition.index') }}">Kompetisi</a></li>
-                    <li class="nav-item"><a class="nav-link {{ Route::is('startlist*') ? 'active fw-semibold' : '' }}" href="{{ route('startlist') }}">Startlist</a></li>
+                    {{-- <li class="nav-item"><a class="nav-link {{ Route::is('startlist*') ? 'active fw-semibold' : '' }}" href="{{ route('startlist') }}">Startlist</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('results*') ? 'active fw-semibold' : '' }}" href="{{ route('results') }}">Hasil</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('entries*') ? 'active fw-semibold' : '' }}" href="{{ route('entries') }}">Entries</a></li>
-                    <li class="nav-item"><a class="nav-link {{ Route::is('heats*') ? 'active fw-semibold' : '' }}" href="{{ route('heats') }}">Heats</a></li>
+                    <li class="nav-item"><a class="nav-link {{ Route::is('heats*') ? 'active fw-semibold' : '' }}" href="{{ route('heats') }}">Heats</a></li> --}}
                     <li class="nav-item"><a class="nav-link {{ Route::is('users*') ? 'active fw-semibold' : '' }}" href="{{ route('users') }}">Manajemen User</a></li>
+                    <li class="nav-item"><a class="nav-link {{ Route::is('master*') ? 'active fw-semibold' : '' }}" href="{{ route('master.setting.index') }}">Master Setting</a></li>
                 </ul>
 
                 <!-- Kanan: Toggle + Profile -->

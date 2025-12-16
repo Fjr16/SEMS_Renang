@@ -17,11 +17,11 @@
       <table id="sessionsTable" class="table table-striped align-middle">
         <thead class="table-light">
           <tr>
+            <th>Aksi</th>
             <th>Nama Sesi</th>
             <th>Tanggal Sesi</th>
             <th>Jam Mulai</th>
             <th>Jam Selesai</th>
-            <th>Aksi</th>
           </tr>
         </thead>
       </table>

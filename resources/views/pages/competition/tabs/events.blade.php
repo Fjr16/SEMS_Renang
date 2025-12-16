@@ -17,7 +17,7 @@
         <table id="eventsTable" class="table table-striped align-middle">
             <thead class="table-light">
             <tr>
-                <th>#</th>
+                <th>Aksi</th>
                 <th>Tanggal</th>
                 <th>Sesi</th>
                 <th>Nomor Event</th>
@@ -32,7 +32,6 @@
                 <th>Biaya Pendaftaran</th>
                 <th>Catatan</th>
                 {{-- <th>Lanes</th> --}}
-                <th>Aksi</th>
             </tr>
             </thead>
         </table>
