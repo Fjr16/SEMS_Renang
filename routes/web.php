@@ -19,11 +19,15 @@ Route::prefix('/master')->group(function(){
         return view('pages.master.index');
     })->name('master.setting.index');
 
-    Route::prefix('/venue/pools')->group(function(){
+    Route::prefix('/venue')->group(function(){
         Route::get('/', [VenuesAndPoolController::class, 'index'])->name('master.venue.pools.index');
-        Route::get('/data', [VenuesAndPoolController::class, 'data'])->name('master.venue.pools.data');
-        Route::post('/store', [VenuesAndPoolController::class, 'store'])->name('master.venue.pools.store');
-        Route::delete('/destroy/{id}', [VenuesAndPoolController::class, 'destroy'])->name('master.venue.pools.destroy');
+        Route::get('/data', [VenuesAndPoolController::class, 'venueData'])->name('master.venue.data');
+        Route::post('/store', [VenuesAndPoolController::class, 'storeVenue'])->name('master.venue.store');
+        Route::delete('/destroy/{id}', [VenuesAndPoolController::class, 'destroyVenue'])->name('master.venue.destroy');
+        
+        Route::get('/pools/data', [VenuesAndPoolController::class, 'poolData'])->name('master.pool.data');
+        Route::post('/pools/store', [VenuesAndPoolController::class, 'storePool'])->name('master.venue.pool.store');
+        Route::delete('/pools/destroy/{id}', [VenuesAndPoolController::class, 'destroyPool'])->name('master.venue.pool.destroy');
     });
     Route::prefix('/competition')->group(function(){
         Route::get('/', [CompetitionController::class, 'index'])->name('competition.index');

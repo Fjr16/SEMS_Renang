@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('venues', function (Blueprint $table) {
             $table->id();
+            $table->string('code', 50)->unique()->nullable(false);
+            $table->string('name')->nullable(false);
+            $table->string('address',255)->nullable(false);
+            $table->string('city',100)->nullable(false);
+            $table->string('province',100)->nullable();
+            $table->string('country',100)->nullable(false);
+            $table->text('notes')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

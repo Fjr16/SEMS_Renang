@@ -13,6 +13,15 @@ return new class extends Migration
     {
         Schema::create('pools', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('venue_id')->constrained('venues')->onDelete('cascade');
+            $table->string('code', 50)->unique()->nullable(false);
+            $table->string('name')->nullable(false);
+            $table->string('pool_role',100)->nullable(false);
+            $table->enum('course_type', ['SCM','LCM','SCY'])->nullable(false); //SCM = 25m/LCM = 50m/SCY = 25yd
+            $table->integer('length_meter',false,true)->nullable(false);
+            $table->smallInteger('total_lanes',false,true)->nullable(false);
+            $table->boolean('is_available')->default(true);
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

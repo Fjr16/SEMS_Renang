@@ -18,31 +18,60 @@ class CodeGenerator
         return $value ?: 'X';
     }
 
+    public static function normalizeWords(string $value): string
+    {
+        $value = Str::upper($value);
+        $value = preg_replace('/[^A-Z0-9]+/u', ' ', $value);
+        $value = trim(preg_replace('/\s+/u', ' ', $value));
+        return $value ?: 'X';
+    }
+
     /**
      * Ambil city prefix 3 huruf (fallback: XXX).
-     * Kamu bisa ganti map sesuai kebutuhan (JKT, PDG, DPS, dll).
      */
+
     public static function cityPrefix(?string $city): string
     {
-        if (!$city) return 'XXX';
+        if (blank($city)) return 'XXX';
 
-        $c = self::normalize($city);
+        $c = self::normalizeWords($city);
 
-        // Map opsional (lebih “manusiawi”)
-        $map = [
+        // 2) buang stopword administratif (unicode-safe)
+        // pakai \s+ pengganti agar tidak nempel
+        $c = preg_replace('/\b(KOTA|KAB|KEP|PROV|KABUPATEN|PROVINSI|DAERAH|ADM|KEPULAUAN|DKI|DI)\b/u', ' ', $c);
+        $c = trim(preg_replace('/\s+/u', ' ', $c));
+
+        if ($c === '') return 'XXX';
+
+        // 2) mapping khusus (opsional, cukup yang benar-benar perlu)
+        $special = [
             'JAKARTA' => 'JKT',
-            'PADANG'  => 'PDG',
-            'DENPASAR'=> 'DPS',
+            'YOGYAKARTA' => 'DIY',
+            'DENPASAR' => 'DPS',
+            'SURABAYA' => 'SBY',
             'BANDUNG' => 'BDG',
-            'MEDAN'   => 'MDN',
-            'SURABAYA'=> 'SBY',
+            'PADANG' => 'PDG',
+            'MEDAN' => 'MDN',
         ];
-
-        foreach ($map as $k => $v) {
+        foreach ($special as $k => $v) {
             if (Str::contains($c, $k)) return $v;
         }
 
-        return Str::padRight(substr($c, 0, 3), 3, 'X');
+        // 3) fallback cerdas: ambil inisial kata sampai 3 huruf
+        $words = array_values(array_filter(explode(' ', $c)));
+
+        // kalau banyak kata, ambil huruf depan tiap kata (maks 3)
+        if (count($words) >= 2) {
+            $prefix = '';
+            foreach ($words as $w) {
+                $prefix .= substr($w, 0, 1);
+                if (strlen($prefix) >= 3) break;
+            }
+            return Str::padRight($prefix, 3, 'X');
+        }
+
+        // kalau satu kata, ambil 3 huruf pertama
+        return Str::padRight(substr($words[0], 0, 3), 3, 'X');
     }
 
     /**
@@ -78,21 +107,6 @@ class CodeGenerator
     }
 
     /**
-     * Role singkat untuk pool.
-     */
-    public static function poolRoleShort(string $poolRole): string
-    {
-        $poolRole = Str::lower($poolRole);
-        return match ($poolRole) {
-            'competition' => 'COMP',
-            'warmup'      => 'WARM',
-            'training'    => 'TRN',
-            'diving'      => 'DIV',
-            default       => 'UNK',
-        };
-    }
-
-    /**
      * Course type dibatasi SCM/LCM/SCY.
      */
     public static function normalizeCourse(string $courseType): string
@@ -111,18 +125,13 @@ class CodeGenerator
         string $courseType,
         int $lanes
     ): string {
-        $venueCode = self::normalize(str_replace('-', '', $venueCode));
-        // balikin ke format dengan dash sesuai venue (opsional). Cara simpel:
-        // kalau venueCode awalnya "JKT-GBKAC", normalisasi di atas akan jadi "JKTGBKAC"
-        // jadi kita terima venueCode as-is lebih aman:
-        // -> lebih baik: jangan hilangkan dash, cukup sanitize:
         $venueCode = Str::upper(preg_replace('/[^A-Z0-9-]/', '', $venueCode));
 
-        $role = self::poolRoleShort($poolRole);
         $course = self::normalizeCourse($courseType);
-        $lanes = max(1, min(99, (int)$lanes));
+        $lanes = max(1, min(12, (int)$lanes));
 
-        return "{$venueCode}-{$role}-{$course}-{$lanes}";
+        // return "{$venueCode}-{$role}-{$course}-{$lanes}";
+        return "{$venueCode}-{$course}-{$lanes}";
     }
 
     /**
