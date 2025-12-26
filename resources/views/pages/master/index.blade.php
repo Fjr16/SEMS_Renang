@@ -43,25 +43,37 @@
         'title' => 'Lokasi & Kolam',
         'desc'  => 'Kelola venue dan pool renang',
         'icon'  => 'bi-geo-alt',
-        'route' => route('master.venue.pools.index'), // ganti
+        'route' => route('master.venue.pools.index'),
         ],
         [
         'title' => 'Atlet',
         'desc'  => 'Kelola data atlet terdaftar',
         'icon'  => 'bi-person-badge',
-        'route' => route('atlet.index'), // ganti
+        'route' => route('atlet.index'),
+        ],
+        [
+        'title' => 'Official',
+        'desc'  => 'Kelola data official terdaftar',
+        'icon'  => 'bi-person-check',
+        'route' => route('official.index'),
         ],
         [
         'title' => 'Klub',
         'desc'  => 'Kelola data klub & tim',
         'icon'  => 'bi-people',
-        'route' => route('club.index'), // ganti
+        'route' => route('club.index'),
         ],
         [
         'title' => 'Kompetisi',
         'desc'  => 'Daftar & kelola kompetisi',
         'icon'  => 'bi-trophy',
-        'route' => route('competition.index'), // ganti
+        'route' => route('competition.index'),
+        ],
+        [
+        'title' => 'User Sistem',
+        'desc'  => 'Kelola data user dan akses sistem',
+        'icon'  => 'bi-shield-lock',
+        'route' => route('users'),
         ],
     ];
     @endphp

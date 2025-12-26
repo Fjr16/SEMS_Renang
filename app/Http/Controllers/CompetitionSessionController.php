@@ -15,7 +15,8 @@ class CompetitionSessionController extends Controller
     public function data(Competition $competition){
         Carbon::setLocale('id');
         $data = CompetitionSession::query()
-        ->where('competition_id', $competition->id);
+        ->where('competition_id', $competition->id)
+        ->orderBy('created_at', 'asc');
 
         return DataTables::of($data)
         ->addColumn('action', function($row) use ($competition){

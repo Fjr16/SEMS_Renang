@@ -131,4 +131,15 @@ class AthleteController extends Controller
             ]);
         }
     }
+
+    // guest controller
+    public function indexGuest(){
+        $data = Athlete::query()->with('club')->get();
+        return view('pages.guest.atlet.index',compact('data'));
+    }
+    public function showGuest(){
+        return 'berhasil';
+        // $data = Athlete::query()->with('club')->get();
+        // return view('pages.guest.atlet.index',compact('data'));
+    }
 }

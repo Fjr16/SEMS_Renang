@@ -100,6 +100,11 @@ Route::prefix('/competition/{competition}')->group(function(){
     Route::get('/tab/payments', [CompetitionSessionController::class, 'payments'])->name('competition.tab.payments');
 });
 
+Route::prefix('/guest')->group(function(){
+    Route::get('/atlet', [AthleteController::class, 'indexGuest'])->name('guest.atlet.index');
+    Route::get('/atlet/show', [AthleteController::class, 'showGuest'])->name('guest.atlet.show');
+});
+
 Route::get('/club', function(){
     return view('pages.club.index');
 })->name('club');
