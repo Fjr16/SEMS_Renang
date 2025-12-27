@@ -19,7 +19,7 @@ class AthleteFactory extends Factory
         return [
             'name'   => $this->faker->name(),
             'bod'    => $this->faker->date(),
-            'gender' => $this->faker->randomElement(['M','F']),
+            'gender' => $this->faker->randomElement(['male','female']),
             'school_name' => $this->faker->company(),
             'club_id'=> \App\Models\Club::inRandomOrder()->value('id'), // pastikan club sudah ada
             'city_name' => $this->faker->city(),

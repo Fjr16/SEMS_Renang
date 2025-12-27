@@ -24,7 +24,7 @@ Route::prefix('/master')->group(function(){
         Route::get('/data', [VenuesAndPoolController::class, 'venueData'])->name('master.venue.data');
         Route::post('/store', [VenuesAndPoolController::class, 'storeVenue'])->name('master.venue.store');
         Route::delete('/destroy/{id}', [VenuesAndPoolController::class, 'destroyVenue'])->name('master.venue.destroy');
-        
+
         Route::get('/pools/data', [VenuesAndPoolController::class, 'poolData'])->name('master.pool.data');
         Route::post('/pools/store', [VenuesAndPoolController::class, 'storePool'])->name('master.venue.pool.store');
         Route::delete('/pools/destroy/{id}', [VenuesAndPoolController::class, 'destroyPool'])->name('master.venue.pool.destroy');
@@ -53,6 +53,13 @@ Route::prefix('/master')->group(function(){
         Route::post('/store', [OfficialController::class, 'store'])->name('official.store');
         Route::delete('/destroy/{id}', [OfficialController::class, 'destroy'])->name('official.destroy');
     });
+
+    Route::get('/users', function () {
+        return view('pages.users.index');
+    })->name('users');
+    Route::get('/users/detail', function () {
+        return view('pages.users.show');
+    })->name('users.detail');
 });
 
 // Route::prefix('/master/club')->group(function(){
@@ -116,25 +123,18 @@ Route::get('/events/entries', function(){
     return view('pages.competition.events.show');
 })->name('events.entries');
 
-Route::get('/entries', function(){
-    return view('pages.entries.index');
-})->name('entries');
-Route::get('/heats', function(){
-    return view('pages.heats.index');
-})->name('heats');
-Route::get('/startlist', function(){
-    return view('pages.startlist.index');
-})->name('startlist');
-Route::get('/results', function(){
-    return view('pages.result.index');
-})->name('results');
-
-Route::get('/users', function () {
-    return view('pages.users.index');
-})->name('users');
-Route::get('/users/detail', function () {
-    return view('pages.users.show');
-})->name('users.detail');
+// Route::get('/entries', function(){
+//     return view('pages.entries.index');
+// })->name('entries');
+// Route::get('/heats', function(){
+//     return view('pages.heats.index');
+// })->name('heats');
+// Route::get('/startlist', function(){
+//     return view('pages.startlist.index');
+// })->name('startlist');
+// Route::get('/results', function(){
+//     return view('pages.result.index');
+// })->name('results');
 
 
 Route::get('/select2/getClubByCategory', [OtherController::class, 'getClubByCategory'])->name('getClubByCategory');

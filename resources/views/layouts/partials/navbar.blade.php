@@ -11,7 +11,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <div class="d-flex flex-column flex-lg-row w-100 align-items-lg-center justify-content-between">
                 <ul class="navbar-nav mx-lg-auto order-2 order-lg-1 my-3 my-lg-0 gap-lg-2">
-                    <li class="nav-item"><a class="nav-link {{ Route::is('atlet*') ? 'active fw-semibold' : '' }} " href="{{ route('atlet.index') }}">Atlet</a></li>
+                    <li class="nav-item"><a class="nav-link {{ Route::is('guest.atlet*') ? 'active fw-semibold' : '' }} " href="{{ route('guest.atlet.index') }}">Atlet</a></li>
                     {{-- <li class="nav-item"><a class="nav-link {{ Route::is('official*') ? 'active fw-semibold' : '' }} " href="{{ route('official.index') }}">Official</a></li> --}}
                     <li class="nav-item"><a class="nav-link {{ Route::is('club*') ? 'active fw-semibold' : '' }}" href="{{ route('club.index') }}">Klub</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('competition*') ? 'active fw-semibold' : '' }}" href="{{ route('competition.index') }}">Kompetisi</a></li>
@@ -20,7 +20,7 @@
                     <li class="nav-item"><a class="nav-link {{ Route::is('entries*') ? 'active fw-semibold' : '' }}" href="{{ route('entries') }}">Entries</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('heats*') ? 'active fw-semibold' : '' }}" href="{{ route('heats') }}">Heats</a></li> --}}
                     {{-- <li class="nav-item"><a class="nav-link {{ Route::is('users*') ? 'active fw-semibold' : '' }}" href="{{ route('users') }}">Manajemen User</a></li> --}}
-                    <li class="nav-item"><a class="nav-link {{ Route::is('master*') ? 'active fw-semibold' : '' }}" href="{{ route('master.setting.index') }}">Master Setting</a></li>
+                    <li class="nav-item"><a class="nav-link {{ request()->is('master*') ? 'active fw-semibold' : '' }}" href="{{ route('master.setting.index') }}">Master Setting</a></li>
                 </ul>
 
                 <!-- Kanan: Toggle + Profile -->

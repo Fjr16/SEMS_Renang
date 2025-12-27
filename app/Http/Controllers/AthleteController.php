@@ -134,8 +134,33 @@ class AthleteController extends Controller
 
     // guest controller
     public function indexGuest(){
-        $data = Athlete::query()->with('club')->get();
-        return view('pages.guest.atlet.index',compact('data'));
+        $q = request('q');
+        $gender = request('gender');
+        $province = request('province');
+
+        $query = Athlete::query()
+        ->with('club')
+        ->when($q, function($qq) use ($q){
+            $qq->where(function($subQ) use ($q){
+                $subQ->where('name', 'LIKE', '%'.$q.'%')
+                    ->orWhere('code', 'LIKE', '%'.$q.'%')
+                    ->orWhere('club_name', 'LIKE', '%'.$q.'%')
+                    ->orWhere('city_name', 'LIKE', '%'.$q.'%')
+                    ->orWhere('school_name', 'LIKE', '%'.$q.'%')
+                    ->orWhere('province_name', 'LIKE', '%'.$q.'%');
+            });
+        })
+        ->when($gender, function($qq) use ($gender){
+            $qq->where('gender', strtolower($gender));
+        })
+        ->orderBy('name', 'asc');
+        $athletes = $query->paginate(21)->withQueryString();
+
+        if(request()->ajax()){
+            return view('pages.guest.atlet.partials.cards', compact('athletes'))->render();
+        }
+
+        return view('pages.guest.atlet.index',compact('athletes'));
     }
     public function showGuest(){
         return 'berhasil';
