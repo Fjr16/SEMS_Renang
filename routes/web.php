@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\AthleteController;
+use App\Http\Controllers\AuthenticateController;
 use App\Http\Controllers\ClubController;
 use App\Http\Controllers\CompetitionController;
 use App\Http\Controllers\CompetitionEventController;
 use App\Http\Controllers\CompetitionSessionController;
 use App\Http\Controllers\OfficialController;
 use App\Http\Controllers\OtherController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VenuesAndPoolController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,12 +56,20 @@ Route::prefix('/master')->group(function(){
         Route::delete('/destroy/{id}', [OfficialController::class, 'destroy'])->name('official.destroy');
     });
 
-    Route::get('/users', function () {
-        return view('pages.users.index');
-    })->name('users');
-    Route::get('/users/detail', function () {
-        return view('pages.users.show');
-    })->name('users.detail');
+    Route::prefix('/users')->group(function(){
+        Route::get('/', [UserController::class, 'index'])->name('users');
+        Route::get('/get/table', [UserController::class, 'getDataTables'])->name('users.get');
+        Route::get('/detail/{id}', [UserController::class, 'show'])->name('users.detail');
+        Route::post('/save', [UserController::class, 'store'])->name('users.save');
+        Route::delete('/destroy', [UserController::class, 'destroy'])->name('users.destroy');
+
+        // Route::get('/users', function () {
+        //     return view('pages.users.index');
+        // })->name('users');
+        // Route::get('/users/detail', function () {
+        //     return view('pages.users.show');
+        // })->name('users.detail');
+    });
 });
 
 // Route::prefix('/master/club')->group(function(){

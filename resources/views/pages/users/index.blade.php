@@ -18,18 +18,17 @@
   <div class="card shadow-sm border-0">
     <div class="card-body">
       <div class="table-responsive">
-        <table id="dataTable" class="table table-striped align-middle">
+        <table id="usersTable" class="table table-striped align-middle">
           <thead class="table-light">
             <tr>
-              <th>#</th>
+              <th>Aksi</th>
               <th>Nama</th>
               <th>Email</th>
               <th>Role</th>
               <th>Status</th>
-              <th>Aksi</th>
             </tr>
           </thead>
-          <tbody>
+          {{-- <tbody>
             <!-- Contoh data statis -->
             <tr>
               <td>1</td>
@@ -59,7 +58,7 @@
                 </div>
               </td>
             </tr>
-          </tbody>
+          </tbody> --}}
         </table>
       </div>
     </div>
@@ -111,3 +110,22 @@
     </div>
   </div>
 @endsection
+
+@push('scripts')
+  <script>
+    var table;
+    table = $('#usersTable').DataTable({
+        processing:true,
+        serverSide:true,
+        ajax:"{{ route('users.get') }}",
+        columns:[
+            {data:'action',name:'action', className:'text-center dt-actions', orderable:false, searchable:false},
+            {data:'name',name:'name', className:'text-center', orderable:true, searchable:true},
+            {data:'email',name:'email', className:'text-center', orderable:true, searchable:true},
+            {data:'role',name:'role', className:'text-center', orderable:true, searchable:true},
+            {data:'status',name:'status', className:'text-center', orderable:true, searchable:true},
+        ],
+        order:[[1,'asc']],
+    });
+  </script>
+@endpush

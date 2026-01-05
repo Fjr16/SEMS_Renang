@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('club_role_category_id');
             $table->foreignId('club_id');
-            $table->string('name');
-            $table->string('email')->unique();
+            $table->string('name', 100)->nullable(false);
+            $table->string('email', 100)->nullable(false)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('isAdmin');
