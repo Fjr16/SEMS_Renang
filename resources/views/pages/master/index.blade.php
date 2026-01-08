@@ -73,7 +73,13 @@
         'title' => 'User Sistem',
         'desc'  => 'Kelola data user dan akses sistem',
         'icon'  => 'bi-shield-lock',
-        'route' => route('users'),
+        'route' => route('users.index'),
+        ],
+        [
+        'title' => 'Roles & Permissions',
+        'desc'  => 'Kelola data master roles dan permissions',
+        'icon'  => 'bi-key',
+        'route' => route('roles.index'),
         ],
     ];
     @endphp

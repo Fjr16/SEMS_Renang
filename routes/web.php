@@ -8,6 +8,7 @@ use App\Http\Controllers\CompetitionEventController;
 use App\Http\Controllers\CompetitionSessionController;
 use App\Http\Controllers\OfficialController;
 use App\Http\Controllers\OtherController;
+use App\Http\Controllers\RolesPermissionsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VenuesAndPoolController;
 use Illuminate\Support\Facades\Route;
@@ -69,13 +70,23 @@ Route::prefix('/master')->group(function(){
 
         Route::get('/{id}/permissions', [UserController::class, 'userPermissions']);
         Route::post('/{id}/permissions/sync', [UserController::class, 'syncUserPermissions']);
+    });
 
-        // Route::get('/users', function () {
-        //     return view('pages.users.index');
-        // })->name('users');
-        // Route::get('/users/detail', function () {
-        //     return view('pages.users.show');
-        // })->name('users.detail');
+    Route::prefix('/roles')->group(function(){
+        Route::get('/', [RolesPermissionsController::class, 'index'])->name('roles.index');
+        Route::get('/datatables', [RolesPermissionsController::class, 'rolesData'])->name('roles.get');
+
+        Route::post('/store', [RolesPermissionsController::class, 'storeRole'])->name('roles.store');
+
+        Route::get('/{id}/permissions', [RolesPermissionsController::class, 'rolePermissions']);
+        Route::post('/{id}/permissions/sync', [RolesPermissionsController::class, 'syncRolePermissions']);
+
+    });
+    Route::prefix('/permissions')->group(function(){
+        Route::get('/datatables', [RolesPermissionsController::class, 'permissionsData'])->name('permissions.get');
+
+        Route::post('/store', [RolesPermissionsController::class, 'storePermission'])->name('permissions.store');
+        Route::delete('/{id}', [RolesPermissionsController::class, 'deletePermission']);
     });
 });
 
