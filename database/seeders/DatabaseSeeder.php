@@ -16,15 +16,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        DB::table('users')->truncate();
+        User::factory(100)->create();
 
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
+        // DB::table('clubs')->truncate();
         // Club::factory(50)->create();
-        DB::table('athletes')->truncate();
-        Athlete::factory(500)->create();
+
+        // DB::table('athletes')->truncate();
+        // Athlete::factory(500)->create();
+
+        $this->call([
+            UserRolePermissionSeeder::class,
+        ]);
+        $user = \App\Models\User::orderBy('id')->first();
+        if ($user) {
+            $user->assignRole('super_admin');
+        }
     }
 }

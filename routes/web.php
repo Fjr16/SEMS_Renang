@@ -57,11 +57,18 @@ Route::prefix('/master')->group(function(){
     });
 
     Route::prefix('/users')->group(function(){
-        Route::get('/', [UserController::class, 'index'])->name('users');
-        Route::get('/get/table', [UserController::class, 'getDataTables'])->name('users.get');
-        Route::get('/detail/{id}', [UserController::class, 'show'])->name('users.detail');
-        Route::post('/save', [UserController::class, 'store'])->name('users.save');
-        Route::delete('/destroy', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::get('/', [UserController::class, 'index'])->name('users.index');
+        Route::get('/datatables', [UserController::class, 'getDataTables'])->name('users.get');
+
+        Route::post('/store', [UserController::class, 'store'])->name('users.store');
+
+        Route::delete('/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+
+        Route::get('/{id}/roles', [UserController::class, 'userRoles']);
+        Route::post('/{id}/roles/sync', [UserController::class, 'syncUserRoles']);
+
+        Route::get('/{id}/permissions', [UserController::class, 'userPermissions']);
+        Route::post('/{id}/permissions/sync', [UserController::class, 'syncUserPermissions']);
 
         // Route::get('/users', function () {
         //     return view('pages.users.index');

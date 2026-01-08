@@ -15,6 +15,11 @@ class AgeGroupSeeder extends Seeder
     {
         DB::table('age_groups')->insert([
             [
+                'label' => 'UMUM',
+                'min_age' => '0',
+                'max_age' => null,
+            ],
+            [
                 'label' => 'KU I',
                 'min_age' => '16',
                 'max_age' => '18',
@@ -36,13 +41,13 @@ class AgeGroupSeeder extends Seeder
             ],
             [
                 'label' => 'KU V',
-                'min_age' => null,
+                'min_age' => '8',
                 'max_age' => '9',
             ],
             [
-                'label' => 'UMUM',
-                'min_age' => '0',
-                'max_age' => null,
+                'label' => 'KU VI',
+                'min_age' => '6',
+                'max_age' => '7',
             ],
         ]);
     }
