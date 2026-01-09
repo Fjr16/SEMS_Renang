@@ -74,7 +74,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . ($userId ?: 'NULL') . ',id',
             'password' => $userId ? 'nullable|min:6' : 'required|min:6',
-            'status' => 'nullable|in:active,inactive',
+            'status' => 'required|in:active,inactive',
             'club_id' => 'nullable',
         ]);
 
@@ -90,6 +90,7 @@ class UserController extends Controller
 
             $user->name = $req->name;
             $user->email = $req->email;
+            $stts = $req->status === 'active' ? true : false;
 
             // password: hash hanya jika diisi / create
             if (!$userId || $req->filled('password')) {
@@ -98,7 +99,10 @@ class UserController extends Controller
 
             // sesuaikan field kamu
             if ($req->has('club_id')) $user->club_id = $req->club_id;
-            if ($req->has('status')) $user->status = $req->status === 'active' ? true : false;
+            $user->status = $stts;
+            if (!$stts) {
+                $user->remember_token = null;
+            }
 
             $user->save();
 

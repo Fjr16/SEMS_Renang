@@ -113,7 +113,7 @@
             </div>
             <div class="mb-3">
               <label class="form-label">Status</label>
-              <select class="form-select" name="status" id="user_status">
+              <select class="form-select" name="status" id="user_status" required>
                 <option value="active" selected>Aktif</option>
                 <option value="inactive">Nonaktif</option>
               </select>

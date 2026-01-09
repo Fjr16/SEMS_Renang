@@ -161,10 +161,6 @@
           </div>
 
         </div>
-
-        <div class="text-center mt-3 small text-secondary">
-          © {{ date('Y') }} SwimComp • Semua hak dilindungi
-        </div>
       </div>
     </div>
   </div>
