@@ -8,7 +8,7 @@
       <p class="text-muted mb-0">Informasi lengkap pengguna</p>
     </div>
     <div class="mt-3 mt-md-0">
-      <a href="{{ route('users') }}" class="btn btn-secondary">
+      <a href="{{ route('dashboard') }}" class="btn btn-secondary">
         <i class="bi bi-arrow-left me-1"></i> Kembali
       </a>
     </div>

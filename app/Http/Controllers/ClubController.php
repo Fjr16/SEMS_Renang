@@ -11,6 +11,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class ClubController extends Controller
 {
+    // CRUD Master Data
     public function data(){
         $data = Club::leftjoin('club_role_categories as category', 'clubs.club_role_category_id', '=', 'category.id')
         ->select(
@@ -108,4 +109,20 @@ class ClubController extends Controller
             ]);
         }
     }
+    // END CRUD Master Data
+
+    // club manage
+    public function dashboard(){
+        return view('pages.club.dashboard');
+    }
+    public function indexRegistComp(){
+        return view('pages.club.registrations.index');
+    }
+    public function showRegistComp(){
+        return view('pages.club.registrations.show');
+    }
+    public function storeRegistComp(){
+        return 'berhasil';
+    }
+    // END club manage
 }

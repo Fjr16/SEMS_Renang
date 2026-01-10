@@ -119,7 +119,7 @@
                         </a>
 
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3" aria-labelledby="navbarProfile">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-person-circle me-2"></i>Profil Saya</a></li>
+                        <li><a class="dropdown-item" href="{{ route('user.profile', encrypt(auth()->user()->id)) }}"><i class="bi bi-person-circle me-2"></i>Profil Saya</a></li>
                         <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Pengaturan</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>

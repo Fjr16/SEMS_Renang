@@ -136,6 +136,18 @@ class UserController extends Controller
         }
     }
 
+    public function profile($id){
+        try {
+            $item = User::findOrFail(decrypt($id));
+
+            return view('pages.users.show', [
+                'item' => $item
+            ]);
+        } catch (\Throwable $th) {
+            return back()->with('error', 'Pengguna tidak ditemukan');
+        }
+    }
+
     // ==========================
     // Spatie: Roles mapping user
     // ==========================

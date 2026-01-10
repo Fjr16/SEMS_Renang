@@ -90,30 +90,15 @@ Route::prefix('/master')->group(function(){
     });
 });
 
-// Route::prefix('/master/club')->group(function(){
-//     Route::get('/', [ClubController::class, 'index'])->name('club.index');
-//     Route::get('/data', [ClubController::class, 'data'])->name('club.data');
-//     Route::post('/store', [ClubController::class, 'store'])->name('club.store');
-//     Route::delete('/destroy/{id}', [ClubController::class, 'destroy'])->name('club.destroy');
-// });
-// Route::prefix('/master/atlet')->group(function(){
-//     Route::get('/', [AthleteController::class, 'index'])->name('atlet.index');
-//     Route::get('/data', [AthleteController::class, 'data'])->name('atlet.data');
-//     Route::post('/store', [AthleteController::class, 'store'])->name('atlet.store');
-//     Route::delete('/destroy/{id}', [AthleteController::class, 'destroy'])->name('atlet.destroy');
-// });
-// Route::prefix('/master/official')->group(function(){
-//     Route::get('/', [OfficialController::class, 'index'])->name('official.index');
-//     Route::get('/data', [OfficialController::class, 'data'])->name('official.data');
-//     Route::post('/store', [OfficialController::class, 'store'])->name('official.store');
-//     Route::delete('/destroy/{id}', [OfficialController::class, 'destroy'])->name('official.destroy');
-// });
-// Route::prefix('/master/competition')->group(function(){
-//     Route::get('/', [CompetitionController::class, 'index'])->name('competition.index');
-//     Route::get('/data', [CompetitionController::class, 'data'])->name('competition.data');
-//     Route::post('/store', [CompetitionController::class, 'store'])->name('competition.store');
-//     Route::delete('/destroy/{id}', [CompetitionController::class, 'destroy'])->name('competition.destroy');
-// });
+Route::get('/users/profile/{id}', [UserController::class, 'profile'])->name('user.profile');
+
+// manager club menu
+Route::prefix('/club')->group(function() {
+    Route::get('/dashboard', [ClubController::class, 'dashboard'])->name('club.dashboard');
+    Route::get('/registrations', [ClubController::class, 'indexRegistComp'])->name('club.registration');
+    Route::get('/registrations/{competition}', [ClubController::class, 'showRegistComp'])->name('club.registration.show');
+    Route::post('/registrations/store', [ClubController::class, 'storeRegistComp'])->name('club.registration.store');
+});
 
 Route::prefix('/competition/{competition}')->group(function(){
     Route::get('/', [CompetitionController::class, 'show'])->name('competition.show');
