@@ -169,7 +169,7 @@
             {{ isset($athletes) ? (method_exists($athletes, 'total') ? $athletes->total() : $athletes->count()) : 0 }}
             Atlet
             </span>
-            <span class="chip"><i class="bi bi-shield-check me-1"></i>Guest</span>
+            <span class="chip"><i class="bi bi-shield-check me-1"></i>{{ $accessType ?? 'Guest' }}</span>
         </div>
         </div>
 

@@ -110,19 +110,4 @@ class ClubController extends Controller
         }
     }
     // END CRUD Master Data
-
-    // club manage
-    public function dashboard(){
-        return view('pages.club.dashboard');
-    }
-    public function indexRegistComp(){
-        return view('pages.club.registrations.index');
-    }
-    public function showRegistComp(){
-        return view('pages.club.registrations.show');
-    }
-    public function storeRegistComp(){
-        return 'berhasil';
-    }
-    // END club manage
 }

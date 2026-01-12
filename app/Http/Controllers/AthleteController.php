@@ -160,7 +160,8 @@ class AthleteController extends Controller
             return view('pages.guest.atlet.partials.cards', compact('athletes'))->render();
         }
 
-        return view('pages.guest.atlet.index',compact('athletes'));
+        $accessType = 'Guest';
+        return view('pages.guest.atlet.index',compact('athletes', 'accessType'));
     }
     public function showGuest(){
         return 'berhasil';

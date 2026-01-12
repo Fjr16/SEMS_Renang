@@ -93,7 +93,7 @@
     </div>
 
     <div class="d-flex gap-2 flex-wrap">
-      <a href="{{ route('club.dashboard') ?? '#' }}" class="btn btn-outline-secondary btn-pill">
+      <a href="{{ route('manager.club.dashboard') ?? '#' }}" class="btn btn-outline-secondary btn-pill">
         <i class="bi bi-arrow-left me-1"></i>Kembali
       </a>
     </div>

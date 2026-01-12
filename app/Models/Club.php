@@ -22,4 +22,10 @@ class Club extends Model
     public function clubRoleCategory() {
         return $this->belongsTo(ClubRoleCategory::class);
     }
+    public function athletes(){
+        return $this->hasMany(Athlete::class);
+    }
+    public function officials(){
+        return $this->hasMany(Official::class);
+    }
 }

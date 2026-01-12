@@ -87,14 +87,6 @@
   .table-slim td, .table-slim th{ padding:.55rem .6rem; }
 </style>
 
-@php
-  // Data yang biasanya dikirim dari controller:
-  // $club, $team, $counts (athletes, officials), $openCompetitions, $recentEntries
-  $clubName = $club->name ?? 'Club';
-  $teamName = $team->name ?? 'Team';
-  $athCount = $counts['athletes'] ?? 0;
-  $offCount = $counts['officials'] ?? 0;
-@endphp
 
 {{-- =================== HERO =================== --}}
 <div class="cm-hero p-3 p-md-4 mb-4">
@@ -107,9 +99,9 @@
 
       <h1 class="h4 fw-bold mb-1 mt-2">Dashboard Team</h1>
       <div class="text-secondary">
-        <span class="fw-semibold">{{ $clubName }}</span>
+        <span class="fw-semibold">{{ $item?->clubRoleCategory?->name ?? '-' }}</span>
         <span class="mx-2">•</span>
-        <span>{{ $teamName }}</span>
+        <span>{{ $item?->club_name ?? '-' }}</span>
       </div>
     </div>
 
@@ -119,22 +111,9 @@
         <i class="bi bi-building me-1"></i>Profil Team
       </a>
       {{-- <a href="{{ route('cm.registration') ?? '#' }}" class="btn btn-primary btn-pill"> --}}
-      <a href="#" class="btn btn-primary btn-pill">
+      <a href="{{ route('manager.club.registration') }}" class="btn btn-primary btn-pill">
         <i class="bi bi-clipboard-check me-1"></i>Daftar Kompetisi
       </a>
-    </div>
-  </div>
-
-  {{-- Quick Search --}}
-  <div class="mt-3">
-    <div class="searchbar px-3 py-2">
-      <div class="d-flex align-items-center gap-2">
-        <i class="bi bi-search text-secondary"></i>
-        <input type="text" class="form-control p-0" placeholder="Cari atlet / official / kompetisi… (opsional)">
-      </div>
-    </div>
-    <div class="text-secondary small mt-2">
-      Tip: kamu bisa mulai dari “Kelola Atlet” atau langsung “Daftar Kompetisi”.
     </div>
   </div>
 </div>
@@ -147,22 +126,22 @@
       <div class="d-flex align-items-start gap-3">
         <div class="icon-badge"><i class="bi bi-people fs-5"></i></div>
         <div class="flex-grow-1">
-          <div class="fw-bold">RU Team</div>
+          <div class="fw-bold">Ringkasan</div>
           <div class="text-secondary small mb-2">
-            Lihat struktur team, pelatih, official, dan ringkasan anggota.
+            Jumlah data official dan atlet
           </div>
 
           <div class="kvs mb-3">
-            <div class="kv"><small>Atlet</small>{{ $athCount }}</div>
-            <div class="kv"><small>Official</small>{{ $offCount }}</div>
+            <div class="kv"><small>Atlet</small>{{ $item?->athletes?->count() ?? 0 }}</div>
+            <div class="kv"><small>Official</small>{{ $item?->officials?->count() ?? 0 }}</div>
           </div>
 
-          <div class="list-mini">
+          {{-- <div class="list-mini"> --}}
             {{-- <a class="mini-link" href="{{ route('cm.team.ru') ?? '#' }}"><i class="bi bi-diagram-3 me-1"></i>Lihat RU</a>
             <a class="mini-link" href="{{ route('cm.team.documents') ?? '#' }}"><i class="bi bi-folder2-open me-1"></i>Dokumen</a> --}}
-            <a class="mini-link" href="#"><i class="bi bi-diagram-3 me-1"></i>Lihat RU</a>
-            <a class="mini-link" href="#"><i class="bi bi-folder2-open me-1"></i>Dokumen</a>
-          </div>
+            {{-- <a class="mini-link" href="#"><i class="bi bi-diagram-3 me-1"></i>Lihat RU</a> --}}
+            {{-- <a class="mini-link" href="#"><i class="bi bi-folder2-open me-1"></i>Dokumen</a> --}}
+          {{-- </div> --}}
         </div>
       </div>
     </div>
@@ -176,12 +155,11 @@
         <div class="flex-grow-1">
           <div class="fw-bold">Kelola Atlet</div>
           <div class="text-secondary small mb-3">
-            CRUD atlet team kamu. Import/Export juga bisa ditambahkan.
+            Manajemen data atlet pada tim terkait
           </div>
 
           <div class="d-flex gap-2 flex-wrap">
-            {{-- <a href="{{ route('cm.athletes.index') ?? '#' }}" class="btn btn-outline-secondary btn-sm btn-pill"> --}}
-            <a href="#" class="btn btn-outline-secondary btn-sm btn-pill">
+            <a href="{{ route('manager.club.atlet', $item) }}" class="btn btn-outline-secondary btn-sm btn-pill">
               <i class="bi bi-list-ul me-1"></i>Daftar Atlet
             </a>
             {{-- <a href="{{ route('cm.athletes.create') ?? '#' }}" class="btn btn-primary btn-sm btn-pill"> --}}
@@ -190,12 +168,12 @@
             </a>
           </div>
 
-          <div class="list-mini mt-3">
+          {{-- <div class="list-mini mt-3"> --}}
             {{-- <a class="mini-link" href="{{ route('cm.athletes.import') ?? '#' }}"><i class="bi bi-upload me-1"></i>Import</a>
             <a class="mini-link" href="{{ route('cm.athletes.export') ?? '#' }}"><i class="bi bi-download me-1"></i>Export</a> --}}
-            <a class="mini-link" href="#"><i class="bi bi-upload me-1"></i>Import</a>
-            <a class="mini-link" href="#"><i class="bi bi-download me-1"></i>Export</a>
-          </div>
+            {{-- <a class="mini-link" href="#"><i class="bi bi-upload me-1"></i>Import</a> --}}
+            {{-- <a class="mini-link" href="#"><i class="bi bi-download me-1"></i>Export</a> --}}
+          {{-- </div> --}}
         </div>
       </div>
     </div>
@@ -223,12 +201,12 @@
             </a>
           </div>
 
-          <div class="list-mini mt-3">
+          {{-- <div class="list-mini mt-3"> --}}
             {{-- <a class="mini-link" href="{{ route('cm.officials.import') ?? '#' }}"><i class="bi bi-upload me-1"></i>Import</a>
             <a class="mini-link" href="{{ route('cm.officials.export') ?? '#' }}"><i class="bi bi-download me-1"></i>Export</a> --}}
-            <a class="mini-link" href="#"><i class="bi bi-upload me-1"></i>Import</a>
-            <a class="mini-link" href="#"><i class="bi bi-download me-1"></i>Export</a>
-          </div>
+            {{-- <a class="mini-link" href="#"><i class="bi bi-upload me-1"></i>Import</a> --}}
+            {{-- <a class="mini-link" href="#"><i class="bi bi-download me-1"></i>Export</a> --}}
+          {{-- </div> --}}
         </div>
       </div>
     </div>
@@ -244,9 +222,8 @@
           <div class="fw-bold">Pendaftaran Kompetisi / Event</div>
           <div class="text-secondary small">Daftarkan team, atlet, dan official ke kompetisi tertentu.</div>
         </div>
-        {{-- <a class="btn btn-primary btn-sm btn-pill" href="{{ route('cm.registration') ?? '#' }}"> --}}
-        <a class="btn btn-primary btn-sm btn-pill" href="#">
-          <i class="bi bi-clipboard-check me-1"></i>Buka Registrasi
+        <a class="btn btn-primary btn-sm btn-pill" href="{{ route('manager.club.registration') }}">
+          <i class="bi bi-clipboard-check me-1"></i>Daftar sekarang
         </a>
       </div>
 
@@ -371,54 +348,4 @@
     </div>
   </div>
 </div>
-
-{{-- =================== ADDITIONAL SUGGESTIONS (UI) =================== --}}
-<div class="soft-card p-3 mt-3">
-  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-    <div>
-      <div class="fw-bold">Tambahan yang disarankan</div>
-      <div class="text-secondary small">Fitur ini biasanya membantu Club Manager biar alur kerja lebih cepat.</div>
-    </div>
-  </div>
-
-  <div class="row g-2 mt-2">
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="perm-item">
-        <div class="fw-semibold"><i class="bi bi-file-earmark-check me-1"></i>Validasi Data</div>
-        <div class="text-secondary small">Cek DOB/gender/club/team wajib sebelum submit entry.</div>
-      </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="perm-item">
-        <div class="fw-semibold"><i class="bi bi-bell me-1"></i>Notifikasi Deadline</div>
-        <div class="text-secondary small">Pengingat pendaftaran & perubahan jadwal kompetisi.</div>
-      </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="perm-item">
-        <div class="fw-semibold"><i class="bi bi-shield-check me-1"></i>Approval Workflow</div>
-        <div class="text-secondary small">Jika event butuh approval dari panitia/official.</div>
-      </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="perm-item">
-        <div class="fw-semibold"><i class="bi bi-clock-history me-1"></i>Personal Best / History</div>
-        <div class="text-secondary small">Ringkas PB atlet & riwayat kompetisi untuk pemilihan event.</div>
-      </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="perm-item">
-        <div class="fw-semibold"><i class="bi bi-upload me-1"></i>Import Entry</div>
-        <div class="text-secondary small">Upload entry dari Excel/CSV jika atlet banyak.</div>
-      </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="perm-item">
-        <div class="fw-semibold"><i class="bi bi-printer me-1"></i>Dokumen Cetak</div>
-        <div class="text-secondary small">Cetak daftar atlet/official & entry list untuk verifikasi.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
 @endsection
