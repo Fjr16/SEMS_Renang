@@ -97,7 +97,7 @@ Route::get('/users/profile/{id}', [UserController::class, 'profile'])->name('use
 Route::prefix('/club')->group(function() {
     Route::get('/dashboard', [MyTeamController::class, 'dashboard'])->name('manager.club.dashboard');
     Route::get('/registrations', [MyTeamController::class, 'indexRegistComp'])->name('manager.club.registration');
-    Route::get('/registrations/{competition}', [MyTeamController::class, 'showRegistComp'])->name('manager.club.registration.show');
+    Route::get('/registrations/create/{competition}', [MyTeamController::class, 'create'])->name('manager.club.registration.create');
     Route::post('/registrations/store', [MyTeamController::class, 'storeRegistComp'])->name('manager.club.registration.store');
     Route::get('/atlet/{club}', [MyTeamController::class, 'athletes'])->name('manager.club.atlet');
 });

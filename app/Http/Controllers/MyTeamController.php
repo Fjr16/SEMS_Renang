@@ -14,12 +14,6 @@ class MyTeamController extends Controller
         $item = Club::first();
         return view('pages.club.dashboard', compact('item'));
     }
-    // public function indexRegistComp(){
-    //     return view('pages.club.registrations.index');
-    // }
-    public function showRegistComp(){
-        return view('pages.club.registrations.show');
-    }
     public function storeRegistComp(){
         return 'berhasil';
     }
@@ -73,11 +67,18 @@ class MyTeamController extends Controller
         $data = $query->paginate(21)->withQueryString();
         // $historyEntries =
 
+        $compClass = CompetitionStatus::class;
+
         if(request()->ajax()){
-            return view('pages.club.registrations.partials.cards', compact('data'))->render();
+            return view('pages.club.registrations.partials.cards', compact('data', 'compClass'))->render();
         }
 
-        $compStts = CompetitionStatus::cases();
-        return view('pages.club.registrations.index',compact('data', 'compStts'));
+        return view('pages.club.registrations.index',compact('data', 'compClass'));
+    }
+
+    public function create(Competition $comp){
+        return view('pages.club.registrations.create', [
+            'comp' => $comp,
+        ]);
     }
 }

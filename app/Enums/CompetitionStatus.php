@@ -17,9 +17,9 @@ enum CompetitionStatus:string
     }
     public function class(){
         return match($this){
-            self::register => 'bg-primary text-white',
-            self::running => 'bg-warning text-white',
-            self::closed => 'bg-secondary text-white'
+            self::register => 'bg-success text-white',
+            self::running => 'bg-secondary text-white',
+            self::closed => 'bg-danger text-white'
         };
     }
 }

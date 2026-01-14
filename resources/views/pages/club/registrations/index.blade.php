@@ -214,7 +214,7 @@
             <div class="col-12 col-lg-auto">
                 <div class="filter-group">
                     <select name="status" class="form-select select-pill" style="min-width: 210px;">
-                        @foreach ($compStts as $stts)
+                        @foreach ($compClass::cases() as $stts)
                             <option value="{{ $stts->value }}" @selected(request('status') === $stts->value)>{{ $stts->label() }}</option>
                         @endforeach
                     </select>
