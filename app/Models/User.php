@@ -48,4 +48,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function club(){
+        return $this->belongsTo(Club::class);
+    }
 }

@@ -7,11 +7,19 @@ use App\Models\Athlete;
 use App\Models\Club;
 use App\Models\Competition;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MyTeamController extends Controller
 {
+
+    public $club;
+    public function __construct()
+    {
+        $this->club = Auth::user()->club;
+    }
+
     public function dashboard(){
-        $item = Club::first();
+        $item = $this->club;
         return view('pages.club.dashboard', compact('item'));
     }
     public function storeRegistComp(){
@@ -65,7 +73,6 @@ class MyTeamController extends Controller
         })
         ->orderBy('created_at', 'desc');
         $data = $query->paginate(21)->withQueryString();
-        // $historyEntries =
 
         $compClass = CompetitionStatus::class;
 
@@ -76,9 +83,17 @@ class MyTeamController extends Controller
         return view('pages.club.registrations.index',compact('data', 'compClass'));
     }
 
-    public function create(Competition $comp){
+    public function create(Competition $competition){
+        $events = $competition->events;
+        $club = Auth::user()->club;
+        $athletes = $club->athletes;
+        $officials = $club->officials;
         return view('pages.club.registrations.create', [
-            'comp' => $comp,
+            'comp' => $competition,
+            'events' => $events,
+            'club' => $club,
+            'athletes' => $athletes,
+            'officials' => $officials,
         ]);
     }
 }

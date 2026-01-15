@@ -159,7 +159,7 @@
           </div>
 
           <div class="d-flex gap-2 flex-wrap">
-            <a href="{{ route('manager.club.atlet', $item) }}" class="btn btn-outline-secondary btn-sm btn-pill">
+            <a href="{{ route('manager.club.atlet', ['club' => $item]) }}" class="btn btn-outline-secondary btn-sm btn-pill">
               <i class="bi bi-list-ul me-1"></i>Daftar Atlet
             </a>
             {{-- <a href="{{ route('cm.athletes.create') ?? '#' }}" class="btn btn-primary btn-sm btn-pill"> --}}

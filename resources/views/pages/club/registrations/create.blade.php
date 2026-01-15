@@ -195,15 +195,6 @@
     }
 </style>
 
-@php
-  // Controller idealnya mengirim:
-  // $competition, $teams, $events, $athletes, $officials
-  $teams = $teams ?? collect();
-  $events = $events ?? collect();
-  $athletes = $athletes ?? collect();
-  $officials = $officials ?? collect();
-@endphp
-
 <div class="page-hero p-3 p-md-4 mb-3">
   <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
     <div>
@@ -213,8 +204,9 @@
       </div>
       <h1 class="h4 fw-bold mb-1">Registrasi: {{ $comp->name ?? 'Kompetisi' }}</h1>
       <div class="text-secondary small">
-        <span class="badge text-bg-light border">{{ $comp->code ?? 'COMP' }}</span>
-        <span class="ms-2">Deadline: {{ $comp->reg_deadline_label ?? '-' }}</span>
+        {{-- <span class="badge text-bg-light border">{{ $comp->code ?? 'COMP' }}</span> --}}
+        <span>Registrasi: {{ $comp->registration_start ?? '-' }}  /  {{ $comp->registration_end ?? '-' }}</span> <br>
+        <span>Kompetisi: {{ $comp->start_date ?? '-' }}  /  {{ $comp->end_date ?? '-' }}</span>
       </div>
     </div>
 
@@ -248,7 +240,6 @@
           <div class="card-head">
             <div class="d-flex align-items-center gap-2">
               <span class="step-badge"><i class="bi bi-1-circle"></i> Team</span>
-              <div class="d-none d-md-block mini-help">Pilih team yang akan mendaftarkan entries.</div>
             </div>
             <a href="#" class="btn btn-sm btn-soft">
               <i class="bi bi-people me-1"></i>Kelola Team
@@ -256,16 +247,9 @@
           </div>
           <div class="card-bodyy">
             <label class="form-label fw-semibold mb-1">Team</label>
-            <select class="form-select pill-input" name="team_id" id="team_id" required>
-              <option value="">-- Pilih Team --</option>
-              @foreach($teams as $t)
-                <option value="{{ $t->id }}">{{ $t->name }}</option>
-              @endforeach
+            <select class="form-select pill-input" name="team_id" id="team_id" required disabled>
+              <option value="{{ $club->id }}" selected>{{ $club->club_name }}</option>
             </select>
-
-            <div class="mini-help mt-2">
-              Tips: kalau kamu punya lebih dari 1 team, pastikan team yang dipilih sesuai atlet yang akan didaftarkan.
-            </div>
           </div>
         </div>
 
@@ -274,7 +258,6 @@
           <div class="card-head">
             <div class="d-flex align-items-center gap-2">
               <span class="step-badge"><i class="bi bi-2-circle"></i> Event</span>
-              <div class="mini-help d-none d-md-block">Centang event yang ingin diikuti.</div>
             </div>
 
             <div class="d-flex align-items-center gap-2">
@@ -310,8 +293,8 @@
               <div class="list-scroll" id="eventList">
                 @foreach($events as $ev)
                   @php
-                    $label = $ev->label ?? ($ev->event_no.' - '.$ev->name);
-                    $meta  = ($ev->gender ?? '-') . ' • ' . ($ev->age_group ?? '-') . ' • ' . ($ev->distance ?? '') . ($ev->stroke ?? '');
+                    $label = $ev->event_number.' - '.$ev->stroke;
+                    $meta  = ($ev->gender ?? '-') . ' • ' . ($ev->ageGroup->label ?? '-') . ' • ' . ($ev->distance . 'm' ?? '') .' • '. ($ev->event_type ?? '');
                   @endphp
 
                   <label class="pick-item mb-2" data-type="event">
@@ -330,10 +313,6 @@
                 @endforeach
               </div>
             </div>
-
-            <div class="mini-help mt-2">
-              Setelah memilih event, lanjut pilih atlet & official.
-            </div>
           </div>
         </div>
 
@@ -342,7 +321,6 @@
           <div class="card-head">
             <div class="d-flex align-items-center gap-2">
               <span class="step-badge"><i class="bi bi-3-circle"></i> Atlet</span>
-              <div class="mini-help d-none d-md-block">Centang atlet yang akan didaftarkan.</div>
             </div>
 
             <div class="d-flex align-items-center gap-2">
@@ -377,18 +355,12 @@
 
               <div class="list-scroll" id="athList">
                 @foreach($athletes as $a)
-                  @php
-                    $name = $a->name ?? '-';
-                    $code = $a->code ?? '-';
-                    $meta = ($a->gender ?? '-') . ' • ' . ($a->bod_label ?? ($a->bod ?? '-'));
-                  @endphp
-
                   <label class="pick-item mb-2" data-type="athlete">
                     <div class="pick-left">
                       <input class="form-check-input ath-check mt-1" type="checkbox" name="athlete_ids[]" value="{{ $a->id }}">
                       <div style="min-width:0;">
-                        <div class="pick-title text-truncate">{{ $name }}</div>
-                        <div class="pick-meta text-truncate">[{{ $code }}] • {{ $meta }}</div>
+                        <div class="pick-title text-truncate">{{ $a->name ?? '-' }}</div>
+                        <div class="pick-meta text-truncate">[{{ $a->code ?? '-' }}] • {{ ($a->gender ?? '-') . ' • ' . ($a->bod ?? '-') }}</div>
                       </div>
                     </div>
                     <div class="pick-right">
@@ -407,7 +379,6 @@
           <div class="card-head">
             <div class="d-flex align-items-center gap-2">
               <span class="step-badge"><i class="bi bi-4-circle"></i> Official</span>
-              <div class="mini-help d-none d-md-block">Optional, sesuai kebutuhan panitia.</div>
             </div>
 
             <div class="d-flex align-items-center gap-2">
@@ -442,17 +413,12 @@
 
               <div class="list-scroll" id="ofcList">
                 @foreach($officials as $o)
-                  @php
-                    $name = $o->name ?? '-';
-                    $role = $o->role_name ?? ($o->position ?? 'Official');
-                  @endphp
-
                   <label class="pick-item mb-2" data-type="official">
                     <div class="pick-left">
                       <input class="form-check-input ofc-check mt-1" type="checkbox" name="official_ids[]" value="{{ $o->id }}">
                       <div style="min-width:0;">
-                        <div class="pick-title text-truncate">{{ $name }}</div>
-                        <div class="pick-meta text-truncate">{{ $role }}</div>
+                        <div class="pick-title text-truncate">{{ $o->name ?? '-' }}</div>
+                        <div class="pick-meta text-truncate">{{ $o->license }}</div>
                       </div>
                     </div>
                     <div class="pick-right">
