@@ -107,13 +107,10 @@
             </div>
 
             {{-- actions --}}
-            <div class="d-flex gap-2 mt-3">
-            <a href="{{ route('manager.club.registration.create', ['competition' => $c]) }}" class="btn btn-primary btn-sm comp-btn">
-                <i class="bi bi-clipboard-check me-1"></i>Daftar
-            </a>
-            <a href="#" class="btn btn-outline-secondary btn-sm comp-btn">
-                <i class="bi bi-eye me-1"></i>Detail
-            </a>
+            <div class="mt-3">
+                <a href="{{ route('manager.club.registration.create', ['competition' => $c]) }}" class="btn btn-primary btn-sm comp-btn">
+                    <i class="bi bi-clipboard-check me-1"></i>Daftar
+                </a>
             </div>
         </div>
         @endforeach

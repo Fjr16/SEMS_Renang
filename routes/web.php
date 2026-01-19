@@ -4,6 +4,7 @@ use App\Http\Controllers\AthleteController;
 use App\Http\Controllers\AuthenticateController;
 use App\Http\Controllers\ClubController;
 use App\Http\Controllers\CompetitionController;
+use App\Http\Controllers\CompetitionEntryController;
 use App\Http\Controllers\CompetitionEventController;
 use App\Http\Controllers\CompetitionSessionController;
 use App\Http\Controllers\MyTeamController;
@@ -97,9 +98,13 @@ Route::middleware(['auth'])->group(function(){
     // manager club menu
     Route::prefix('/club')->group(function() {
         Route::get('/dashboard', [MyTeamController::class, 'dashboard'])->name('manager.club.dashboard');
-        Route::get('/registrations', [MyTeamController::class, 'indexRegistComp'])->name('manager.club.registration');
-        Route::get('/registrations/create/{competition}', [MyTeamController::class, 'create'])->name('manager.club.registration.create');
-        Route::post('/registrations/store', [MyTeamController::class, 'storeRegistComp'])->name('manager.club.registration.store');
+
+        // entries
+        Route::get('/registrations', [CompetitionEntryController::class, 'index'])->name('manager.club.registration');
+        Route::get('/registrations/create/{competition}', [CompetitionEntryController::class, 'create'])->name('manager.club.registration.create');
+        Route::post('/registrations/store', [CompetitionEntryController::class, 'store'])->name('manager.club.registration.store');
+        // entries
+
         Route::get('/atlet/{club}', [MyTeamController::class, 'athletes'])->name('manager.club.atlet');
     });
 });

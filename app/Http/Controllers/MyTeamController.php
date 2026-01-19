@@ -22,9 +22,6 @@ class MyTeamController extends Controller
         $item = $this->club;
         return view('pages.club.dashboard', compact('item'));
     }
-    public function storeRegistComp(){
-        return 'berhasil';
-    }
 
     public function athletes(Club $club){
         $q = request('q');
@@ -56,44 +53,5 @@ class MyTeamController extends Controller
 
         $accessType = 'Manajer Tim';
         return view('pages.guest.atlet.index',compact('athletes', 'accessType'));
-    }
-
-    public function indexRegistComp(){
-        $q = request('q');
-        $stts = request('status', null);
-
-        $query = Competition::query()
-        ->where('status', $stts ?? CompetitionStatus::register->value)
-        ->when($q, function($qq) use ($q){
-            $qq->where(function($subQ) use ($q){
-                $subQ->where('name', 'LIKE', '%'.$q.'%')
-                    ->orWhere('organizer', 'LIKE', '%'.$q.'%')
-                    ->orWhere('location', 'LIKE', '%'.$q.'%');
-            });
-        })
-        ->orderBy('created_at', 'desc');
-        $data = $query->paginate(21)->withQueryString();
-
-        $compClass = CompetitionStatus::class;
-
-        if(request()->ajax()){
-            return view('pages.club.registrations.partials.cards', compact('data', 'compClass'))->render();
-        }
-
-        return view('pages.club.registrations.index',compact('data', 'compClass'));
-    }
-
-    public function create(Competition $competition){
-        $events = $competition->events;
-        $club = Auth::user()->club;
-        $athletes = $club->athletes;
-        $officials = $club->officials;
-        return view('pages.club.registrations.create', [
-            'comp' => $competition,
-            'events' => $events,
-            'club' => $club,
-            'athletes' => $athletes,
-            'officials' => $officials,
-        ]);
     }
 }
