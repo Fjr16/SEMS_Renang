@@ -4,8 +4,10 @@
     $photo  = $a->foto ?? null;
     $code   = $a->code ?? '-';
     $name   = $a->name ?? '-';
-    $clubCurrent = $a->club?->name ?? '-';
+    $clubCurrent = $a->club?->club_name ?? '-';
+    $clubCode = $a->club?->club_code ?? '-';
     $bod    = $a->bod ?? null;
+    $no_reg    = $a->registration_number ?? null;
 
     try {
         $bodLabel = $bod ? \Carbon\Carbon::parse($bod)->translatedFormat('d F Y') : '-';
@@ -41,8 +43,8 @@
 
             <div class="text-secondary small">
                 <span class="badge text-bg-light border">[{{ $code }}]</span>
-                <span class="ms-1 text-truncate d-inline-block" style="max-width: 210px" title="{{ $clubCurrent }}">
-                {{ $clubCurrent }}
+                <span class="ms-1 d-inline-block" style="max-width: 210px" title="{{ $no_reg }}">
+                {{ 'No Reg: ' . ($no_reg ?? '-') }}
                 </span>
             </div>
             </div>
@@ -50,9 +52,7 @@
 
         <div class="kvs mt-3">
             <div class="kv"><small>BOD</small>{{ $bodLabel }}</div>
-            <div class="kv"><small>Sekolah</small>{{ $a->school_name ?? '-' }}</div>
-            <div class="kv"><small>Kota</small>{{ $a->city_name ?? '-' }}</div>
-            <div class="kv"><small>Provinsi</small>{{ $a->province_name ?? '-' }}</div>
+            <div class="kv"><small>Klub</small>{{ '['. $clubCode .']' }} {{ $clubCurrent }}</div>
         </div>
 
         <div class="d-flex gap-2 mt-3">

@@ -17,11 +17,8 @@ class Athlete extends Model
         'name',
         'bod',
         'gender',
-        'school_name',
-        'club_name',
-        'city_name',
-        'province_name',
-        // 'prsi_id',
+        'registration_number',
+        'status',
     ];
 
     protected static function booted()

@@ -187,7 +187,7 @@
                             name="q"
                             value="{{ request('q') }}"
                             class="form-control"
-                            placeholder="Cari atlet / kode / klub / kota / provinsi / sekolah…"
+                            placeholder="Cari atlet / kode / No Registrasi / klub..."
                             autocomplete="off"
                         >
 
@@ -223,7 +223,7 @@
                 </div>
 
                 <div class="mt-2 text-secondary small">
-                Tip: gunakan kata kunci seperti <span class="badge text-bg-light border">ATH-01</span> atau nama klub/kota.
+                Tip: gunakan kata kunci seperti <span class="badge text-bg-light border">ATH-01</span> atau nama atlet / klub.
                 </div>
             </div>
 

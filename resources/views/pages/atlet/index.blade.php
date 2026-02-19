@@ -56,15 +56,13 @@
             <thead class="table-light">
             <tr>
                 <th>Aksi</th>
+                <th>No Registrasi</th>
                 <th>Foto</th>
                 <th>Atlet</th>
                 <th>Klub Sekarang</th>
                 <th>BOD</th>
                 <th>Jenis Kelamin</th>
-                <th>Sekolah</th>
-                <th>Klub</th>
-                <th>Kota</th>
-                <th>Provinsi</th>
+                <th>Status</th>
             </tr>
             </thead>
         </table>
@@ -99,7 +97,7 @@
                     </div>
                 </div>
             </div>
-            <div class="mb-3">
+            <div class="mb-1">
                 <div class="row">
                     <div class="col-sm-8 col-md-7 col-6">
                         <div class="mb-3">
@@ -121,8 +119,8 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="city_name">Nama Kota</label>
-                            <input type="text" name="city_name" id="city_name" class="form-control" required>
+                            <label class="form-label" for="registration_number">Nomor Registrasi</label>
+                            <input type="text" name="registration_number" id="registration_number" class="form-control">
                         </div>
                     </div>
                     <div class="col-sm-4 col-md-5 col-6">
@@ -145,17 +143,11 @@
                 </div>
             </div>
             <div class="mb-3">
-                <label class="form-label" for="province_name">Nama Provinsi</label>
-                <input type="text" class="form-control" name="province_name" id="province_name" required>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="status" name="status" value="active" checked>
+                    <label class="form-check-label" for="status">Status Aktif</label>
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label" for="school_name">Nama Sekolah</label>
-                <input type="text" class="form-control" name="school_name" id="school_name" required>
-            </div>
-            {{-- <div class="mb-3">
-                <label class="form-label">Nama Klub</label>
-                <input type="text" class="form-control" required>
-            </div> --}}
           </div>
           <div class="modal-footer">
             <button type="submit" class="btn btn-primary">Simpan</button>
@@ -180,15 +172,13 @@
             ajax:"{{ route('atlet.data') }}",
             columns:[
                 {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
+                {data:'registration_number', name:'registration_number', className:'text-center', orderable:false, searchable:false, defaultContent:'-'},
                 {data:'foto', name:'foto', className:'text-center', orderable:false, searchable:false},
                 {data:'codeName', name:'name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 {data:'clubDesc', name:'clubDesc', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 {data:'bod', name:'bod', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 {data:'genderAttr', name:'gender', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'school_name', name:'school_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'club_name', name:'club_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'city_name', name:'city_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'province_name', name:'province_name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                {data:'status', name:'status', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
             ],
             order:[[2,'asc']]
         });
@@ -317,10 +307,9 @@
             $('#name').val(atlet.name);
             $('#gender').val(atlet.gender);
             $('#bod')[0]._flatpickr.setDate(atlet.bod);
-            $('#city_name').val(atlet.city_name);
-            $('#province_name').val(atlet.province_name);
-            $('#school_name').val(atlet.school_name);
+            $('#registration_number').val(atlet.registration_number);
             $('#athlete_id').val(id_atlet);
+            $('#status').prop('checked', atlet.status === 'active');
             // preview foto
             if(atlet.foto){
                 const img = document.getElementById('fotoPreview');
@@ -403,6 +392,7 @@
         showSpinner();
 
         let formData = new FormData(this);
+        formData.set('status', $('#status').is(':checked') ? 'active' : 'inactive');
         try {
             const res = await fetch("{{ route('atlet.store') }}", {
                 method:'POST',
