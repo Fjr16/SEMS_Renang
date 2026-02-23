@@ -36,7 +36,7 @@ class UserController extends Controller
                 })->implode(' ');
             })
             ->addColumn('status_badge', function (User $row) {
-                $status = $row->status ?? true;
+                $status = $row->deleted_at; // contoh: aktif jika deleted_at null
 
                 if (!$status) {
                     return '<span class="badge bg-secondary">Nonaktif</span>';
@@ -74,8 +74,8 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . ($userId ?: 'NULL') . ',id',
             'password' => $userId ? 'nullable|min:6' : 'required|min:6',
-            'status' => 'required|in:active,inactive',
             'club_id' => 'nullable',
+            'organization_id' => 'nullable',
         ]);
 
         if ($validators->fails()) {
@@ -90,7 +90,6 @@ class UserController extends Controller
 
             $user->name = $req->name;
             $user->email = $req->email;
-            $stts = $req->status === 'active' ? true : false;
 
             // password: hash hanya jika diisi / create
             if (!$userId || $req->filled('password')) {
@@ -99,10 +98,7 @@ class UserController extends Controller
 
             // sesuaikan field kamu
             if ($req->has('club_id')) $user->club_id = $req->club_id;
-            $user->status = $stts;
-            if (!$stts) {
-                $user->remember_token = null;
-            }
+            if ($req->has('organization_id')) $user->organization_id = $req->organization_id;
 
             $user->save();
 

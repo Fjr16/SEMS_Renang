@@ -111,13 +111,6 @@
               <label class="form-label">Password <span class="text-muted small">(kosongkan jika tidak diubah)</span></label>
               <input type="password" class="form-control" name="password" id="user_password">
             </div>
-            <div class="mb-3">
-              <label class="form-label">Status</label>
-              <select class="form-select" name="status" id="user_status" required>
-                <option value="active" selected>Aktif</option>
-                <option value="inactive">Nonaktif</option>
-              </select>
-            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
@@ -274,7 +267,6 @@
     document.getElementById('user_name').value = '';
     document.getElementById('user_email').value = '';
     document.getElementById('user_password').value = '';
-    document.getElementById('user_status').value = 'active';
     modalUser.show();
   }
 
@@ -290,7 +282,6 @@
     document.getElementById('user_name').value = rowData.name;
     document.getElementById('user_email').value = rowData.email;
     document.getElementById('user_password').value = '';
-    document.getElementById('user_status').value = rowData.status ? 'active' : 'inactive';
     modalUser.show();
 
     showSpinner(false);

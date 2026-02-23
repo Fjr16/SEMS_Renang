@@ -30,8 +30,6 @@ class AuthenticateController extends Controller
             ])->onlyInput('email');
         }
 
-        $credentials['status'] = true;
-
         $remember = $req->boolean('remember');
 
         if (Auth::attempt($credentials, $remember)) {

@@ -13,14 +13,17 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->nullable(true);
             $table->foreignId('club_id')->nullable(true);
             $table->string('name', 100)->nullable(false);
             $table->string('email', 100)->nullable(false)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->boolean('status')->default(true);
+            // $table->boolean('status')->default(true);
+            // $table->enum('role', ['super_admin', 'admin', 'manager', 'organisasi'])->default('athlete');
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
