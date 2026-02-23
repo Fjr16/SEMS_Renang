@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pool extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'venue_id',
         'code',
@@ -14,10 +16,11 @@ class Pool extends Model
         'course_type', //SCM = 25m/LCM = 50m/SCY = 25yd
         'length_meter',
         'total_lanes',
-        'is_available',
-        'notes',
+        'depth',
+        // 'is_available',
+        'status',
     ];
-    
+
     public function venue(){
         return $this->belongsTo(Venue::class);
     }

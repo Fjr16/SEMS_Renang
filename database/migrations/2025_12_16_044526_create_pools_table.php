@@ -20,9 +20,11 @@ return new class extends Migration
             $table->enum('course_type', ['SCM','LCM','SCY'])->nullable(false); //SCM = 25m/LCM = 50m/SCY = 25yd
             $table->integer('length_meter',false,true)->nullable(false);
             $table->smallInteger('total_lanes',false,true)->nullable(false);
-            $table->boolean('is_available')->default(true);
-            $table->text('notes')->nullable();
+            $table->unsignedBigInteger('depth')->nullable(false);
+            $table->enum('status', ['active','inactive'])->default('active');
+            // $table->boolean('is_available')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

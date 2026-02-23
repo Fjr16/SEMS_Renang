@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Venue extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'code',
         'name',
@@ -13,7 +15,6 @@ class Venue extends Model
         'city',
         'province',
         'country',
-        'notes',
         'is_active',
     ];
 

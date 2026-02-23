@@ -19,9 +19,9 @@ return new class extends Migration
             $table->string('city',100)->nullable(false);
             $table->string('province',100)->nullable();
             $table->string('country',100)->nullable(false);
-            $table->text('notes')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -30,6 +30,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('venues');
+        Schema::enableForeignKeyConstraints();
     }
 };

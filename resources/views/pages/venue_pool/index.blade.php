@@ -81,6 +81,7 @@
               <th class="text-center">Course</th>
               <th class="text-center">Panjang</th>
               <th class="text-center">Lanes</th>
+              <th class="text-center">Kedalaman</th>
               <th class="text-center">Status</th>
             </tr>
           </thead>
@@ -141,10 +142,6 @@
                   <option value="0">Nonaktif</option>
                 </select>
             </div>
-            <div class="col-md-12">
-              <label class="form-label" for="venue_notes">Catatan</label>
-              <input type="text" class="form-control" id="venue_notes" name="notes" placeholder="Catatan tambahan (opsional)">
-            </div>
           </div>
         </div>
 
@@ -201,19 +198,18 @@
               <label class="form-label" for="total_lanes">Total Lanes</label>
               <input type="number" class="form-control" id="total_lanes" name="total_lanes" min="1" max="12" placeholder="8">
             </div>
+            <div class="col-md-4">
+                <label class="form-label" for="depth">Kedalaman (meter)</label>
+                <input type="number" class="form-control" id="depth" name="depth" min="1" placeholder="2">
+            </div>
 
             <div class="col-md-4">
-              <label class="form-label" for="pool_is_available">Status</label>
-              <select class="form-control" id="pool_is_available" name="is_available">
-                <option value="1">Available</option>
-                <option value="0">Not Available</option>
+              <label class="form-label" for="status">Status</label>
+              <select class="form-control" id="status" name="status">
+                <option value="active">Aktif</option>
+                <option value="inactive">Nonaktif</option>
               </select>
             </div>
-            <div class="col-md-8">
-              <label class="form-label" for="notes">Catatan</label>
-              <input type="text" class="form-control" id="notes" name="notes" placeholder="Opsional">
-            </div>
-          </div>
         </div>
 
         <div class="modal-footer">
@@ -295,11 +291,11 @@
         { data: 'course_type', name: 'course_type', className:'text-center' },
         { data: 'length_meter', name: 'length_meter', className:'text-center' },
         { data: 'total_lanes', name: 'total_lanes', className:'text-center' },
+        { data: 'depth', name: 'depth', className:'text-center' },
         {
-          data: 'is_available',
-          name: 'is_available',
+          data: 'badge_status',
+          name: 'badge_status',
           className:'text-center',
-          render: (d)=> d ? '<span class="badge text-bg-success">Available</span>' : '<span class="badge text-bg-danger">Not</span>'
         },
       ],
       drawCallback: function(){
@@ -448,7 +444,6 @@
     $('#venue_province').val(selectedVenue.province ?? '');
     $('#venue_country').val(selectedVenue.country ?? '');
     $('#venue_is_active').val(selectedVenue.is_active ? 1 : 0);
-    $('#venue_notes').val(selectedVenue.notes ?? '');
 
     $('#modalVenue').modal('show');
   }
@@ -495,9 +490,8 @@
     $('#course_type').val(data.course_type);
     $('#length_meter').val(data.length_meter);
     $('#total_lanes').val(data.total_lanes);
-    $('#pool_is_available').val(data.is_available ? 1 : 0);
-    $('#notes').val(data.notes);
-
+    $('#depth').val(data.depth);
+    $('#status').val(data.status);
     $('#modalPool').modal('show');
   }
 

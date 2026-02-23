@@ -38,6 +38,11 @@ class VenuesAndPoolController extends Controller
             $delete = '<button class="btn btn-sm btn-danger btn-delete-pool" data-id="'.$row->id.'" onclick="destroyPool(this)"><i class="bi bi-trash"></i></button>';
             return $edit.' '.$delete;
         })
+        ->addColumn('badge_status', function($row){
+            $badgeClass = $row->status === 'active' ? 'bg-success' : 'bg-secondary';
+            return '<span class="badge '.$badgeClass.'">'.ucfirst($row->status).'</span>';
+        })
+        ->rawColumns(['action', 'badge_status'])
         ->make(true);
     }
     public function storeVenue(Request $req){
@@ -47,7 +52,6 @@ class VenuesAndPoolController extends Controller
             'city' => 'required|string|max:100',
             'province' => 'nullable|string|max:100',
             'country' => 'required|string|max:100',
-            'notes' => 'nullable|string',
             'is_active' => 'boolean',
             'venue_id' => 'sometimes|nullable|exists:venues,id',
         ]);
@@ -78,7 +82,6 @@ class VenuesAndPoolController extends Controller
             $item->city = $req->city;
             $item->province = $req->province;
             $item->country = $req->country;
-            $item->notes = $req->notes ?? null;
             $item->is_active = $req->is_active ?? true;
             $item->save();
 
@@ -117,8 +120,8 @@ class VenuesAndPoolController extends Controller
             'course_type' => 'required|in:SCM,LCM,SCY',
             'length_meter' => 'required|integer|min:1',
             'total_lanes' => 'required|integer|max:12|min:1',
-            'is_available' => 'boolean',
-            'notes' => 'nullable|string',
+            'depth' => 'required|integer|min:1',
+            'status' => 'in:active,inactive',
             'pool_id' => 'sometimes|nullable|exists:pools,id',
         ]);
 
@@ -155,7 +158,7 @@ class VenuesAndPoolController extends Controller
                         ],
                     ];
                 }
-    
+
                 try {
                     // cek eksistensi candidate code dalam venue (exclude pool_id saat update)
                     $existsFn = function (string $code) use ($req, $venue) {
@@ -164,9 +167,9 @@ class VenuesAndPoolController extends Controller
                             ->when($req->pool_id, fn($q) => $q->where('id', '!=', $req->pool_id))
                             ->exists();
                     };
-    
+
                     $finalCode = CodeGenerator::uniqueCode($baseCode, $existsFn);
-    
+
                     $item = $req->pool_id ? Pool::findOrFail($req->pool_id) : new Pool();
                     $item->code         = $finalCode;
                     $item->venue_id     = $req->venue_id;
@@ -175,10 +178,10 @@ class VenuesAndPoolController extends Controller
                     $item->course_type  = $req->course_type;
                     $item->length_meter = (int) $req->length_meter;
                     $item->total_lanes  = (int) $req->total_lanes;
-                    $item->is_available = $req->has('is_available') ? (bool) $req->is_available : true;
-                    $item->notes        = $req->notes ?? null;
+                    $item->depth        = (int) $req->depth;
+                    $item->status       = $req->status ?? 'active';
                     $item->save();
-    
+
                     return [
                         'ok' => true,
                         'status_code' => $req->pool_id ? 200 : 201,
