@@ -10,13 +10,14 @@ class Club extends Model
     use HasFactory;
     protected $fillable = [
         'club_role_category_id',
-        'club_code',
         'club_name',
-        'club_logo',
-        'club_address',
+        'club_code',
+        'club_city',
         'club_province',
         'club_lead',
-        'lead_phone'
+        'lead_phone',
+        'team_type',
+        'club_logo'
     ];
 
     public function clubRoleCategory() {
