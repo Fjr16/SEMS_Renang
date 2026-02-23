@@ -57,12 +57,11 @@
             <tr>
                 <th>Aksi</th>
                 <th>Foto</th>
-                <th>Official</th>
+                <th>Jabatan</th>
+                <th>Nama</th>
                 <th>Jenis Kelamin</th>
                 <th>License</th>
                 <th>Klub</th>
-                <th>Kota</th>
-                <th>Provinsi</th>
             </tr>
             </thead>
         </table>
@@ -123,8 +122,8 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="current_city">Nama Kota</label>
-                            <input type="text" name="current_city" id="current_city" class="form-control" required>
+                            <label class="form-label" for="role">Jabatan</label>
+                            <input type="text" class="form-control" name="role" id="role" required>
                         </div>
                     </div>
                     <div class="col-sm-4 col-md-5 col-6">
@@ -145,10 +144,6 @@
                         <input type="file" name="foto" id="foto" accept="image/*" class="d-none" onchange="previewImg(event)">
                     </div>
                 </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label" for="current_province">Nama Provinsi</label>
-                <input type="text" class="form-control" name="current_province" id="current_province" required>
             </div>
           </div>
           <div class="modal-footer">
@@ -175,12 +170,11 @@
             columns:[
                 {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
                 {data:'foto', name:'foto', className:'text-center', orderable:false, searchable:false},
+                {data:'role', name:'role', className:'text-center', orderable:true, searchable:true},
                 {data:'name', name:'name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 {data:'genderAttr', name:'gender', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 {data:'licenseAttr', name:'licenseAttr', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 {data:'clubDesc', name:'clubDesc', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'current_city', name:'current_city', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                {data:'current_province', name:'current_province', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
             ],
             order:[[2,'asc']]
         });
@@ -306,10 +300,9 @@
                 $('#club_id').append(option).trigger('change');
                 $('#club_id').prop('disabled', false);
             }
+            $('#role').val(official.role);
             $('#name').val(official.name);
             $('#gender').val(official.gender);
-            $('#current_city').val(official.current_city);
-            $('#current_province').val(official.current_province);
             $('#license').val(official.license);
             $('#official_id').val(id_official);
             // preview foto

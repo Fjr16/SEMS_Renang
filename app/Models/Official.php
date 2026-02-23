@@ -8,14 +8,11 @@ class Official extends Model
 {
     protected $fillable = [
         'club_id',
+        'role',
         'foto',
         'name',
         'gender',
         'license',
-        // 'current_club',
-        'current_city',
-        'current_province',
-        // 'certificate',
     ];
 
     public function club() {

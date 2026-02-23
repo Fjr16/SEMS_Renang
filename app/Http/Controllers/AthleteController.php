@@ -57,7 +57,10 @@ class AthleteController extends Controller
                         <img src="'. $url .'" alt="logo-klub" class="img-fluid">
                     </a>';
         })
-        ->rawColumns(['action','genderAttr','foto'])
+        ->editColumn('status', function($row){
+            return $row->status === 'active' ? '<span class="badge bg-success">Aktif</span>' : '<span class="badge bg-secondary">Tidak Aktif</span>';
+        })
+        ->rawColumns(['action','genderAttr','foto', 'status'])
         ->make(true);
     }
 
@@ -69,12 +72,11 @@ class AthleteController extends Controller
     public function store(Request $r){
         $validators = Validator::make($r->all(), [
             'club_id' => 'required|integer|exists:clubs,id',
+            'registration_number' => 'nullable|string|max:255',
             'name' => 'required|string|max:255',
             'bod' => 'required|date|before_or_equal:today',
             'gender' => ['required', new Enum(Gender::class)],
-            'school_name' => 'nullable|string|max:255',
-            'city_name' => 'nullable|string|max:255',
-            'province_name' => 'nullable|string|max:255',
+            'status' => ['nullable', 'in:active,inactive'],
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'athlete_id' => 'nullable|integer|exists:athletes,id',
         ]);
@@ -91,10 +93,8 @@ class AthleteController extends Controller
         $item->name = $r->name;
         $item->bod = $r->bod;
         $item->gender = $r->gender;
-        $item->school_name = $r->school_name;
-        // $item->club_name = $r->club_name;
-        $item->city_name = $r->city_name;
-        $item->province_name = $r->province_name;
+        $item->registration_number = $r->registration_number;
+        $item->status = $r->status ? ($r->status === 'active' ? 'active' : 'inactive') : 'inactive';
         if($r->file('foto')){
             $item->foto = $r->file('foto')->store('club/athlete', 'public');
         }
@@ -140,14 +140,16 @@ class AthleteController extends Controller
 
         $query = Athlete::query()
         ->with('club')
+        ->where('status', 'active')
         ->when($q, function($qq) use ($q){
             $qq->where(function($subQ) use ($q){
                 $subQ->where('name', 'LIKE', '%'.$q.'%')
                     ->orWhere('code', 'LIKE', '%'.$q.'%')
-                    ->orWhere('club_name', 'LIKE', '%'.$q.'%')
-                    ->orWhere('city_name', 'LIKE', '%'.$q.'%')
-                    ->orWhere('school_name', 'LIKE', '%'.$q.'%')
-                    ->orWhere('province_name', 'LIKE', '%'.$q.'%');
+                    ->orWhere('registration_number', 'LIKE', '%'.$q.'%')
+                    ->orWhereHas('club', function($clubQ) use ($q){
+                        $clubQ->where('club_name', 'LIKE', '%'.$q.'%')
+                            ->orWhere('club_code', 'LIKE', '%'.$q.'%');
+                    });
             });
         })
         ->when($gender, function($qq) use ($gender){

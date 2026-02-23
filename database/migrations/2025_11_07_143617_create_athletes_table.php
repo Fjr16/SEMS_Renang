@@ -13,17 +13,14 @@ return new class extends Migration
     {
         Schema::create('athletes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('club_id')->nullable();
-            $table->string('code')->nullable();
-            $table->string('foto')->nullable();
-            $table->string('name')->nullable();
-            $table->date('bod')->nullable();
-            $table->string('gender', 50)->nullable();
-            $table->string('school_name')->nullable();
-            $table->string('club_name')->nullable();
-            $table->string('city_name')->nullable();
-            $table->string('province_name')->nullable();
-            // $table->string('prsi_id')->nullable();
+            $table->foreignId('club_id')->nullable(false);
+            $table->string('code')->nullable(false)->unique();
+            $table->string('foto')->nullable(true);
+            $table->string('name')->nullable(false);
+            $table->date('bod')->nullable(false);
+            $table->string('gender', 50)->nullable(false);
+            $table->string('registration_number')->nullable(true);
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });
     }

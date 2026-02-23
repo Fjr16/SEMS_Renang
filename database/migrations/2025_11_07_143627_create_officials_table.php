@@ -13,15 +13,12 @@ return new class extends Migration
     {
         Schema::create('officials', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('club_id')->nullable();
-            $table->string('foto')->nullable();
-            $table->string('name')->nullable();
-            $table->string('gender', 50)->nullable();
-            $table->string('license', 50)->nullable();
-            // $table->string('current_club')->nullable();
-            $table->string('current_city')->nullable();
-            $table->string('current_province')->nullable();
-            // $table->string('certificate')->nullable();
+            $table->foreignId('club_id')->nullable(false);
+            $table->string('role')->nullable(false);
+            $table->string('foto')->nullable(true);
+            $table->string('name')->nullable(false);
+            $table->string('gender', 50)->nullable(false);
+            $table->string('license', 50)->nullable(true);
             $table->timestamps();
         });
     }

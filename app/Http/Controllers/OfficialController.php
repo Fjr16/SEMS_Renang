@@ -75,11 +75,9 @@ class OfficialController extends Controller
     public function store(Request $r){
         $validators = Validator::make($r->all(), [
             'club_id' => 'required|integer|exists:clubs,id',
+            'role' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'gender' => ['required', new Enum(Gender::class)],
-            // 'current_club' => 'nullable|string|max:255',
-            'current_city' => 'nullable|string|max:255',
-            'current_province' => 'nullable|string|max:255',
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'official_id' => 'nullable|integer|exists:officials,id',
         ]);
@@ -93,11 +91,10 @@ class OfficialController extends Controller
 
         $item = $r->input('official_id') ? Official::find($r->input('official_id')) : new Official;
         $item->club_id = $r->club_id;
+        $item->role = $r->role;
         $item->name = $r->name;
         $item->gender = $r->gender;
         $item->license = $r->license;
-        $item->current_city = $r->current_city;
-        $item->current_province = $r->current_province;
         if($r->file('foto')){
             $item->foto = $r->file('foto')->store('club/official', 'public');
         }
