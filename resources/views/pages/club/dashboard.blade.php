@@ -135,13 +135,6 @@
             <div class="kv"><small>Atlet</small>{{ $item?->athletes?->count() ?? 0 }}</div>
             <div class="kv"><small>Official</small>{{ $item?->officials?->count() ?? 0 }}</div>
           </div>
-
-          {{-- <div class="list-mini"> --}}
-            {{-- <a class="mini-link" href="{{ route('cm.team.ru') ?? '#' }}"><i class="bi bi-diagram-3 me-1"></i>Lihat RU</a>
-            <a class="mini-link" href="{{ route('cm.team.documents') ?? '#' }}"><i class="bi bi-folder2-open me-1"></i>Dokumen</a> --}}
-            {{-- <a class="mini-link" href="#"><i class="bi bi-diagram-3 me-1"></i>Lihat RU</a> --}}
-            {{-- <a class="mini-link" href="#"><i class="bi bi-folder2-open me-1"></i>Dokumen</a> --}}
-          {{-- </div> --}}
         </div>
       </div>
     </div>
@@ -162,18 +155,10 @@
             <a href="{{ route('manager.club.atlet', ['club' => $item]) }}" class="btn btn-outline-secondary btn-sm btn-pill">
               <i class="bi bi-list-ul me-1"></i>Daftar Atlet
             </a>
-            {{-- <a href="{{ route('cm.athletes.create') ?? '#' }}" class="btn btn-primary btn-sm btn-pill"> --}}
             <a href="#" class="btn btn-primary btn-sm btn-pill">
               <i class="bi bi-plus-circle me-1"></i>Tambah
             </a>
           </div>
-
-          {{-- <div class="list-mini mt-3"> --}}
-            {{-- <a class="mini-link" href="{{ route('cm.athletes.import') ?? '#' }}"><i class="bi bi-upload me-1"></i>Import</a>
-            <a class="mini-link" href="{{ route('cm.athletes.export') ?? '#' }}"><i class="bi bi-download me-1"></i>Export</a> --}}
-            {{-- <a class="mini-link" href="#"><i class="bi bi-upload me-1"></i>Import</a> --}}
-            {{-- <a class="mini-link" href="#"><i class="bi bi-download me-1"></i>Export</a> --}}
-          {{-- </div> --}}
         </div>
       </div>
     </div>
@@ -200,13 +185,6 @@
               <i class="bi bi-plus-circle me-1"></i>Tambah
             </a>
           </div>
-
-          {{-- <div class="list-mini mt-3"> --}}
-            {{-- <a class="mini-link" href="{{ route('cm.officials.import') ?? '#' }}"><i class="bi bi-upload me-1"></i>Import</a>
-            <a class="mini-link" href="{{ route('cm.officials.export') ?? '#' }}"><i class="bi bi-download me-1"></i>Export</a> --}}
-            {{-- <a class="mini-link" href="#"><i class="bi bi-upload me-1"></i>Import</a> --}}
-            {{-- <a class="mini-link" href="#"><i class="bi bi-download me-1"></i>Export</a> --}}
-          {{-- </div> --}}
         </div>
       </div>
     </div>

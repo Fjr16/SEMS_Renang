@@ -151,26 +151,72 @@
       background: rgba(255,255,255,.8);
       border-radius: 1rem;
     }
+
+    .gallery-box {
+        border: 2px dashed #ced4da;
+        border-radius: 8px;
+        padding: 6px;
+        /* width: 100%; */
+        width: 150px;
+        aspect-ratio: 3 / 4; /* kotak potret */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        cursor: pointer;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+        overflow: hidden;
+    }
+
+    .gallery-box:hover {
+        border-color: #0d6efd;
+        background-color: #eef4ff;
+    }
+
+    .gallery-placeholder {
+        padding: 4px;
+    }
+
+    .gallery-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 6px;
+    }
   </style>
 
     {{-- ====== HERO + FILTER ====== --}}
     <div class="page-hero p-3 p-md-4 mb-4">
         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-        <div>
-            <h1 class="h4 fw-bold mb-1">Daftar Atlet</h1>
-            <p class="mb-0 text-secondary">
-            Tampilan publik untuk melihat atlet yang terdaftar.
-            </p>
-        </div>
+            <div>
+                <h4 class="fw-bold mb-1">Daftar Atlet</h4>
+                @if (Route::is('manager.club.atlet'))
+                    <h6 class="fw-bold mb-1">Klub : {{ $club->club_name ?? '' }}</h6>
+                @endif
+                @if (Route::is('guest.atlet.index'))
+                    <p class="mb-0 text-secondary">
+                    Tampilan publik untuk melihat atlet yang terdaftar.
+                    </p>
+                @endif
+            </div>
 
-        <div class="d-flex gap-2 flex-wrap">
-            <span class="chip">
-            <i class="bi bi-people me-1"></i>
-            {{ isset($athletes) ? (method_exists($athletes, 'total') ? $athletes->total() : $athletes->count()) : 0 }}
-            Atlet
-            </span>
-            <span class="chip"><i class="bi bi-shield-check me-1"></i>{{ $accessType ?? 'Guest' }}</span>
-        </div>
+            <div class="text-end">
+                @if (Route::is('manager.club.atlet'))
+                <button type="button" class="btn btn-primary btn-sm btn-pill mb-2" data-bs-toggle="modal" data-bs-target="#modalAthlete" onclick="$('#modalTitle').text('Tambah Atlet'); $('#athlete_id').val('');">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Tambah
+                </button>
+                @endif
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <span class="chip">
+                        <i class="bi bi-people me-1"></i>
+                        {{ isset($athletes) ? (method_exists($athletes, 'total') ? $athletes->total() : $athletes->count()) : 0 }}
+                        Atlet
+                    </span>
+                    <span class="chip"><i class="bi bi-shield-check me-1"></i>{{ $accessType ?? 'Guest' }}</span>
+                </div>
+            </div>
         </div>
 
         <form method="GET" action="" class="mt-3">
@@ -271,6 +317,79 @@
       <div class="fw-semibold">Tidak ada atlet yang cocok.</div>
       <div class="text-secondary">Coba ubah kata kunci atau reset filter.</div>
     </div>
+
+    {{-- modal crud athlete --}}
+    @if (Route::is('manager.club.atlet'))
+    <div class="modal fade" id="modalAthlete" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form id="formAthlete" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Tambah Atlet</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-sm-8 col-md-7 col-6">
+                                    <div class="mb-3">
+                                        <input type="hidden" name="club_id" value="{{ $club->id ?? '' }}">
+                                        <label class="form-label" for="name">Nama Lengkap</label>
+                                        <input type="text" class="form-control" name="name"  id="name" required>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-sm-6 col-md-6 col-12 mb-3 mb-sm-0">
+                                            <label class="form-label" for="gender">Gender</label>
+                                            <select class="form-control" name="gender" id="gender">
+                                                @foreach ($genders as $gd)
+                                                    <option value="{{ $gd->value }}" @selected(old('gender') == $gd->value)>{{ $gd->label() }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-sm-6 col-md-6 col-12">
+                                            <label class="form-label" for="bod">Tanggal Lahir</label>
+                                            <input type="text" class="form-control tanggal" name="bod" id="bod" required placeholder="Pilih tanggal lahir">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="registration_number">Nomor Registrasi</label>
+                                        <input type="text" name="registration_number" id="registration_number" class="form-control">
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="status" name="status" value="active" checked>
+                                            <label class="form-check-label" for="status">Status Aktif</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 col-md-5 col-6">
+                                    <div class="mb-2">
+                                        <label class="form-label" for="foto">Foto</label>
+                                    </div>
+
+                                    <!-- Gallery Box -->
+                                    <div class="gallery-box" onclick="document.getElementById('foto').click()">
+                                        <div id="galleryPlaceholder" class="gallery-placeholder text-center">
+                                            <div class="small text-muted mb-1">Klik untuk pilih foto</div>
+                                            <div class="small text-muted">JPG / PNG, maks 2MB</div>
+                                        </div>
+                                        <img id="fotoPreview" class="gallery-image d-none" alt="Preview Foto">
+                                    </div>
+
+                                    <!-- Input File Asli (disembunyikan) -->
+                                    <input type="file" name="foto" id="foto" accept="image/*" class="d-none" onchange="previewImg(event)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
 @endsection
 
 @push('scripts')
@@ -342,5 +461,99 @@
 
             if (sentinel) observer.observe(sentinel);
         })();
+
+        if ("{{ Route::is('manager.club.atlet') }}") {
+            function previewImg(event){
+                const input = event.target;
+                const file = input.files[0];
+
+                if(!file) return;
+
+                const allowTypes = ['image/jpeg', 'image/png'];
+                const maxSize = 2*1024*1024;
+
+                if(!allowTypes.includes(file.type)){
+                    Toast.fire({
+                        icon:'error',
+                        title:'Gambar yang diterima hanya .jpeg/jpg .png'
+                    });
+                    input.value = '';
+                    return;
+                }
+
+                if(file.size > maxSize){
+                    Toast.fire({
+                        icon:'error',
+                        title:'Ukuran foto maksimal 2mb'
+                    });
+                    input.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e){
+                    const img = document.getElementById('fotoPreview');
+                    const placeholder = document.getElementById('galleryPlaceholder');
+
+                    img.src = e.target.result;
+                    img.classList.remove('d-none');
+                    if(placeholder) placeholder.classList.add('d-none');
+                }
+
+                reader.readAsDataURL(file);
+            }
+            $('#modalAthlete').on('hidden.bs.modal', function(){
+                const form = document.getElementById('formAthlete');
+                form.reset();
+
+                // reset preview gambar
+                const img = document.getElementById('fotoPreview');
+                const placeholder = document.getElementById('galleryPlaceholder');
+
+                img.src = '';
+                img.classList.add('d-none');
+                if(placeholder) placeholder.classList.remove('d-none');
+            });
+
+            $('#formAthlete').on('submit', async function(e){
+                e.preventDefault();
+                showSpinner();
+
+                let formData = new FormData(this);
+                try {
+                    const res = await fetch("{{ route('atlet.store') }}", {
+                        method:'POST',
+                        headers:{
+                            'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                        },
+                        body:formData
+                    });
+                    if(!res.ok) throw new Error('Terjadi kesalahan pada server');
+
+                    const result = await res.json();
+
+                    hideSpinner();
+                    if(!result.status) throw new Error(result.message || 'Gagal menyimpan data');
+
+                    Toast.fire({
+                        icon:'success',
+                        title:result.message || 'Sukses menyimpan data'
+                    });
+                    $('#modalAthlete').modal('hide');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2500);
+                } catch (error) {
+                    hideSpinner();
+                    Toast.fire({
+                        icon:'error',
+                        title:error.message ||'Gagal menyimpan data'
+                    });
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2500);
+                }
+            });
+        }
     </script>
 @endpush

@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\CompetitionStatus;
+use App\Enums\Gender;
 use App\Models\Athlete;
 use App\Models\Club;
-use App\Models\Competition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -31,14 +30,16 @@ class MyTeamController extends Controller
         $query = Athlete::query()
         ->where('club_id', $club->id)
         ->with('club')
+        ->where('status', 'active')
         ->when($q, function($qq) use ($q){
             $qq->where(function($subQ) use ($q){
                 $subQ->where('name', 'LIKE', '%'.$q.'%')
                     ->orWhere('code', 'LIKE', '%'.$q.'%')
-                    ->orWhere('club_name', 'LIKE', '%'.$q.'%')
-                    ->orWhere('city_name', 'LIKE', '%'.$q.'%')
-                    ->orWhere('school_name', 'LIKE', '%'.$q.'%')
-                    ->orWhere('province_name', 'LIKE', '%'.$q.'%');
+                    ->orWhere('registration_number', 'LIKE', '%'.$q.'%')
+                    ->orWhereHas('club', function($clubQ) use ($q){
+                        $clubQ->where('club_name', 'LIKE', '%'.$q.'%')
+                            ->orWhere('club_code', 'LIKE', '%'.$q.'%');
+                    });
             });
         })
         ->when($gender, function($qq) use ($gender){
@@ -52,6 +53,7 @@ class MyTeamController extends Controller
         }
 
         $accessType = 'Manajer Tim';
-        return view('pages.guest.atlet.index',compact('athletes', 'accessType'));
+        $genders = Gender::cases();
+        return view('pages.guest.atlet.index',compact('athletes', 'accessType', 'club', 'genders'));
     }
 }

@@ -19,11 +19,11 @@ class DatabaseSeeder extends Seeder
         DB::table('users')->truncate();
         User::factory(100)->create();
 
-        // DB::table('clubs')->truncate();
-        // Club::factory(50)->create();
+        DB::table('clubs')->truncate();
+        Club::factory(50)->create();
 
-        // DB::table('athletes')->truncate();
-        // Athlete::factory(500)->create();
+        DB::table('athletes')->truncate();
+        Athlete::factory(500)->create();
 
         $this->call([
             UserRolePermissionSeeder::class,
