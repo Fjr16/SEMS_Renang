@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Athlete;
 use App\Models\Club;
 use App\Models\Official;
+use App\Models\Organization;
+use App\Models\Venue;
 use Illuminate\Http\Request;
 
 class OtherController extends Controller
@@ -85,5 +87,45 @@ class OtherController extends Controller
                 'message' => substr($th->getMessage(), 0,100) || 'Data tidak ditemukan'
             ]);
         }
+    }
+    public function getOrganization(Request $r){
+        $keyword = $r->input('q', '');
+        $page = $r->input('page', 1);
+        $perPage = 10;
+
+        $query = Organization::query()
+                ->when($keyword != '', function($q) use ($keyword){
+                    $q->where('name', 'like', "%{$keyword}%");
+                })
+                ->orderBy('name', 'asc');
+        $paginated = $query->simplePaginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'data' => $paginated->items(),
+            'pagination' => [
+                'more' => $paginated->hasMorePages(),
+            ],
+        ]);
+    }
+    public function getVenue(Request $r){
+        $keyword = $r->input('q', '');
+        $page = $r->input('page', 1);
+        $perPage = 10;
+
+        $query = Venue::query()
+                ->where('is_active', true)
+                ->when($keyword != '', function($q) use ($keyword){
+                    $q->where('code', 'like', "%{$keyword}%")
+                    ->orWhere('name', 'like', "%{$keyword}%");
+                })
+                ->orderBy('name', 'asc');
+        $paginated = $query->simplePaginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'data' => $paginated->items(),
+            'pagination' => [
+                'more' => $paginated->hasMorePages(),
+            ],
+        ]);
     }
 }

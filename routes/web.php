@@ -162,6 +162,8 @@ Route::get('/events/entries', function(){
 Route::get('/select2/getClubByCategory', [OtherController::class, 'getClubByCategory'])->name('getClubByCategory');
 Route::get('/findAtletById/{id}', [OtherController::class, 'findAtletById'])->name('findAtletById');
 Route::get('/findOfficialById/{id}', [OtherController::class, 'findOfficialById'])->name('findOfficialById');
+Route::get('/select2/getOrganization', [OtherController::class, 'getOrganization'])->name('getOrganization');
+Route::get('/select2/getVenue', [OtherController::class, 'getVenue'])->name('getVenue');
 
 
 require __DIR__ . '/auth.php';

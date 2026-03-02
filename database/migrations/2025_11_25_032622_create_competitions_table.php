@@ -13,14 +13,18 @@ return new class extends Migration
     {
         Schema::create('competitions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->nullable(false);
+            $table->foreignId('venue_id')->nullable(false);
             $table->string('name')->nullable(false);
-            $table->string('organizer')->nullable(false);
+            $table->string('code', 50)->nullable(false);
+            $table->string('description')->nullable(true);
             $table->date('start_date')->nullable(false);
             $table->date('end_date')->nullable(false);
-            $table->string('location')->nullable(false);
             $table->date('registration_start')->nullable(false);
             $table->date('registration_end')->nullable(false);
+            $table->string('sanction_number')->nullable(true);
             $table->string('status',50)->nullable(false);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

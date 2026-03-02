@@ -22,8 +22,10 @@
                         <th>Nama Kompetisi</th>
                         <th>Penyelenggara</th>
                         <th>Waktu Kompetisi</th>
-                        <th>Lokasi</th>
+                        <th>Venue</th>
                         <th>Waktu Pendaftaran</th>
+                        <th>No. Legalisasi</th>
+                        <th>Deskripsi</th>
                         <th>Status</th>
                         <th>Dibuat Pada</th>
                     </tr>
@@ -49,15 +51,27 @@
                                 <label class="form-label" for="name">Nama Kompetisi</label>
                                 <input type="text" class="form-control" id="name" name="name" placeholder="Nama Kompetisi">
                             </div>
-                            <div class="col-md-4">
+                            {{-- <div class="col-md-4">
                                 <label class="form-label" for="organizer">Penyelenggara</label>
                                 <input type="text" class="form-control" id="organizer" name="organizer" placeholder="Penyelenggara Kompetisi">
+                            </div> --}}
+                            <div class="col-md-4">
+                                <label class="form-label" for="organization_id">Penyelenggara</label>
+                                <select name="organization_id" class="form-control" id="organization_id" style="width: 100%"></select>
                             </div>
                         </div>
                     </div>
-                    <div class="mb-3">
+                    {{-- <div class="mb-3">
                         <label class="form-label" for="location">Lokasi Kompetisi (Venue)</label>
                         <input type="text" class="form-control" id="location" name="location" placeholder="Lokasi Pelaksanaan Kompetisi">
+                    </div> --}}
+                    <div class="mb-3">
+                        <label class="form-label" for="sanction_number">No. Legalisasi</label>
+                        <input type="text" class="form-control" name="sanction_number" id="sanction_number">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="venue_id">Lokasi Kompetisi (Venue)</label>
+                        <select name="venue_id" class="form-control" id="venue_id" style="width: 100%"></select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="">Tanggal Kompetisi</label>
@@ -89,6 +103,10 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="description">Deskripsi</label>
+                        <input type="text" class="form-control" name="description" id="description">
+                    </div>
                 </div>
                 <div class="modal-footer"><button type="submit" class="btn btn-primary">Simpan</button></div>
             </form>
@@ -102,6 +120,81 @@
     <script>
         var table;
 
+        $('#venue_id').select2({
+            width:'100%',
+            placeholder:'Cari Venue',
+            allowClear:true,
+            minimumInputLength:0,
+            dropdownParent: $('#modalCompetition'),
+            ajax:{
+                url:"{{ route('getVenue') }}",
+                dataType:'json',
+                delay:250,
+                data:function(params){
+                    return {
+                        q:params.term || '',
+                        page:params.page || 1
+                    };
+                },
+                processResults:function(res,params){
+                    params.page = params.page || 1;
+                    return {
+                        results:(res.data || []).map(row => ({
+                            id:row.id,
+                            text:`[${row.code ?? ''}] ${row.name ?? ''}`
+                        })),
+                        pagination:{
+                            more:res.pagination?.more || false
+                        }
+                    };
+                },
+                cache:true,
+            },
+             templateResult:function(item){
+                return item.text;
+            },
+            templateSelection:function(item){
+                return item.text || item.id;
+            }
+        });
+        $('#organization_id').select2({
+            width:'100%',
+            placeholder:'Cari Penyelenggara',
+            allowClear:true,
+            minimumInputLength:0,
+            dropdownParent:$('#modalCompetition'),
+            ajax:{
+                url:"{{ route('getOrganization') }}",
+                dataType:'json',
+                delay:250,
+                data:function(params){
+                    return {
+                        q:params.term || '',
+                        page:params.page || 1
+                    };
+                },
+                processResults:function(res,params){
+                    params.page = params.page || 1;
+                    return {
+                        results:(res.data || []).map(row => ({
+                            id:row.id,
+                            text:row.name
+                        })),
+                        pagination:{
+                            more:res.pagination?.more || false
+                        }
+                    };
+                },
+                cache:true,
+            },
+            templateResult:function(item){
+                return item.text;
+            },
+            templateSelection:function(item){
+                return item.text || item.id;
+            }
+        });
+
         $(document).ready(function(){
             table = $('#competitionTable').DataTable({
                 processing:true,
@@ -112,11 +205,15 @@
                 ],
                 columns:[
                     {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
-                    {data:'name', name:'name', className:'text-center', orderable:true, searchable:true},
-                    {data:'organizer', name:'organizer', className:'text-center', orderable:true, searchable:true},
-                    {data:'comp_date', name:'start_date', className:'text-center', orderable:true, searchable:true},
-                    {data:'location', name:'location', className:'text-center', orderable:true, searchable:true},
-                    {data:'registration_date', name:'registration_start', className:'text-center', orderable:true, searchable:true},
+                    // {data:'name', name:'name', className:'text-center', orderable:true, searchable:true},
+                    {data:'comp_desc', name:'comp_desc', orderable:true, searchable:true},
+                    {data:'organizer', name:'organizer', orderable:true, searchable:true},
+                    {data:'comp_date', name:'start_date', orderable:true, searchable:true},
+                    {data:'venue_desc', name:'venue_desc', orderable:true, searchable:true},
+                    // {data:'location', name:'location', className:'text-center', orderable:true, searchable:true},
+                    {data:'registration_date', name:'registration_start', orderable:true, searchable:true},
+                    {data:'sanction_number', name:'sanction_number', orderable:true, searchable:true},
+                    {data:'description', name:'description', orderable:true, searchable:true},
                     {data:'statusAttr', name:'status', className:'text-center', orderable:true, searchable:true},
                     {data:'created_at', name:'created_at', className:'text-center', orderable:true, searchable:true},
                 ],
@@ -180,13 +277,15 @@
 
             $('#competition_id').val(data.id);
             $('#name').val(data.name);
-            $('#organizer').val(data.organizer);
+            $('#organization_id').val(data.organization_id).trigger('change');
             $('#start_date').flatpickr().setDate(data.start_date);
             $('#end_date').flatpickr().setDate(data.end_date);
-            $('#location').val(data.location);
+            $('#venue_id').val(data.venue_id).trigger('change');
             $('#registration_start').flatpickr().setDate(data.registration_start);
             $('#registration_end').flatpickr().setDate(data.registration_end);
             $('#status').val(data.status);
+            $('#sanction_number').val(data.sanction_number);
+            $('#description').val(data.description);
             $('#modalCompetition').modal('show');
         }
 
