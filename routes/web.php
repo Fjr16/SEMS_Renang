@@ -132,6 +132,8 @@ Route::prefix('/competition/{competition}')->group(function(){
 Route::prefix('/guest')->group(function(){
     Route::get('/atlet', [AthleteController::class, 'indexGuest'])->name('guest.atlet.index');
     Route::get('/atlet/show', [AthleteController::class, 'showGuest'])->name('guest.atlet.show');
+    Route::get('/competition', [CompetitionEntryController::class, 'indexGuest'])->name('guest.competition.index');
+    // Route::get('/competition/show', [CompetitionEntryController::class, 'showGuest'])->name('guest.competition.show');
 });
 
 Route::get('/club', function(){

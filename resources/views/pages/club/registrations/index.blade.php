@@ -143,21 +143,41 @@
 <div class="page-hero p-3 p-md-4 mb-3">
   <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
     <div>
-      <div class="d-flex gap-2 flex-wrap mb-2">
-        <span class="chip"><i class="bi bi-person-badge me-1"></i>Team Manager</span>
-        <span class="chip"><i class="bi bi-clipboard-check me-1"></i>Pendaftaran Kompetisi</span>
-      </div>
-      <h1 class="h4 fw-bold mb-1">Registrasi Kompetisi</h1>
+        @if (Route::is('manager.club.registration'))
+        <div class="d-flex gap-2 flex-wrap mb-2">
+          <span class="chip"><i class="bi bi-person-badge me-1"></i>Team Manager</span>
+          <span class="chip"><i class="bi bi-clipboard-check me-1"></i>Pendaftaran Kompetisi</span>
+        </div>
+        @endif
+      <h1 class="h4 fw-bold mb-1">Daftar Kompetisi</h1>
+      @if (Route::is('manager.club.registration'))
       <div class="text-secondary">Daftarkan team, atlet, & official + pantau status pendaftaran.</div>
+      @endif
+      @if (Route::is('guest.competition.index'))
+      <div class="text-secondary">Tampilan publik untuk melihat kompetisi yang terdaftar</div>
+      @endif
     </div>
 
+    @if (Route::is('manager.club.registration'))
     <div class="d-flex gap-2 flex-wrap">
       <a href="{{ route('manager.club.dashboard') }}" class="btn btn-outline-secondary btn-pill">
         <i class="bi bi-arrow-left me-1"></i>Kembali
       </a>
     </div>
+    @endif
+    @if (Route::is('guest.competition.index'))
+    <div class="d-flex gap-2 flex-wrap">
+        <span class="chip">
+            <i class="bi bi-people me-1"></i>
+            {{ isset($data) ? (method_exists($data, 'total') ? $data->total() : $data->count()) : 0 }}
+            Kompetisi
+        </span>
+        <span class="chip"><i class="bi bi-shield-check me-1"></i>{{ $accessType ?? 'Guest' }}</span>
+    </div>
+    @endif
   </div>
 
+  @if (Route::is('manager.club.registration'))
   {{-- Summary status --}}
   <div class="row g-2 mt-3">
     <div class="col-6 col-md-3"><div class="mini-kv"><small>Draft</small>{{ $counts['draft'] ?? 0 }}</div></div>
@@ -179,6 +199,7 @@
       </button>
     </li>
   </ul>
+  @endif
 </div>
 
 <div class="tab-content">
@@ -196,7 +217,7 @@
                         name="q"
                         value="{{ request('q') }}"
                         class="form-control p-0"
-                        placeholder="Cari kompetisi (nama / penyelenggara / lokasi)…"
+                        placeholder="Cari kompetisi (nama kompetisi / penyelenggara / nama venue)…"
                     >
                     @if(request('q'))
                         <a href="{{ url()->current() }}" class="text-secondary text-decoration-none" title="Hapus kata kunci">
@@ -214,6 +235,7 @@
             <div class="col-12 col-lg-auto">
                 <div class="filter-group">
                     <select name="status" class="form-select select-pill" style="min-width: 210px;">
+                        <option value="">Semua</option>
                         @foreach ($compClass::cases() as $stts)
                             <option value="{{ $stts->value }}" @selected(request('status') === $stts->value)>{{ $stts->label() }}</option>
                         @endforeach
@@ -233,9 +255,30 @@
         </form>
     </div>
 
-    @include('pages.club.registrations.partials.cards')
+    <div class="row g-3" id="competitionGrid">
+        @include('pages.club.registrations.partials.cards')
+    </div>
+
+    {{-- Sentinel + loader --}}
+    <div class="py-4 text-center" id="loadMoreWrap">
+        <div class="d-none" id="loadMoreSpinner">
+            <div class="spinner-border" role="status"></div>
+            <div class="text-secondary small mt-2">Memuat data...</div>
+        </div>
+
+        {{-- sentinel: kalau terlihat -> load next page --}}
+        <div id="sentinel" style="height: 1px;"></div>
+    </div>
+    <div class="empty-state p-4 text-center d-none" id="empty_state">
+      <div class="mb-2">
+        <i class="bi bi-info-circle fs-2 text-secondary"></i>
+      </div>
+      <div class="fw-semibold">Tidak ada kompetisi yang cocok.</div>
+      <div class="text-secondary">Coba ubah kata kunci atau reset filter.</div>
+    </div>
   </div>
 
+  @if (Route::is('manager.club.registration'))
   {{-- =============== TAB HISTORY =============== --}}
   <div class="tab-pane fade" id="tabHistory">
     <div class="soft-card p-3 mb-3">
@@ -345,37 +388,108 @@
       @endif
     @endif
   </div>
+  @endif
 </div>
 
 @push('scripts')
 <script>
-(function(){
-  const statusSel = document.getElementById('historyStatus');
-  const searchInp = document.getElementById('historySearch');
-  const items = () => document.querySelectorAll('#historyGrid .history-item');
+    (function(){
+        const grid = document.getElementById('competitionGrid');
+        const sentinel = document.getElementById('sentinel');
+        const spinner = document.getElementById('loadMoreSpinner');
+        const emptyData = document.getElementById('empty_state');
 
-  function applyFilter(){
-    const st = (statusSel?.value || '').toLowerCase().trim();
-    const q  = (searchInp?.value || '').toLowerCase().trim();
+        let nextPageUrl = @json($data->nextPageUrl());
+        let countItems = @json($data->count());
+        let loading = false;
 
-    items().forEach(el=>{
-      const okStatus = !st || (el.dataset.status || '').toLowerCase() === st
-        || (st === 'pending' && ['pending','submitted'].includes((el.dataset.status || '').toLowerCase()));
+        // kalau memang tidak ada halaman berikutnya dari awal
+        if(countItems === 0){
+            emptyData.classList.remove('d-none');
+        }
 
-      const okText = !q || el.innerText.toLowerCase().includes(q);
+        async function loadNext(){
+            if (!nextPageUrl || loading) return;
+            loading = true;
+            spinner.classList.remove('d-none');
 
-      el.style.display = (okStatus && okText) ? '' : 'none';
-    });
-  }
+            try{
+                // penting: server detect ajax -> return partial cards
+                const res = await fetch(nextPageUrl, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
 
-  statusSel?.addEventListener('change', applyFilter);
-  searchInp?.addEventListener('input', applyFilter);
+                if(!res.ok) throw new Error('Gagal memuat data');
+                const html = await res.text();
 
-  // Fix DataTables/tab issue? (jaga-jaga kalau nanti tab ini ada table)
-  document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn=>{
-    btn.addEventListener('shown.bs.tab', ()=> window.dispatchEvent(new Event('resize')));
-  });
-})();
+                if (!html.trim()) { // jaga-jaga kalau server benar2 kosong
+                    nextPageUrl = null;
+                    observer.disconnect();
+                    return;
+                }
+
+                // append cards
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+
+                // ambil next url dari marker sebelum dipindah ke grid
+                const marker = tmp.querySelector('.js-next-page');
+                nextPageUrl = marker ? marker.dataset.next : null;
+                if (marker) marker.remove();
+
+                while(tmp.firstChild){
+                    grid.appendChild(tmp.firstChild);
+                }
+
+            // stop bila sudah melewati last page: cek kalau response kosong
+            if (!nextPageUrl) {
+                observer.disconnect();
+            }
+            }catch(err){
+                console.error(err);
+            }finally{
+                spinner.classList.add('d-none');
+                loading = false;
+            }
+        }
+
+        // Observer: saat sentinel terlihat -> load
+        const observer = new IntersectionObserver((entries) => {
+            if(entries[0].isIntersecting) loadNext();
+        }, { rootMargin: '400px' });
+
+        if (sentinel) observer.observe(sentinel);
+    })();
+
+    if("{{ Route::is('manager.club.registration') }}"){
+        (function(){
+        const statusSel = document.getElementById('historyStatus');
+        const searchInp = document.getElementById('historySearch');
+        const items = () => document.querySelectorAll('#historyGrid .history-item');
+
+        function applyFilter(){
+            const st = (statusSel?.value || '').toLowerCase().trim();
+            const q  = (searchInp?.value || '').toLowerCase().trim();
+
+            items().forEach(el=>{
+            const okStatus = !st || (el.dataset.status || '').toLowerCase() === st
+                || (st === 'pending' && ['pending','submitted'].includes((el.dataset.status || '').toLowerCase()));
+
+            const okText = !q || el.innerText.toLowerCase().includes(q);
+
+            el.style.display = (okStatus && okText) ? '' : 'none';
+            });
+        }
+
+        statusSel?.addEventListener('change', applyFilter);
+        searchInp?.addEventListener('input', applyFilter);
+
+        // Fix DataTables/tab issue? (jaga-jaga kalau nanti tab ini ada table)
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn=>{
+            btn.addEventListener('shown.bs.tab', ()=> window.dispatchEvent(new Event('resize')));
+        });
+        })();
+    }
 </script>
 @endpush
 

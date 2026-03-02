@@ -68,7 +68,7 @@
                 <ul class="navbar-nav mx-lg-auto order-2 order-lg-1 my-3 my-lg-0 gap-lg-2">
                     <li class="nav-item"><a class="nav-link {{ Route::is('guest.atlet*') ? 'active fw-semibold' : '' }} " href="{{ route('guest.atlet.index') }}">Atlet</a></li>
                     {{-- <li class="nav-item"><a class="nav-link {{ Route::is('club*') ? 'active fw-semibold' : '' }}" href="{{ route('club.index') }}">Klub</a></li> --}}
-                    <li class="nav-item"><a class="nav-link {{ Route::is('competition*') ? 'active fw-semibold' : '' }}" href="{{ route('competition.index') }}">Kompetisi</a></li>
+                    <li class="nav-item"><a class="nav-link {{ Route::is('guest.competition*') ? 'active fw-semibold' : '' }}" href="{{ route('guest.competition.index') }}">Kompetisi</a></li>
                     <li class="nav-item"><a class="nav-link {{ Route::is('manager.club*') ? 'active fw-semibold' : '' }} " href="{{ route('manager.club.dashboard') }}">Team Saya</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->is('master*') ? 'active fw-semibold' : '' }}" href="{{ route('master.setting.index') }}">Master Setting</a></li>
 

@@ -68,9 +68,9 @@ class CompetitionController extends Controller
             return $row->organization?->name;
         })
         ->addColumn('venue_desc', function($row){
-            return $row->venue?->name . '</br>' .
-                    $row->venue->address . '</br>' .
-                    $row->venue?->city . '</br>' .
+            return $row->venue?->name . ' - ' .
+                    $row->venue->address . '</br>,' .
+                    $row->venue?->city . '</br>,' .
                     $row->venue?->province;
         })
         ->editColumn('created_at', function($row){
@@ -86,13 +86,11 @@ class CompetitionController extends Controller
     public function store(Request $r){
         $validators = Validator::make($r->all(), [
             'name' => 'required|string|max:255',
-            // 'organizer' => 'required|string|max:255',
             'organization_id' => 'required|exists:organizations,id',
             'venue_id' => 'required|exists:venues,id',
             'description' => 'nullable|string|max:255',
             'start_date' => 'required|date|before_or_equal:end_date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            // 'location' => 'required|string|max:255',
             'registration_start' => 'required|date|before_or_equal:registration_end',
             'registration_end' => 'required|date|after_or_equal:registration_start',
             'sanction_number' => 'nullable',
@@ -114,14 +112,12 @@ class CompetitionController extends Controller
 
         $item = $r->input('competition_id') ? Competition::find($r->input('competition_id')) : new Competition;
         $item->name = $r->name;
-        // $item->organizer = $r->organizer;
         $item->organization_id = $r->organization_id;
         $item->venue_id = $r->venue_id;
-        $item->code = $r->code;
+        // $item->code = $r->code;
         $item->description = $r->description;
         $item->start_date = $r->start_date;
         $item->end_date = $r->end_date;
-        // $item->location = $r->location;
         $item->registration_start = $r->registration_start;
         $item->registration_end = $r->registration_end;
         $item->sanction_number = $r->sanction_number;

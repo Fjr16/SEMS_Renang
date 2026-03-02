@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Competition extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes,HasFactory;
 
     protected $fillable = [
         'organization_id',

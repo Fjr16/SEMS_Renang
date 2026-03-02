@@ -51,20 +51,12 @@
                                 <label class="form-label" for="name">Nama Kompetisi</label>
                                 <input type="text" class="form-control" id="name" name="name" placeholder="Nama Kompetisi">
                             </div>
-                            {{-- <div class="col-md-4">
-                                <label class="form-label" for="organizer">Penyelenggara</label>
-                                <input type="text" class="form-control" id="organizer" name="organizer" placeholder="Penyelenggara Kompetisi">
-                            </div> --}}
                             <div class="col-md-4">
                                 <label class="form-label" for="organization_id">Penyelenggara</label>
                                 <select name="organization_id" class="form-control" id="organization_id" style="width: 100%"></select>
                             </div>
                         </div>
                     </div>
-                    {{-- <div class="mb-3">
-                        <label class="form-label" for="location">Lokasi Kompetisi (Venue)</label>
-                        <input type="text" class="form-control" id="location" name="location" placeholder="Lokasi Pelaksanaan Kompetisi">
-                    </div> --}}
                     <div class="mb-3">
                         <label class="form-label" for="sanction_number">No. Legalisasi</label>
                         <input type="text" class="form-control" name="sanction_number" id="sanction_number">
@@ -205,12 +197,10 @@
                 ],
                 columns:[
                     {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
-                    // {data:'name', name:'name', className:'text-center', orderable:true, searchable:true},
-                    {data:'comp_desc', name:'comp_desc', orderable:true, searchable:true},
-                    {data:'organizer', name:'organizer', orderable:true, searchable:true},
+                    {data:'comp_desc', name:'name', orderable:true, searchable:true},
+                    {data:'organizer', name:'organization.name', orderable:true, searchable:true},
                     {data:'comp_date', name:'start_date', orderable:true, searchable:true},
-                    {data:'venue_desc', name:'venue_desc', orderable:true, searchable:true},
-                    // {data:'location', name:'location', className:'text-center', orderable:true, searchable:true},
+                    {data:'venue_desc', name:'venue.name', orderable:true, searchable:true},
                     {data:'registration_date', name:'registration_start', orderable:true, searchable:true},
                     {data:'sanction_number', name:'sanction_number', orderable:true, searchable:true},
                     {data:'description', name:'description', orderable:true, searchable:true},

@@ -10,23 +10,24 @@ use Illuminate\Support\Facades\Validator;
 
 class CompetitionEntryController extends Controller
 {
-    public $club;
-    public function __construct()
-    {
-        $this->club = Auth::user()->club;
-    }
-
     public function index(){
         $q = request('q');
         $stts = request('status', null);
 
         $query = Competition::query()
-        ->where('status', $stts ?? CompetitionStatus::register->value)
+        ->with(['venue', 'organization'])
+        ->when($stts, function($q) use ($stts){
+            $q->where('status', $stts);
+        })
         ->when($q, function($qq) use ($q){
             $qq->where(function($subQ) use ($q){
                 $subQ->where('name', 'LIKE', '%'.$q.'%')
-                    ->orWhere('organizer', 'LIKE', '%'.$q.'%')
-                    ->orWhere('location', 'LIKE', '%'.$q.'%');
+                    ->orWhereHas('organization', function($organization) use ($q){
+                        $organization->where('name', 'LIKE', '%'.$q.'%');
+                    })
+                    ->orWhereHas('venue', function($venue) use ($q){
+                        $venue->where('name', 'like', "%{$q}%");
+                    });
             });
         })
         ->orderBy('created_at', 'desc');
@@ -53,6 +54,39 @@ class CompetitionEntryController extends Controller
             'athletes' => $athletes,
             'officials' => $officials,
         ]);
+    }
+
+    public function indexGuest(){
+        $q = request('q');
+        $stts = request('status', null);
+
+        $query = Competition::query()
+        ->with(['venue', 'organization'])
+        ->when($stts, function($q) use ($stts){
+            $q->where('status', $stts);
+        })
+        ->when($q, function($qq) use ($q){
+            $qq->where(function($subQ) use ($q){
+                $subQ->where('name', 'LIKE', '%'.$q.'%')
+                    ->orWhereHas('organization', function($organization) use ($q){
+                        $organization->where('name', 'LIKE', '%'.$q.'%');
+                    })
+                    ->orWhereHas('venue', function($venue) use ($q){
+                        $venue->where('name', 'like', "%{$q}%");
+                    });
+            });
+        })
+        ->orderBy('created_at', 'desc');
+        $data = $query->paginate(21)->withQueryString();
+
+        $compClass = CompetitionStatus::class;
+
+        if(request()->ajax()){
+            return view('pages.club.registrations.partials.cards', compact('data', 'compClass'))->render();
+        }
+
+        $accessType = 'Guest';
+        return view('pages.club.registrations.index',compact('data', 'compClass', 'data'));
     }
 
     // public function store(Request $r){

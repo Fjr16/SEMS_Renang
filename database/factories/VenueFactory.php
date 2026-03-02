@@ -17,7 +17,7 @@ class VenueFactory extends Factory
     public function definition(): array
     {
         return [
-            'code' => $this->faker->companySuffix(),
+            'code' => $this->faker->unique()->bothify('??##'),
             'name' => $this->faker->company(),
             'address' => $this->faker->address(),
             'city' => $this->faker->city(),
