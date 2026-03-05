@@ -6,6 +6,7 @@ use App\Models\Athlete;
 use App\Models\Club;
 use App\Models\Competition;
 use App\Models\Organization;
+use App\Models\Pool;
 use App\Models\User;
 use App\Models\Venue;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -37,6 +38,9 @@ class DatabaseSeeder extends Seeder
 
         // DB::table('venues')->truncate();
         Venue::factory(100)->create();
+
+        DB::table('pools')->truncate();
+        Pool::factory(50)->create();
 
         DB::table('competitions')->truncate();
         Competition::factory(200)->create();
