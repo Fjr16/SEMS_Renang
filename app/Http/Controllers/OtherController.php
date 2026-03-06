@@ -6,6 +6,7 @@ use App\Models\Athlete;
 use App\Models\Club;
 use App\Models\Official;
 use App\Models\Organization;
+use App\Models\Pool;
 use App\Models\Venue;
 use Illuminate\Http\Request;
 
@@ -128,4 +129,28 @@ class OtherController extends Controller
             ],
         ]);
     }
+
+    // public function getPoolByVenue(Request $r){
+    //     $keyword = $r->input('q', '');
+    //     $page = $r->input('page', 1);
+    //     $perPage = 10;
+    //     $venue_id = $r->input('venue_id');
+
+    //     $query = Pool::query()
+    //             ->where('venue_id', $venue_id)
+    //             ->where('status', 'active')
+    //             ->when($keyword != '', function($q) use ($keyword){
+    //                 $q->where('code', 'like', "%{$keyword}%")
+    //                 ->orWhere('name', 'like', "%{$keyword}%");
+    //             })
+    //             ->orderBy('name', 'asc');
+    //     $paginated = $query->simplePaginate($perPage, ['*'], 'page', $page);
+
+    //     return response()->json([
+    //         'data' => $paginated->items(),
+    //         'pagination' => [
+    //             'more' => $paginated->hasMorePages(),
+    //         ],
+    //     ]);
+    // }
 }

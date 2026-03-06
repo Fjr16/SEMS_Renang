@@ -8,12 +8,15 @@ class CompetitionSession extends Model
 {
     protected $fillable = [
         'competition_id',
+        'pool_id',
         'name',
-        'date',
-        'start_time',
-        'end_time',
+        'session_order',
+        'session_date',
     ];
 
+    public function pool(){
+        return $this->belongsTo(Pool::class);
+    }
     public function competition(){
         return $this->belongsTo(Competition::class);
     }

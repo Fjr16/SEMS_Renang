@@ -5,7 +5,7 @@
     <p class="text-muted mb-0">Kelola sesi yang ada dalam kompetisi ini</p>
   </div>
   <div class="mt-3 mt-md-0">
-    <button data-bs-toggle="modal" data-bs-target="#modalSessions" onclick="document.getElementById('sessionForm').reset()" class="btn btn-primary">
+    <button data-bs-toggle="modal" data-bs-target="#modalSessions" onclick="resetSessionForm()" class="btn btn-primary">
       <i class="bi bi-plus-circle me-1"></i> Tambah Sesi
     </button>
   </div>
@@ -20,8 +20,8 @@
             <th>Aksi</th>
             <th>Nama Sesi</th>
             <th>Tanggal Sesi</th>
-            <th>Jam Mulai</th>
-            <th>Jam Selesai</th>
+            <th>Kolam</th>
+            <th>Urutan</th>
           </tr>
         </thead>
       </table>
@@ -44,23 +44,31 @@
             <input type="text" class="form-control" id="competition_name" value="{{ $competition->name ?? '' }}" disabled>
             <input type="hidden" value="{{ $competition->id ?? '' }}" name="competition_id" id="competition_id">
           </div>
+          <div class="row mb-3">
+            <div class="col-6">
+                <label>Lokasi / Tempat</label>
+                <input type="text" class="form-control" id="venue_name" value="{{ $competition->venue->name ?? '' }}" disabled>
+            </div>
+            <div class="col-6">
+              <label>Kolam</label>
+              <select class="form-select form-select-md" name="pool_id" id="pool_id" required>
+                @foreach ($pools as $pool)
+                    <option value="{{ $pool->id }}">{{ '[' . ($pool->code ?? '-') . '] ' . ($pool->name ?? '-') }}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
           <div class="mb-3">
             <label>Nama Sesi</label>
             <input type="text" class="form-control" name="name" id="name" required>
           </div>
           <div class="mb-3">
             <label>Tanggal Sesi</label>
-            <input type="text" class="form-control mark-date" placeholder="Pilih Tanggal" name="date" id="date" required>
+            <input type="text" class="form-control mark-date" placeholder="Pilih Tanggal" name="session_date" id="session_date" required>
           </div>
-          <div class="row mb-3">
-            <div class="col-6">
-              <label>Jam Mulai</label>
-              <input class="form-control waktu-picker" placeholder="Pilih Jam" name="start_time" id="start_time" required>
-            </div>
-            <div class="col-6">
-              <label>Jam Selesai</label>
-              <input class="form-control waktu-picker" placeholder="Pilih Jam" name="end_time" id="end_time" required>
-            </div>
+          <div class="mb-3">
+            <label>Urutan</label>
+            <input type="number" min="1" class="form-control" name="session_order" id="session_order" required>
           </div>
         </div>
         <div class="modal-footer">
@@ -85,11 +93,18 @@
 
             $('#competition_session_id').val(data.id);
             $('#name').val(data.name);
-            $('#date').flatpickr().setDate(data.date);
-            $('#start_time')[0]._flatpickr.setDate(data.start_time, true, 'H:i');
-            $('#end_time')[0]._flatpickr.setDate(data.end_time, true, 'H:i');
+            $('#session_date').flatpickr().setDate(data.session_date);
+            $('#pool_id').val(data.pool_id);
+            $('#session_order').val(data.session_order);
 
             $(modalId).modal('show');
+        }
+
+        function resetSessionForm(){
+            let form = document.getElementById('sessionForm');
+            form.reset();
+
+            document.getElementById('competition_session_id').value = '';
         }
     </script>
 @endpush

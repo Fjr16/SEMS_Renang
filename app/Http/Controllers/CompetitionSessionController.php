@@ -16,7 +16,7 @@ class CompetitionSessionController extends Controller
         Carbon::setLocale('id');
         $data = CompetitionSession::query()
         ->where('competition_id', $competition->id)
-        ->orderBy('created_at', 'asc');
+        ->orderBy('session_order', 'asc');
 
         return DataTables::of($data)
         ->addColumn('action', function($row) use ($competition){
@@ -31,11 +31,14 @@ class CompetitionSessionController extends Controller
                         .'
                     </div>';
         })
-        ->addColumn('session_date',function($row){
-            if(!$row->date){
+        ->editColumn('session_date',function($row){
+            if(!$row->session_date){
                 return '-';
             }
-            return Carbon::parse($row->date)->translatedFormat('d F Y');
+            return Carbon::parse($row->session_date)->translatedFormat('d F Y');
+        })
+        ->addColumn('desc_pool', function($row){
+            return '[' . $row->pool->code . '] ' . $row->pool->name;
         })
         ->rawColumns(['action'])
         ->make(true);
@@ -43,10 +46,10 @@ class CompetitionSessionController extends Controller
     public function store(Request $r){
         $validators = Validator::make($r->all(), [
             'competition_id' => 'required|integer|exists:competitions,id',
+            'pool_id' => 'required|integer|exists:pools,id',
             'name' => 'required|string|max:255',
-            'date' => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i',
+            'session_date' => 'required|date',
+            'session_order' => 'required|integer',
             'competition_session_id' => 'nullable|integer|exists:competition_sessions,id',
         ]);
 
@@ -59,10 +62,10 @@ class CompetitionSessionController extends Controller
 
         $item = $r->input('competition_session_id') ? CompetitionSession::find($r->input('competition_session_id')) : new CompetitionSession();
         $item->competition_id = $r->competition_id;
+        $item->pool_id = $r->pool_id;
         $item->name = $r->name;
-        $item->date = $r->date;
-        $item->start_time = $r->start_time;
-        $item->end_time = $r->end_time;
+        $item->session_date = $r->session_date;
+        $item->session_order = $r->session_order;
 
         try {
             DB::beginTransaction();

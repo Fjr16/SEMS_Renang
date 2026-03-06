@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('competition_sessions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('competition_id')->nullable(false);
+            $table->foreignId('pool_id')->nullable(false);
             $table->string('name')->nullable(false);
-            $table->date('date')->nullable(false);
-            $table->time('start_time')->nullable(false);
-            $table->time('end_time')->nullable(false);
+            $table->integer('session_order')->nullable(false);
+            $table->date('session_date')->nullable(false);
             $table->timestamps();
         });
     }

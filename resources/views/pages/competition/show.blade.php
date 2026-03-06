@@ -191,9 +191,11 @@
           columns:[
             {data:"action", name:"action", className:"text-center dt-actions", searchable:false, orderable:false},
             {data:"name", name:"name", className:"text-center", searchable:true, orderable:true},
-            {data:"session_date", name:"date", className:"text-center", searchable:true, orderable:true},
-            {data:"start_time", name:"start_time", className:"text-center", searchable:true, orderable:true},
-            {data:"end_time", name:"end_time", className:"text-center", searchable:true, orderable:true},
+            {data:"session_date", name:"session_date", className:"text-center", searchable:true, orderable:true},
+            {data:"desc_pool", name:"desc_pool", className:"text-center", searchable:true, orderable:true},
+            {data:"session_order", name:"session_order", className:"text-center", searchable:true, orderable:true},
+            // {data:"start_time", name:"start_time", className:"text-center", searchable:true, orderable:true},
+            // {data:"end_time", name:"end_time", className:"text-center", searchable:true, orderable:true},
           ],
           order:[[3,'asc']]
         });
