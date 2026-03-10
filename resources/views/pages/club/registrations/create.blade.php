@@ -134,7 +134,7 @@
     <div>
       <div class="d-flex gap-2 flex-wrap mb-2">
         <span class="chip"><i class="bi bi-person-badge me-1"></i>Club Manager</span>
-        <span class="chip"><i class="bi bi-clipboard-check me-1"></i>Registrasi</span>
+        <span class="chip"><i class="bi bi-clipboard-check me-1"></i>{{ App\Enums\CompetitionStatus::from($comp->status)->label() }}</span>
       </div>
       <h1 class="h4 fw-bold mb-1">Registrasi: {{ $comp->name ?? 'Kompetisi' }}</h1>
       <div class="text-secondary small">
@@ -176,7 +176,6 @@
     })->values();
 
     $evJS = ($events ?? collect())->map(function($ev){
-    //   $label = ($ev->event_number ?? '') . ' - ' . ($ev->name ?? 'Event');
       $label = $ev->event_number ?? '';
       $meta  = (($ev->gender ?? '-') . ' • ' . ($ev->ageGroup->label ?? '-') . ' • ' . (($ev->distance ?? '') . ($ev->stroke ?? '')));
       return [
@@ -198,79 +197,81 @@
               <div class="fw-bold">Pilih Event & Assign Peserta</div>
               <div class="small muted">Setiap event punya daftar atlet & official sendiri.</div>
             </div>
-            {{-- <a href="#" class="btn btn-sm btn-soft">
-              <i class="bi bi-info-circle me-1"></i>Petunjuk
-            </a> --}}
           </div>
           <div class="panel-b">
             <div class="input-group mb-3">
               <span class="input-group-text bg-white pill" style="border-right:0;">
                 <i class="bi bi-search"></i>
               </span>
-              <input id="eventSearch" type="text" class="form-control pill" placeholder="Cari event…"
-                     style="border-left:0;">
+              <input id="eventSearch" type="text" class="form-control pill" placeholder="Cari event…" style="border-left:0;">
+            </div>
+            <div class="small muted mb-2">
+              Alur: centang event → klik <b>Assign</b> → pilih atlet & official untuk event.
             </div>
 
             <div class="list-scroll" id="eventCards">
               {{-- Render event cards --}}
-              @foreach($events as $ev)
-                @php
-                  $label = 'Event ' . ($ev->event_number ?? '');
-                  $meta  = (($ev->distance ?? '-') . ' M ' . ($ev->stroke ?? '-') . ' • ' . (($ev->event_type ?? '-')));
-                @endphp
+                @forelse($events as $ev)
+                    @php
+                    $label = 'Event ' . ($ev->event_number ?? '');
+                    $meta  = (($ev->distance ?? '-') . ' M ' . ($ev->stroke ?? '-') . ' • ' . (($ev->event_type ?? '-')));
+                    @endphp
 
-                <div class="ev-card mb-2" data-evcard data-evtext="{{ strtolower($label.' '.$meta) }}">
-                  <div class="d-flex gap-3 align-items-start">
-                    <div class="form-check form-switch mt-1">
-                      <input class="form-check-input ev-toggle" type="checkbox" id="ev_on_{{ $ev->id }}" data-evid="{{ $ev->id }}">
-                      <label class="form-check-label small fw-semibold" for="ev_on_{{ $ev->id }}">Ikut</label>
+                    <div class="ev-card mb-2" data-evcard data-evtext="{{ strtolower($label.' '.$meta) }}">
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="form-check form-switch mt-1">
+                        <input class="form-check-input ev-toggle" type="checkbox" id="ev_on_{{ $ev->id }}" data-evid="{{ $ev->id }}">
+                        <label class="form-check-label small fw-semibold" for="ev_on_{{ $ev->id }}">Ikut</label>
+                        </div>
+
+                        <div style="min-width:0;">
+                        <div class="ev-title text-truncate">{{ $label }}</div>
+                        <div class="ev-meta text-truncate">{{ $meta }}</div>
+
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <span class="tiny-chip">
+                            Atlet: <b id="cntAth_{{ $ev->id }}">0</b>
+                            </span>
+                            <span class="tiny-chip">
+                            Official: <b id="cntOfc_{{ $ev->id }}">0</b>
+                            </span>
+                            <span class="badge-dot" id="status_{{ $ev->id }}">
+                            <span class="dot warn"></span><span class="small">Belum di-assign</span>
+                            </span>
+                        </div>
+
+                        {{-- container hidden inputs untuk event ini --}}
+                        <div class="d-none" id="hidden_{{ $ev->id }}"></div>
+                        </div>
                     </div>
 
-                    <div style="min-width:0;">
-                      <div class="ev-title text-truncate">{{ $label }}</div>
-                      <div class="ev-meta text-truncate">{{ $meta }}</div>
+                    <div class="d-flex flex-column align-items-end gap-2">
+                        {{-- <span class="tiny-chip">#{{ $ev->id }}</span> --}}
 
-                      <div class="d-flex flex-wrap gap-2 mt-2">
-                        <span class="tiny-chip">
-                          Atlet: <b id="cntAth_{{ $ev->id }}">0</b>
-                        </span>
-                        <span class="tiny-chip">
-                          Official: <b id="cntOfc_{{ $ev->id }}">0</b>
-                        </span>
-                        <span class="badge-dot" id="status_{{ $ev->id }}">
-                          <span class="dot warn"></span><span class="small">Belum di-assign</span>
-                        </span>
-                      </div>
+                        <button type="button"
+                                class="btn btn-sm btn-primary btn-pill btn-assign"
+                                data-evid="{{ $ev->id }}"
+                                disabled>
+                        <i class="bi bi-person-plus me-1"></i>Assign
+                        </button>
 
-                      {{-- container hidden inputs untuk event ini --}}
-                      <div class="d-none" id="hidden_{{ $ev->id }}"></div>
+                        <button type="button"
+                                class="btn btn-sm btn-soft btn-pill btn-clear"
+                                data-evid="{{ $ev->id }}"
+                                disabled>
+                        <i class="bi bi-x-circle me-1"></i>Clear
+                        </button>
                     </div>
-                  </div>
-
-                  <div class="d-flex flex-column align-items-end gap-2">
-                    {{-- <span class="tiny-chip">#{{ $ev->id }}</span> --}}
-
-                    <button type="button"
-                            class="btn btn-sm btn-primary btn-pill btn-assign"
-                            data-evid="{{ $ev->id }}"
-                            disabled>
-                      <i class="bi bi-person-plus me-1"></i>Assign
-                    </button>
-
-                    <button type="button"
-                            class="btn btn-sm btn-soft btn-pill btn-clear"
-                            data-evid="{{ $ev->id }}"
-                            disabled>
-                      <i class="bi bi-x-circle me-1"></i>Clear
-                    </button>
-                  </div>
+                    </div>
+                @empty
+                <div class="soft-card p-4 text-center">
+                    <div class="mb-2"><i class="bi bi-clock-history fs-2 text-secondary"></i></div>
+                    <div class="fw-semibold">Tidak Ada Event</div>
+                    <div class="text-secondary">Menunggu penyelenggara atau admin menginputkan data event</div>
                 </div>
-              @endforeach
+                @endforelse
             </div>
 
-            <div class="small muted mt-2">
-              Alur: centang event → klik <b>Assign</b> → pilih atlet & official untuk event itu.
-            </div>
           </div>
         </div>
 

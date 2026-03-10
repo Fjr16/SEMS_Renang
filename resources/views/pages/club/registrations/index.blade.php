@@ -281,7 +281,7 @@
   @if (Route::is('manager.club.registration'))
   {{-- =============== TAB HISTORY =============== --}}
   <div class="tab-pane fade" id="tabHistory">
-    <div class="soft-card p-3 mb-3">
+    {{-- <div class="soft-card p-3 mb-3">
       <div class="d-flex flex-column flex-lg-row gap-2 align-items-lg-center justify-content-between">
         <div class="fw-bold">Riwayat Pendaftaran</div>
 
@@ -302,6 +302,55 @@
           </div>
         </div>
       </div>
+    </div> --}}
+    <div class="soft-card filter-card p-3 mb-3">
+        <form method="GET" class="row g-2">
+            {{-- Search --}}
+            <div class="col-12 col-lg">
+                <div class="searchbar px-3 py-2">
+                    <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-search text-secondary"></i>
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ request('q') }}"
+                        class="form-control p-0"
+                        placeholder="Cari kompetisi (nama kompetisi / penyelenggara / nama venue)…"
+                    >
+                    @if(request('q'))
+                        <a href="{{ url()->current() }}" class="text-secondary text-decoration-none" title="Hapus kata kunci">
+                        <i class="bi bi-x-circle"></i>
+                        </a>
+                    @endif
+                    </div>
+                </div>
+                <div class="hint mt-2">
+                    Tip: coba kata kunci seperti <span class="badge text-bg-light border">Padang</span> atau nama penyelenggara.
+                </div>
+            </div>
+
+            {{-- Filters + Buttons --}}
+            <div class="col-12 col-lg-auto">
+                <div class="filter-group">
+                    <select name="historyStatus" id="historyStatus" class="form-select select-pill" style="min-width: 210px;">
+                        <option value="">Semua</option>
+                        @foreach ($compClass::cases() as $stts)
+                            <option value="{{ $stts->value }}" @selected(request('historyStatus') === $stts->value)>{{ $stts->label() }}</option>
+                        @endforeach
+                    </select>
+
+                    <button class="btn btn-primary btn-pill" type="submit">
+                    <i class="bi bi-funnel"></i> Filter
+                    </button>
+
+                    <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-ghost" type="button">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                        <span class="d-none d-md-inline">Reset</span>
+                        <span class="d-inline d-md-none">Reset</span>
+                    </a>
+                </div>
+            </div>
+        </form>
     </div>
 
     @if($entries->count() === 0)

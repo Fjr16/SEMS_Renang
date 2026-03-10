@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\CompetitionStatus;
 use App\Models\Competition;
+use App\Models\CompetitionTeam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -39,7 +40,13 @@ class CompetitionEntryController extends Controller
             return view('pages.club.registrations.partials.cards', compact('data', 'compClass'))->render();
         }
 
-        return view('pages.club.registrations.index',compact('data', 'compClass'));
+        $team_id = auth()->user->club_id ?? null;
+        $compRegistrations = CompetitionTeam::query()
+        ->where('team_id', $team_id)
+        ->orderBy('created_at','desc');
+        $entries = $compRegistrations->paginate(21)->withQueryString();
+
+        return view('pages.club.registrations.index',compact('data', 'compClass', 'entries'));
     }
 
     public function create(Competition $competition){
@@ -89,14 +96,16 @@ class CompetitionEntryController extends Controller
         return view('pages.club.registrations.index',compact('data', 'compClass', 'data'));
     }
 
-    // public function store(Request $r){
-    //     $validators = Validator::make($r->all(), [
-    //         'atlet_ids' => 'required|array',
-    //         'atlet_ids.*' => 'required|exists:athletes,id',
-    //         'event_ids' => 'required|array',
-    //         'event_ids.*' => 'required|exists:competition_events,id',
-
-
-    //     ]);
-    // }
+    public function store(Request $r){
+        $validators = Validator::make($r->all(), [
+            'event_ids' => 'required|array',
+            'event_ids.*' => 'required|exists:competition_events,id',
+            'atlet_ids' => 'required|array',
+            'atlet_ids.*' => 'required|exists:athletes,id',
+            'official_ids' => 'required|array',
+            'official_ids.*' => 'required|exists:officials,id',
+            'competition_id' => 'required',
+            'team_id' => 'required',
+        ]);
+    }
 }
