@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CompetitionStatus;
-use App\Enums\EventSystem;
 use App\Enums\EventType;
 use App\Enums\Gender;
 use App\Enums\Stroke;
@@ -163,7 +162,6 @@ class CompetitionController extends Controller
         $enumStroke = Stroke::cases();
         $enumGender = Gender::cases();
         $enumEType = EventType::cases();
-        $enumESystem = EventSystem::cases();
         $ageGroups = AgeGroup::all();
         $pools = Pool::select('name', 'code', 'id')
                 ->where('venue_id', $competition->venue_id)
@@ -171,7 +169,7 @@ class CompetitionController extends Controller
                 ->get();
         $counts = [
             'sessions'  => $competition->sessions()->count(),
-            'events'    => $competition->events()->count(),
+            // 'events'    => $competition->events()->count(),
             // 'entries'   => $competition->entries()->count(),
             // 'heats'     => $competition->heats()->count(),
             // 'results'   => $competition->results()->count(),
@@ -179,6 +177,6 @@ class CompetitionController extends Controller
             // 'officials' => $competition->officials()->count(),
             // 'payments'  => $competition->payments()->count(),
         ];
-        return view('pages.competition.show', compact('competition', 'counts', 'enumStts', 'enumStroke', 'enumGender', 'enumEType', 'enumESystem', 'ageGroups', 'pools'));
+        return view('pages.competition.show', compact('competition', 'counts', 'enumStts', 'enumStroke', 'enumGender', 'enumEType', 'ageGroups', 'pools'));
     }
 }

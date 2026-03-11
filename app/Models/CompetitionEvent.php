@@ -7,20 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class CompetitionEvent extends Model
 {
     protected $fillable = [
-        // 'competition_id',
         'competition_session_id',
         'age_group_id',
         'event_number', //format sesi_id + nomor event mulai dari 01
-        'name',
         'distance', //dalam meter
         'stroke',
         'gender',
         'event_type',
         'max_relay_athletes',
-        // 'event_system',
-        // 'remarks',
-        // 'min_dob',
-        // 'max_dob',
         'registration_fee',
     ];
 
@@ -39,9 +33,6 @@ class CompetitionEvent extends Model
         });
     }
 
-    // public function competition(){
-    //     return $this->belongsTo(Competition::class);
-    // }
     public function competitionSession(){
         return $this->belongsTo(CompetitionSession::class);
     }

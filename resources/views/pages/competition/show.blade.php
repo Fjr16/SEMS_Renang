@@ -5,9 +5,16 @@
   <!-- Header -->
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
     <div>
-      <h2 class="fw-bold mb-1">Competition: {{ $competition->name ?? '-' }}</h2>
+        <div class="d-flex gap-2">
+            <h2 class="fw-bold mb-1">
+                Kompetisi: {{ $competition->name ?? '-' }}
+            </h2>
+            {{-- <span class="badge {{ $competition->status ? $enumStts::from($competition->status)->class() : 'bg-danger text-white' }}">
+                {{ $competition->status ? $enumStts::from($competition->status)->label() : '-' }}
+            </span> --}}
+        </div>
       <p class="text-muted mb-1">Tanggal: {{ Carbon\Carbon::parse($competition->start_date)->translatedFormat('d F Y') . ' - ' . Carbon\Carbon::parse($competition->end_date)->translatedFormat('d F Y') }}</p>
-      <p class="text-muted mb-0">Lokasi: {{ $competition->location ?? '-' }}</p>
+      <p class="text-muted mb-0">Arena: {{ '['.($competition->venue?->code ?? '-').'] ' . ($competition->venue?->name ?? '-') }}</p>
     </div>
     <div class="mt-3 mt-md-0">
       <a href="{{ route('competition.index') }}" class="btn btn-secondary">
@@ -30,7 +37,7 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button" role="tab" aria-controls="overview" aria-selected="false">
             Events
-            <span class="badge bg-secondary">{{ $counts['events'] ?? 0 }}</span>
+            {{-- <span class="badge bg-secondary">{{ $counts['events'] ?? 0 }}</span> --}}
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -44,18 +51,6 @@
             Heats & Lanes
             <span class="badge bg-secondary">{{ $counts['heats'] ?? 0 }}</span>
         </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#results" type="button" role="tab" aria-controls="overview" aria-selected="false">Results</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="points-tab" data-bs-toggle="tab" data-bs-target="#points" type="button" role="tab" aria-controls="overview" aria-selected="false">Team Points</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="officials-tab" data-bs-toggle="tab" data-bs-target="#officials" type="button" role="tab" aria-controls="overview" aria-selected="false">Officials</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab" aria-controls="overview" aria-selected="false">Payments</button>
     </li>
   </ul>
 
@@ -83,11 +78,11 @@
         </p>
         <p class="mb-1">
             <strong>Penyelenggara:</strong>
-            {{ $competition->organizer ?? '-' }}
+            {{ $competition->organization?->name ?? '-' }}
         </p>
         <p class="mb-1">
-            <strong>Lokasi:</strong>
-            {{ $competition->location ?? '-' }}
+            <strong>Arena:</strong>
+            {{ '['.($competition->venue?->code ?? '-').'] ' . ($competition->venue?->name ?? '-') }}
         </p>
         <p class="mb-1">
             <strong>Status:</strong>
@@ -118,31 +113,6 @@
     {{-- <div class="tab-pane fade" id="heats" role="tabpanel">
       @include('pages.competition.tabs.heats')
     </div> --}}
-
-    <!-- Results -->
-    <div class="tab-pane fade" id="results" role="tabpanel" data-url="{{ route('competition.tab.results', $competition) }}"></div>
-    {{-- <div class="tab-pane fade" id="results" role="tabpanel">
-      @include('pages.competition.tabs.results')
-    </div> --}}
-
-    <!-- Team Points -->
-    <div class="tab-pane fade" id="points" role="tabpanel" data-url="{{ route('competition.tab.points', $competition) }}"></div>
-    {{-- <div class="tab-pane fade" id="points" role="tabpanel">
-      @include('pages.competition.tabs.points')
-    </div> --}}
-
-    <!-- Officials -->
-    <div class="tab-pane fade" id="officials" role="tabpanel" data-url="{{ route('competition.tab.officials', $competition) }}"></div>
-    {{-- <div class="tab-pane fade" id="officials" role="tabpanel">
-      @include('pages.competition.tabs.officials')
-    </div> --}}
-
-    <!-- Payments -->
-    <div class="tab-pane fade" id="payments" role="tabpanel" data-url="{{ route('competition.tab.payments', $competition) }}"></div>
-    {{-- <div class="tab-pane fade" id="payments" role="tabpanel">
-      @include('pages.competition.tabs.payments')
-    </div> --}}
-
   </div>
 </div>
 @endsection
@@ -170,7 +140,6 @@
                         getDataSessions();
                         paneSelected.dataset.loaded = '1';
                     }else if(paneSelected.id === 'events'){
-                        getDataEvents();
                         paneSelected.dataset.loaded = '1';
                     }
                 }
@@ -196,30 +165,6 @@
             {data:"session_order", name:"session_order", className:"text-center", searchable:true, orderable:true},
             // {data:"start_time", name:"start_time", className:"text-center", searchable:true, orderable:true},
             // {data:"end_time", name:"end_time", className:"text-center", searchable:true, orderable:true},
-          ],
-          order:[[3,'asc']]
-        });
-      }
-      function getDataEvents(){
-        $('#eventsTable').DataTable({
-          processing:true,
-          serverSide:true,
-          ajax:"{{ route('competition.tab.events.data', $competition) }}",
-          columns:[
-            {data:"action", name:"action", className:"text-center dt-actions", searchable:false, orderable:false},
-            {data:"session_date", name:"session_date", className:"text-center", searchable:true, orderable:true},
-            {data:"session_name", name:"session_name", className:"text-center", searchable:true, orderable:true},
-            {data:"event_number", name:"event_number", className:"text-center", searchable:true, orderable:true},
-            {data:"strokeAttr", name:"stroke", className:"text-center", searchable:true, orderable:true},
-            {data:"jarak", name:"distance", className:"text-center", defaultContent:'-', searchable:true, orderable:true},
-            {data:"genderAttr", name:"genderAttr", className:"text-center", searchable:true, orderable:true},
-            {data:"kelompok_umur", name:"kelompok_umur", className:"text-center", searchable:true, orderable:true},
-            {data:"eventTypeAttr", name:"event_type", className:"text-center", searchable:true, orderable:true},
-            {data:"eventSystemAttr", name:"event_system", className:"text-center", searchable:true, orderable:true},
-            // {data:"minDOB", name:"min_dob", className:"text-center", searchable:true, orderable:true},
-            // {data:"maxDOB", name:"max_dob", className:"text-center", searchable:true, orderable:true},
-            {data:"biaya_pendaftaran", name:"registration_fee", className:"text-center", defaultContent:'-', searchable:true, orderable:true},
-            {data:"remarks", name:"remarks", className:"text-center", searchable:true, orderable:true},
           ],
           order:[[3,'asc']]
         });

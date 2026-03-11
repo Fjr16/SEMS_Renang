@@ -13,18 +13,14 @@ return new class extends Migration
     {
         Schema::create('competition_events', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('competition_id')->nullable(false);
             $table->foreignId('competition_session_id')->nullable(false);
             $table->foreignId('age_group_id')->nullable(false);
             $table->string('event_number', 16)->nullable(false);
-            $table->unsignedInteger('distance')->nullable(false);
+            $table->unsignedInteger('distance',false)->nullable(false);
             $table->string('stroke',50)->nullable(false);
             $table->string('gender',10)->nullable(false);
             $table->string('event_type',20)->nullable(false);
-            $table->string('event_system',20)->nullable(false);
-            $table->text('remarks')->nullable(true);
-            // $table->date('min_dob')->nullable(true);
-            // $table->date('max_dob')->nullable(true);
+            $table->unsignedInteger('max_relay_athletes',false)->nullable(true); // maksimal 4
             $table->decimal('registration_fee',10,2)->nullable(true);
             $table->timestamps();
         });

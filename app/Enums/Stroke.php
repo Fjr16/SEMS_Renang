@@ -12,11 +12,11 @@ enum Stroke:string
 
     public function label(){
         return match ($this) {
-            self::gaya_bebas => 'Freestyle',
-            self::gaya_dada => 'Breast Stroke',
-            self::gaya_kupu => 'Butterfly Stroke',
-            self::gaya_punggung => 'Back Stroke',
-            self::gaya_campuran => 'Medley Stroke',
+            self::gaya_bebas => 'Gaya Bebas',
+            self::gaya_dada => 'Gaya Dada',
+            self::gaya_kupu => 'Gaya Kupu-kupu',
+            self::gaya_punggung => 'Gaya Punggung',
+            self::gaya_campuran => 'Gaya Campuran',
         };
     }
 

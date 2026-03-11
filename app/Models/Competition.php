@@ -29,15 +29,22 @@ class Competition extends Model
     public function sessions(){
         return $this->hasMany(CompetitionSession::class);
     }
-    public function events(){
-        return $this->hasMany(CompetitionEvent::class);
-    }
 
     public function organization(){
         return $this->belongsTo(Organization::class);
     }
     public function venue(){
         return $this->belongsTo(Venue::class);
+    }
+    public function events(){
+        return $this->hasManyThrough(
+            CompetitionEvent::class,
+            CompetitionSession::class,
+            'competition_id', // FK di sessions
+            'competition_session_id',     // FK di events
+            'id',             // PK di competitions
+            'id'              // PK di sessions
+        );
     }
 
 

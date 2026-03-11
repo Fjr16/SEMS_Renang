@@ -9,8 +9,8 @@ enum EventType:string
 
     public function label(){
         return match ($this) {
-            self::individual => 'Individual',
-            self::estafet => 'Relay',
+            self::individual => 'Perorangan',
+            self::estafet => 'Estafet',
         };
     }
     public function class(){

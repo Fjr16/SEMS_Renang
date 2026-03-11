@@ -135,3 +135,14 @@ function toNum(target) {
   const digits = String(target).replace(/\s|\u00A0/g, '').replace(/[^0-9.,]/g, '');
   return digits ? Number(digits) : 0;
 }
+
+document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
+    btn.addEventListener('shown.bs.tab', () => {
+        $($.fn.dataTable.tables(true)).DataTable().columns.adjust().responsive?.recalc?.();
+    });
+});
+
+// input harga
+$(document).on('input', '.rupiah', function () {
+  return this.value = this.value.replace(/[^0-9]/g, '');
+});

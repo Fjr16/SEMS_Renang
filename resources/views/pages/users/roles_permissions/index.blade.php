@@ -513,10 +513,10 @@
   }
 
 
-    document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
-        btn.addEventListener('shown.bs.tab', () => {
-            $($.fn.dataTable.tables(true)).DataTable().columns.adjust().responsive?.recalc?.();
-        });
-    });
+    // document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
+    //     btn.addEventListener('shown.bs.tab', () => {
+    //         $($.fn.dataTable.tables(true)).DataTable().columns.adjust().responsive?.recalc?.();
+    //     });
+    // });
 </script>
 @endpush
