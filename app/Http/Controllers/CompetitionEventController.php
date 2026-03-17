@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\EventType;
+use App\Enums\Gender;
+use App\Enums\Stroke;
+use App\Models\AgeGroup;
 use App\Models\Competition;
 use App\Models\CompetitionEvent;
 use Illuminate\Http\Request;
@@ -10,6 +13,16 @@ use Illuminate\Validation\Rule;
 
 class CompetitionEventController extends Controller
 {
+    public function partialReload(Competition $competition){
+        $enumStroke = Stroke::cases();
+        $enumGender = Gender::cases();
+        $enumEType  = EventType::cases();
+        $ageGroups  = AgeGroup::all();
+
+        return view('pages.competition.tabs.events', compact(
+            'competition', 'enumStroke', 'enumGender', 'enumEType', 'ageGroups'
+        ));
+    }
     public function store(Request $request, Competition $competition){
         $validated = $request->validate([
             'competition_session_id' => 'required|exists:competition_sessions,id',
@@ -36,7 +49,6 @@ class CompetitionEventController extends Controller
         return response()->json([
             'success'    => true,
             'message'    => 'Event berhasil ditambahkan.',
-            'event'      => $event,
             'session_id' => $event->competition_session_id,
             'row_html'   => view('pages.competition.tabs._event_row', [
                 'event'       => $event,
@@ -47,7 +59,12 @@ class CompetitionEventController extends Controller
         ]);
     }
     public function edit(Competition $competition, CompetitionEvent $event)    {
-        abort_if($event->competitionSession->competition_id !== $competition->id, 403);
+        if($event->competitionSession->competition_id !== $competition->id){
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya penyelenggara kompetisi ' . $competition?->name . ' yang dapat edit event ini.',
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -67,8 +84,11 @@ class CompetitionEventController extends Controller
                 'nullable', 'integer', 'max:4',
             ],
             'registration_fee'       => 'required|numeric|min:0',
+        ], [
+            'max_relay_athletes.required' => 'Maks. jumlah atlet wajib diisi untuk tipe estafet'
         ]);
 
+        if($request->event_type === EventType::individual->value) $validated['max_relay_athletes'] = null;
         $event->update($validated);
         $event->load('ageGroup');
 
@@ -80,7 +100,6 @@ class CompetitionEventController extends Controller
         return response()->json([
             'success'    => true,
             'message'    => 'Event berhasil diperbarui.',
-            'event'      => $event,
             'session_id' => $event->competition_session_id,
             'row_html'   => view('pages.competition.tabs._event_row', [
                 'event'       => $event,
@@ -90,17 +109,20 @@ class CompetitionEventController extends Controller
             ])->render(),
         ]);
     }
-
     public function destroy(Competition $competition, CompetitionEvent $event){
-        abort_if($event->competitionSession->competition_id !== $competition->id, 403);
+        if($event->competitionSession->competition_id !== $competition->id){
+            return response()->json([
+                'success'    => false,
+                'message'    => 'Hanya penyelenggara kompetisi ' . $competition?->name . ' yang dapat menghapus event ini.',
+            ]);
+        }
+
         $sessionId = $event->competition_session_id;
-        $eventId   = $event->id;
         $event->delete();
 
         return response()->json([
             'success'    => true,
             'message'    => 'Event berhasil dihapus.',
-            'event_id'   => $eventId,
             'session_id' => $sessionId,
         ]);
     }

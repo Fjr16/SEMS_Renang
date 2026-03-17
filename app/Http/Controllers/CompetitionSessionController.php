@@ -87,6 +87,7 @@ class CompetitionSessionController extends Controller
     public function destroy(Competition $competition, $id){
         try {
             $item = CompetitionSession::findOrFail($id);
+            $item->competitionEvents()->delete();
             $item->delete();
             return response()->json([
                 'status' => true,

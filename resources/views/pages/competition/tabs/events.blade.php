@@ -49,7 +49,7 @@
 <div class="card border-0 shadow-sm mb-4" style="border-radius:14px">
     <div class="card-body py-3">
         <div class="row g-2 align-items-center">
-            <div class="col-12 col-sm-5 col-lg-4">
+            <div class="col-12 col-lg-5">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text bg-white border-end-0">
                         <i class="bi bi-search text-muted"></i>
@@ -58,7 +58,7 @@
                            placeholder="Cari nomor, gaya, sesi...">
                 </div>
             </div>
-            <div class="col-6 col-sm-3 col-lg-2">
+            <div class="col-6 col-lg-2">
                 <select id="filterGender" class="form-select form-select-sm">
                     <option value="">Semua Kelamin</option>
                     @foreach($enumGender as $g)
@@ -67,7 +67,7 @@
                     <option value="mixed">Campuran</option>
                 </select>
             </div>
-            <div class="col-6 col-sm-3 col-lg-2">
+            <div class="col-6 col-lg-2">
                 <select id="filterTipe" class="form-select form-select-sm">
                     <option value="">Semua Tipe</option>
                     @foreach($enumEType as $t)
@@ -75,7 +75,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-12 col-sm-auto ms-sm-auto">
+            <div class="col-12 col-lg-2 ms-auto">
                 <button onclick="resetEventFilter()" class="btn btn-sm btn-dark w-100 w-sm-auto">
                     <i class="bi bi-x-circle me-1"></i>Reset
                 </button>
@@ -297,280 +297,303 @@
 
 @push('scripts')
 <script>
+    const EVENTS_URL_STORE   = "{{ route('competition.tab.events.store', $competition) }}";
+    const EVENTS_URL_EDIT    = "{{ route('competition.tab.events.edit', [$competition, ':event']) }}".replace(':event', '');
+    const EVENTS_URL_UPDATE  = "{{ route('competition.tab.events.update', [$competition, ':event']) }}".replace(':event', '');
+    const EVENTS_URL_DESTROY = "{{ route('competition.tab.events.destroy', [$competition, ':event']) }}".replace(':event', '');
+    const CSRF           = "{{ csrf_token() }}";
+    const ESTAFET_VALUE  = "{{ \App\Enums\EventType::estafet->value }}";
 
-const EVENTS_URL_STORE   = "{{ route('competition.tab.events.store', $competition) }}";
-const EVENTS_URL_EDIT    = "{{ route('competition.tab.events.edit', [$competition, ':event']) }}".replace(':event', '');
-const EVENTS_URL_UPDATE  = "{{ route('competition.tab.events.update', [$competition, ':event']) }}".replace(':event', '');
-const EVENTS_URL_DESTROY = "{{ route('competition.tab.events.destroy', [$competition, ':event']) }}".replace(':event', '');
-const CSRF           = "{{ csrf_token() }}";
-const ESTAFET_VALUE  = "{{ \App\Enums\EventType::estafet->value }}";
-
-// ── Helper: Toast notifikasi ─────────────────────────────────────────
-function showToast(icon, title) {
-    // Pakai SweetAlert2 Toast jika tersedia, fallback ke alert biasa
-    if (typeof Toast !== 'undefined') {
-        Toast.fire({ icon, title });
-    } else if (typeof Swal !== 'undefined') {
-        Swal.fire({ icon, title, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
-    } else {
-        alert(title);
-    }
-}
-// ── Open create modal ────────────────────────────────────────────────
-function openCreateEvent() {
-    document.getElementById('eventForm').reset();
-    document.getElementById('competition_event_id').value = '';
-    document.getElementById('modalEventTitle').textContent = 'Tambah Event';
-    document.getElementById('max_relay_athletes').disabled = true;
-}
-// ── Toggle Sesi ──────────────────────────────────────────────────────
-function toggleSessionGroup(btn) {
-    const body    = btn.nextElementSibling;
-    const chevron = btn.querySelector('.session-chevron');
-    const isOpen  = body.style.display !== 'none';
-    body.style.display = isOpen ? 'none' : 'block';
-    chevron.classList.toggle('rotated', isOpen);
-}
-// ── Relay toggle (existing) ──────────────────────────────────────────
-document.getElementById('event_type').addEventListener('change', function () {
-    const maxEl = document.getElementById('max_relay_athletes');
-    maxEl.disabled = this.value !== ESTAFET_VALUE;
-    if (this.value !== ESTAFET_VALUE) maxEl.value = '';
-});
-// ── Helper: update stat cards ────────────────────────────────────────
-function refreshStatCards() {
-    const rows    = document.querySelectorAll('#sessionContainer tr.event-row[data-id]');
-    const total   = rows.length;
-    let   estafet = 0;
-    rows.forEach(r => { if (r.dataset.tipe === ESTAFET_VALUE) estafet++; });
-
-    const statEls = document.querySelectorAll('.stat-value');
-    if (statEls[0]) statEls[0].textContent = total;
-    if (statEls[2]) statEls[2].textContent = estafet;
-    if (statEls[3]) statEls[3].textContent = total - estafet;
-}
-// ── Helper: update per-session count badge ───────────────────────────
-function refreshSessionCount(sessionId) {
-    const card = document.querySelector(`.session-group-card[data-session-id="${sessionId}"]`);
-    if (!card) return;
-    const count = card.querySelectorAll('tr.event-row[data-id]').length;
-    const badge = card.querySelector('.session-visible-count');
-    if (badge) badge.textContent = count;
-
-    // Tampilkan/sembunyikan empty state
-    const emptyDesktop = card.querySelector('.session-empty-row');
-    if (emptyDesktop) emptyDesktop.style.display = count === 0 ? '' : 'none';
-}
-// ── SUBMIT FORM (Create & Update) ────────────────────────────────────
-document.getElementById('eventForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const eventId   = document.getElementById('competition_event_id').value;
-    const isEdit    = !!eventId;
-    const url = isEdit ? `${EVENTS_URL_UPDATE}${eventId}` : EVENTS_URL_STORE
-    const formData  = new FormData(this);
-    if (isEdit) formData.append('_method', 'PUT');
-
-    const submitBtn = document.getElementById('eventSubmitBtn');
-    submitBtn.disabled    = true;
-    submitBtn.textContent = 'Menyimpan...';
-
-    try {
-        const res  = await fetch(url, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-            body: formData,
-        });
-        const data = await res.json();
-
-        if (!res.ok || !data.success) {
-            // Tampilkan error validasi jika ada
-            if (data.errors) {
-                const msg = Object.values(data.errors).flat().join('\n');
-                showToast('error', msg);
-            } else {
-                showToast('error', data.message ?? 'Terjadi kesalahan.');
-            }
-            return;
-        }
-
-        const sessionId = data.session_id;
-        const oldSessionId  = document.querySelector(`tr.event-row[data-id="${eventId}"]`)
-                        ?.closest('.session-group-card')
-                        ?.dataset.sessionId;
-        const card = document.querySelector(`.session-group-card[data-session-id="${sessionId}"]`);
-
-        if (card) {
-            const wrapper     = document.createElement('table');
-            wrapper.innerHTML = `<tbody>${data.row_html}</tbody>`;
-            const newTr       = wrapper.querySelector('tr.event-row');
-            const tbody       = card.querySelector('tbody.event-rows-desktop'); // ← fix selector
-
-            if (isEdit) {
-                const sesiPindah = oldSessionId && oldSessionId !== String(sessionId);
-                if (sesiPindah) {
-                    // Hapus row dari sesi LAMA
-                    const oldCard  = document.querySelector(`.session-group-card[data-session-id="${oldSessionId}"]`);
-                    const oldTbody = oldCard?.querySelector('tbody.event-rows-desktop');
-                    oldTbody?.querySelector(`tr.event-row[data-id="${eventId}"]`)?.remove();
-                    refreshSessionCount(oldSessionId);
-
-                    // Tambahkan ke sesi BARU
-                    tbody?.querySelector('.session-empty-row')?.remove();
-                    tbody?.appendChild(newTr);
-                } else {
-                    // Sesi sama, replace saja
-                    tbody?.querySelector(`tr.event-row[data-id="${eventId}"]`)?.replaceWith(newTr);
-                }
-            } else {
-                tbody?.querySelector('.session-empty-row')?.remove(); // hapus empty state
-                tbody?.appendChild(newTr);
-            }
-
-            refreshSessionCount(sessionId);
-        }
-
-        refreshStatCards();
-        // Tutup modal & reset form
-        bootstrap.Modal.getInstance(document.getElementById('modalEvent'))?.hide();
-        this.reset();
+    // ── Open create modal ────────────────────────────────────────────────
+    function openCreateEvent() {
+        document.getElementById('eventForm').reset();
         document.getElementById('competition_event_id').value = '';
         document.getElementById('modalEventTitle').textContent = 'Tambah Event';
+        document.getElementById('max_relay_athletes').disabled = true;
 
-        showToast('success', data.message);
-
-    } catch (err) {
-        console.error(err);
-        showToast('error', 'Gagal menyimpan event. Periksa koneksi.');
-    } finally {
-        submitBtn.disabled    = false;
-        submitBtn.textContent = 'Simpan';
+        document.getElementById('event_type').dispatchEvent(new Event('change'));
     }
-});
-// ── Edit Event (existing, unchanged) ────────────────────────────────
-async function editEvent(eventId) {
-    document.getElementById('modalEventTitle').textContent = 'Edit Event';
-    try {
-        const res  = await fetch(`${EVENTS_URL_EDIT}${eventId}`, {
-            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
-        });
-        const data = await res.json();
+    // ── Toggle Sesi (fix) ──────────────────────────────────────────────────────
+    function toggleSessionGroup(btn) {
+        const body    = btn.nextElementSibling;
+        const chevron = btn.querySelector('.session-chevron');
+        const isOpen  = body.style.display !== 'none';
+        body.style.display = isOpen ? 'none' : 'block';
+        chevron.classList.toggle('rotated', isOpen);
+    }
+    // ── Helper: update stat cards (fix) ────────────────────────────────────────
+    function refreshStatCards() {
+        const rows    = document.querySelectorAll('#sessionContainer tr.event-row[data-id]');
+        const total   = rows.length;
+        let   estafet = 0;
+        rows.forEach(r => { if (r.dataset.tipe === ESTAFET_VALUE) estafet++; });
 
-        if (!res.ok || !data.success) {
-            showToast('error', 'Data tidak ditemukan.');
-            return;
+        const statEls = document.querySelectorAll('.stat-value');
+        if (statEls[0]) statEls[0].textContent = total;
+        if (statEls[2]) statEls[2].textContent = estafet;
+        if (statEls[3]) statEls[3].textContent = total - estafet;
+    }
+    // ── Helper: update per-session count badge (fix) ───────────────────────────
+    function refreshSessionCount(sessionId) {
+        const card = document.querySelector(`.session-group-card[data-session-id="${sessionId}"]`);
+        if (!card) return;
+        const count = card.querySelectorAll('tr.event-row[data-id]').length;
+        const badge = card.querySelector('.session-visible-count');
+        if (badge) badge.textContent = count;
+
+        // Tampilkan/sembunyikan empty state
+        const empty = card.querySelector('.session-empty-row');
+        if (empty) empty.style.display = count === 0 ? '' : 'none';
+    }
+    // ── Edit Event (existing, unchanged) ────────────────────────────────
+    async function editEvent(eventId) {
+        document.getElementById('modalEventTitle').textContent = 'Edit Event';
+        try {
+            const res  = await fetch(`${EVENTS_URL_EDIT}${eventId}`, {
+                method:'GET',
+                headers: { 'Accept': 'application/json'},
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                Toast.fire({
+                    icon:'error',
+                    title:data.message || 'Data tidak ditemukan'
+                });
+                return;
+            }
+
+            const ev = data.event;
+            const modal = document.getElementById('modalEvent');
+
+            modal.querySelector('#eventForm').reset();
+            modal.querySelector('#competition_event_id').value   = ev.id;
+            modal.querySelector('#competition_session_id').value = ev.competition_session_id;
+            modal.querySelector('#stroke').value                 = ev.stroke;
+            modal.querySelector('#distance').value               = ev.distance;
+            modal.querySelector('#gender').value                 = ev.gender;
+            modal.querySelector('#age_group_id').value           = ev.age_group_id;
+            modal.querySelector('#event_type').value             = ev.event_type;
+            modal.querySelector('#registration_fee').value       = toNum(ev.registration_fee);
+
+            const maxEl = modal.querySelector('#max_relay_athletes');
+            maxEl.disabled = ev.event_type !== ESTAFET_VALUE;
+            maxEl.value    = ev.max_relay_athletes ?? '';
+
+            new bootstrap.Modal(modal).show();
+
+        } catch (err) {
+            console.error(err);
+            Toast.fire({
+                icon:'error',
+                title:'Gagal mengambil data event'
+            });
         }
-
-        const ev = data.event;
-        document.getElementById('eventForm').reset();
-        document.getElementById('competition_event_id').value   = ev.id;
-        document.getElementById('competition_session_id').value = ev.competition_session_id;
-        document.getElementById('stroke').value                 = ev.stroke;
-        document.getElementById('distance').value               = ev.distance;
-        document.getElementById('gender').value                 = ev.gender;
-        document.getElementById('age_group_id').value           = ev.age_group_id;
-        document.getElementById('event_type').value             = ev.event_type;
-        document.getElementById('registration_fee').value       = toNum(ev.registration_fee);
-
-        const maxEl = document.getElementById('max_relay_athletes');
-        maxEl.disabled = ev.event_type !== ESTAFET_VALUE;
-        maxEl.value    = ev.max_relay_athletes ?? '';
-
-        new bootstrap.Modal(document.getElementById('modalEvent')).show();
-
-    } catch (err) {
-        console.error(err);
-        showToast('error', 'Gagal mengambil data event.');
     }
-}
-// ── Delete ───────────────────────────────────────────────────────────
-let _deleteTargetId = null;
-function confirmDeleteEvent(eventId, eventNo) {
-    _deleteTargetId = eventId;
-    document.getElementById('deleteEventNo').textContent = eventNo;
-    new bootstrap.Modal(document.getElementById('modalDeleteEvent')).show();
-}
+    // ── Delete ───────────────────────────────────────────────────────────
+    let _deleteTargetId = null;
+    function confirmDeleteEvent(eventId, eventNo) {
+        _deleteTargetId = eventId;
+        document.getElementById('deleteEventNo').textContent = eventNo;
+        new bootstrap.Modal(document.getElementById('modalDeleteEvent')).show();
+    }
 
-async function executeDeleteEvent() {
-    if (!_deleteTargetId) return;
+    async function executeDeleteEvent() {
+        if (!_deleteTargetId) return;
 
-    const btn = document.getElementById('deleteEventConfirmBtn');
-    btn.disabled    = true;
-    btn.textContent = 'Menghapus...';
+        const btn = document.getElementById('deleteEventConfirmBtn');
+        btn.disabled    = true;
+        btn.textContent = 'Menghapus...';
 
-    try {
-        const res  = await fetch(`${EVENTS_URL_DESTROY}${_deleteTargetId}`, {
-            method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-        });
-        const data = await res.json();
+        try {
+            const res  = await fetch(`${EVENTS_URL_DESTROY}${_deleteTargetId}`, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+            });
+            const data = await res.json();
 
-        if (!res.ok || !data.success) {
-            showToast('error', data.message ?? 'Gagal menghapus.');
-            return;
+            if (!res.ok || !data.success) {
+                Toast.fire({
+                    icon:'error',
+                    title:data.message || 'Gagal menghapus'
+                });
+                return;
+            }
+
+            // Hapus semua elemen DOM dengan data-id ini (desktop tr + mobile div)
+            document.querySelectorAll(`.event-row[data-id="${_deleteTargetId}"]`)
+                .forEach(el => el.remove());
+
+            refreshSessionCount(data.session_id);
+            refreshStatCards();
+
+            bootstrap.Modal.getInstance(document.getElementById('modalDeleteEvent'))?.hide();
+            Toast.fire({
+                icon:'success',
+                title:data.message || 'Terjadi Kesalahan'
+            });
+            _deleteTargetId = null;
+
+        } catch (err) {
+            console.error(err);
+            Toast.fire({
+                icon:'error',
+                title:'Gagal menghapus event'
+            });
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = 'Hapus';
         }
-
-        // Hapus semua elemen DOM dengan data-id ini (desktop tr + mobile div)
-        document.querySelectorAll(`.event-row[data-id="${_deleteTargetId}"]`)
-            .forEach(el => el.remove());
-
-        refreshSessionCount(data.session_id);
-        refreshStatCards();
-
-        bootstrap.Modal.getInstance(document.getElementById('modalDeleteEvent'))?.hide();
-        showToast('success', data.message);
-        _deleteTargetId = null;
-
-    } catch (err) {
-        console.error(err);
-        showToast('error', 'Gagal menghapus event.');
-    } finally {
-        btn.disabled    = false;
-        btn.textContent = 'Hapus';
     }
-}
 
-// ── Filter & Search ──────────────────────────────────────────────────
-function applyEventFilter() {
-    const q      = document.getElementById('eventSearchInput').value.toLowerCase().trim();
-    const gender = document.getElementById('filterGender').value;
-    const tipe   = document.getElementById('filterTipe').value;
-    let   total  = 0;
+    // ── Filter & Search ──────────────────────────────────────────────────
+    function applyEventFilter() {
+        const q      = document.getElementById('eventSearchInput').value.toLowerCase().trim();
+        const gender = document.getElementById('filterGender').value;
+        const tipe   = document.getElementById('filterTipe').value;
+        let   total  = 0;
 
-    document.querySelectorAll('#sessionContainer .event-row').forEach(row => {
-        const match =
-            (
-                !q || row.dataset.nomor.toLowerCase().includes(q)
-                || row.dataset.gaya.toLowerCase().includes(q)
-                || row.dataset.session.toLowerCase().includes(q)
-            ) &&
-            (!gender || row.dataset.kelamin === gender) &&
-            (!tipe || row.dataset.tipe === tipe);
+        document.querySelectorAll('#sessionContainer .event-row').forEach(row => {
+            const match =
+                (
+                    !q || row.dataset.nomor.toLowerCase().includes(q)
+                    || row.dataset.gaya.toLowerCase().includes(q)
+                    || row.dataset.session.toLowerCase().includes(q)
+                ) &&
+                (!gender || row.dataset.kelamin === gender) &&
+                (!tipe || row.dataset.tipe === tipe);
 
-        row.style.display = match ? '' : 'none';
-        if (match) total++;
-    });
+            row.style.display = match ? '' : 'none';
+            if (match) total++;
+        });
 
-    // Update per-session count badge
-    document.querySelectorAll('.session-group-card').forEach(card => {
-        const visible = card.querySelectorAll('.event-row[data-id]:not([style*="display: none"])').length;
-        const badge   = card.querySelector('.session-visible-count');
-        if (badge) badge.textContent = visible;
-    });
+        // Update per-session count badge
+        document.querySelectorAll('.session-group-card').forEach(card => {
+            const visible = card.querySelectorAll('.event-row[data-id]:not([style*="display: none"])').length;
+            const badge   = card.querySelector('.session-visible-count');
+            if (badge) badge.textContent = visible;
+        });
 
-    document.getElementById('eventEmptyFilter').classList.toggle('d-none', total > 0);
-}
+        document.getElementById('eventEmptyFilter').classList.toggle('d-none', total > 0);
+    }
 
-function resetEventFilter() {
-    document.getElementById('eventSearchInput').value = '';
-    document.getElementById('filterGender').value = '';
-    document.getElementById('filterTipe').value = '';
-    applyEventFilter();
-}
+    function resetEventFilter() {
+        document.getElementById('eventSearchInput').value = '';
+        document.getElementById('filterGender').value = '';
+        document.getElementById('filterTipe').value = '';
+        applyEventFilter();
+    }
 
-document.getElementById('eventSearchInput').addEventListener('input', applyEventFilter);
-document.getElementById('filterGender').addEventListener('change', applyEventFilter);
-document.getElementById('filterTipe').addEventListener('change', applyEventFilter);
+    function initEventTabScripts() {
+        // ── Relay toggle (existing) (fix) ──────────────────────────────────────────
+        document.getElementById('event_type').addEventListener('change', function () {
+            const maxEl = document.getElementById('max_relay_athletes');
+            maxEl.disabled = this.value !== ESTAFET_VALUE;
+            if (this.value !== ESTAFET_VALUE) maxEl.value = '';
+        });
 
+        // ── SUBMIT FORM (Create & Update) ────────────────────────────────────
+        document.getElementById('eventForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const eventId   = document.getElementById('competition_event_id').value;
+            const isEdit    = !!eventId;
+            const url = isEdit ? `${EVENTS_URL_UPDATE}${eventId}` : EVENTS_URL_STORE
+            const formData  = new FormData(this);
+            if (isEdit) formData.append('_method', 'PUT');
+
+            const submitBtn = document.getElementById('eventSubmitBtn');
+            submitBtn.disabled    = true;
+            submitBtn.textContent = 'Menyimpan...';
+
+            try {
+                const res  = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: formData,
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    // Tampilkan error validasi jika ada
+                    if (data.errors) {
+                        const msg = Object.values(data.errors).flat().join('\n');
+                        Toast.fire({
+                            icon:'error',
+                            title:msg || 'Terjadi kesalahan'
+                        });
+                    } else {
+                        Toast.fire({
+                            icon:'error',
+                            title:data.message || 'Terjadi kesalahan'
+                        });
+                    }
+                    return;
+                }
+
+                const sessionId = data.session_id;
+                const oldSessionId  = document.querySelector(`tr.event-row[data-id="${eventId}"]`)
+                                ?.closest('.session-group-card')
+                                ?.dataset.sessionId;
+                const card = document.querySelector(`.session-group-card[data-session-id="${sessionId}"]`);
+
+                if (card) {
+                    const wrapper     = document.createElement('table');
+                    wrapper.innerHTML = `<tbody>${data.row_html}</tbody>`;
+                    const newTr       = wrapper.querySelector('tr.event-row');
+                    const tbody       = card.querySelector('tbody.event-rows-desktop'); // ← fix selector
+
+                    if (isEdit) {
+                        const sesiPindah = oldSessionId && oldSessionId !== String(sessionId);
+                        if (sesiPindah) {
+                            // Hapus row dari sesi LAMA
+                            const oldCard  = document.querySelector(`.session-group-card[data-session-id="${oldSessionId}"]`);
+                            const oldTbody = oldCard?.querySelector('tbody.event-rows-desktop');
+                            oldTbody?.querySelector(`tr.event-row[data-id="${eventId}"]`)?.remove();
+                            refreshSessionCount(oldSessionId);
+
+                            // Tambahkan ke sesi BARU
+                            tbody?.querySelector('.session-empty-row')?.remove();
+                            tbody?.appendChild(newTr);
+                        } else {
+                            // Sesi sama, replace saja
+                            tbody?.querySelector(`tr.event-row[data-id="${eventId}"]`)?.replaceWith(newTr);
+                        }
+                    } else {
+                        tbody?.querySelector('.session-empty-row')?.remove(); // hapus empty state
+                        tbody?.appendChild(newTr);
+                    }
+
+                    refreshSessionCount(sessionId);
+                }
+
+                refreshStatCards();
+                // Tutup modal & reset form
+                bootstrap.Modal.getInstance(document.getElementById('modalEvent'))?.hide();
+                this.reset();
+                document.getElementById('competition_event_id').value = '';
+                document.getElementById('modalEventTitle').textContent = 'Tambah Event';
+
+                Toast.fire({
+                    icon:'success',
+                    title:data.message || 'success'
+                });
+
+            } catch (err) {
+                console.error(err);
+                Toast.fire({
+                    icon:'error',
+                    title:'Gagal menyimpan event. Periksa koneksi.'
+                });
+            } finally {
+                submitBtn.disabled    = false;
+                submitBtn.textContent = 'Simpan';
+            }
+        });
+
+        document.getElementById('eventSearchInput').addEventListener('input', applyEventFilter);
+        document.getElementById('filterGender').addEventListener('change', applyEventFilter);
+        document.getElementById('filterTipe').addEventListener('change', applyEventFilter);
+    }
 </script>
 @endpush

@@ -28,7 +28,7 @@
     style="border-color:#f8fafc!important"
     data-id="{{ $event->id }}"
     data-nomor="{{ $event->event_number }}"
-    data-gaya="{{ strtolower($event->stroke) }}"
+    data-gaya="{{ \App\Enums\Stroke::from($event->stroke)->label() }}"
     data-kelamin="{{ $event->gender }}"
     data-tipe="{{ $event->event_type }}"
     data-session="{{ strtolower($sesi->name ?? '') }}">

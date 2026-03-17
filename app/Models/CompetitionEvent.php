@@ -21,15 +21,12 @@ class CompetitionEvent extends Model
     protected static function booted()
     {
         static::creating(function ($event){
-            $lastRecord = self::lockForUpdate()
+            $total = self::lockForUpdate()
             ->where('competition_session_id', $event->competition_session_id)
-            ->orderByDesc('id')
-            ->first();
+            ->count();
+            $nextNumber = $total + 1;
 
-            $lastNumber = $lastRecord ? $lastRecord->event_number : null;
-            $nextNumber = $lastNumber ? (int) $lastNumber + 1 : 1;
-
-            $event->event_number = str_pad($nextNumber,2,'0',STR_PAD_LEFT);
+            $event->event_number = $event->competitionSession->session_order . str_pad($nextNumber,2,'0',STR_PAD_LEFT);
         });
     }
 

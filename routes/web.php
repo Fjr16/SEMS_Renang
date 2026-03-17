@@ -117,6 +117,7 @@ Route::prefix('/competition/{competition}')->group(function(){
     Route::post('/tab/sessions/store', [CompetitionSessionController::class, 'store'])->name('competition.tab.sessions.store');
     Route::delete('/tab/sessions/destroy/{id}', [CompetitionSessionController::class, 'destroy'])->name('competition.tab.sessions.destroy');
 
+    Route::get('/tab/events/partial/reload', [CompetitionEventController::class, 'partialReload'])->name('competition.tab.events.partial');
     Route::post('/tab/events/store', [CompetitionEventController::class, 'store'])->name('competition.tab.events.store');
     Route::get('tab/events/edit/{event}', [CompetitionEventController::class, 'edit'])->name('competition.tab.events.edit');
     Route::put('/tab/events/update/{event}', [CompetitionEventController::class, 'update'])->name('competition.tab.events.update');

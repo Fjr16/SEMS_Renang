@@ -37,7 +37,7 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button" role="tab" aria-controls="overview" aria-selected="false">
             Events
-            {{-- <span class="badge bg-secondary">{{ $counts['events'] ?? 0 }}</span> --}}
+            <span class="badge bg-secondary">{{ $counts['events'] ?? 0 }}</span>
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -119,6 +119,8 @@
 
 @push('scripts')
     <script>
+        const EVENTS_PARTIAL_URL = "{{ route('competition.tab.events.partial', $competition) }}";
+
         document.addEventListener('shown.bs.tab', async function(ev) {
             const paneSelector = ev.target.getAttribute('data-bs-target');
             if (paneSelector === '#overview') return;
@@ -134,13 +136,30 @@
 
             try {
                 if(paneSelected.dataset.loaded === '1') {
-                  $('#'+paneSelected.dataset.table).DataTable().ajax.reload(null,false);
+                    if(paneSelected.id === 'events'){
+                        // Reload hanya konten tab events
+                        paneSelected.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+
+                        fetch(EVENTS_PARTIAL_URL)
+                            .then(r => r.text())
+                            .then(html => {
+                                paneSelected.innerHTML = html;
+                                paneSelected.dataset.loaded = '1';
+                                initEventTabScripts();
+                            })
+                            .catch(() => {
+                                paneSelected.innerHTML = '<div class="py-4 text-danger text-center">Gagal memuat konten.</div>';
+                            });
+                    }else{
+                        $('#'+paneSelected.dataset.table).DataTable().ajax.reload(null,false);
+                    }
                 }else{
                     if (paneSelected.id === 'sessions') {
                         getDataSessions();
                         paneSelected.dataset.loaded = '1';
                     }else if(paneSelected.id === 'events'){
                         paneSelected.dataset.loaded = '1';
+                        initEventTabScripts();
                     }
                 }
             } catch (e) {
@@ -163,8 +182,6 @@
             {data:"session_date", name:"session_date", className:"text-center", searchable:true, orderable:true},
             {data:"desc_pool", name:"desc_pool", className:"text-center", searchable:true, orderable:true},
             {data:"session_order", name:"session_order", className:"text-center", searchable:true, orderable:true},
-            // {data:"start_time", name:"start_time", className:"text-center", searchable:true, orderable:true},
-            // {data:"end_time", name:"end_time", className:"text-center", searchable:true, orderable:true},
           ],
           order:[[3,'asc']]
         });

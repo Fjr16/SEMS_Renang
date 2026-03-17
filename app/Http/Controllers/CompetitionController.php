@@ -169,7 +169,7 @@ class CompetitionController extends Controller
                 ->get();
         $counts = [
             'sessions'  => $competition->sessions()->count(),
-            // 'events'    => $competition->events()->count(),
+            'events'    => $competition->events()->count(),
             // 'entries'   => $competition->entries()->count(),
             // 'heats'     => $competition->heats()->count(),
             // 'results'   => $competition->results()->count(),
