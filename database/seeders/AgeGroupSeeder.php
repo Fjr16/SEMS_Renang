@@ -13,6 +13,7 @@ class AgeGroupSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::table('age_groups')->truncate();
         DB::table('age_groups')->insert([
             [
                 'label' => 'UMUM',

@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('competition_entries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('athlete_id')->unsigned()->nullable(false);
+            $table->foreignId('competition_team_id')->unsigned()->nullable(false);
             $table->foreignId('competition_event_id')->unsigned()->nullable(false);
-            $table->decimal('seed_time',8,2)->nullable(true);
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->text('feedback')->nullable(true);
+            $table->foreignId('athlete_id')->unsigned()->nullable(true);
+            $table->boolean('is_relay')->nullable(false);
+            $table->string('entry_time',20)->nullable(true);
+            $table->string('seed_time',20)->nullable(true);
+            $table->enum('status', ['entered', 'confirmed', 'scratched'])->default('entered');
             $table->timestamps();
         });
     }

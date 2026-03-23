@@ -23,4 +23,10 @@ class CompetitionTeam extends Model
     public function team(){
         return $this->belongsTo(Club::class,'team_id', 'id');
     }
+    public function competitionEntries(){
+        return $this->hasMany(CompetitionEntry::class);
+    }
+    public function competitionTeamOfficials(){
+        return $this->hasMany(CompetitionTeamOfficial::class);
+    }
 }

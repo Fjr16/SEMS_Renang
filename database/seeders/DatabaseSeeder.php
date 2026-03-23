@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Athlete;
 use App\Models\Club;
 use App\Models\Competition;
+use App\Models\Official;
 use App\Models\Organization;
 use App\Models\Pool;
 use App\Models\User;
@@ -20,37 +21,39 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(AgeGroupSeeder::class);
-        $this->call(ClubCategorySeeder::class);
-        $this->call(UserRolePermissionSeeder::class);
+        // $this->call(AgeGroupSeeder::class);
+        // $this->call(UserRolePermissionSeeder::class);
 
-        DB::table('users')->truncate();
-        User::factory(100)->create();
+        // DB::table('users')->truncate();
+        // User::factory(100)->create();
 
-        DB::table('clubs')->truncate();
-        Club::factory(50)->create();
+        // DB::table('clubs')->truncate();
+        // Club::factory(50)->create();
 
-        DB::table('athletes')->truncate();
-        Athlete::factory(500)->create();
+        // DB::table('athletes')->truncate();
+        // Athlete::factory(500)->create();
 
-        DB::table('organizations')->truncate();
-        Organization::factory(100)->create();
+        DB::table('officials')->truncate();
+        Official::factory(250)->create();
 
-        // DB::table('venues')->truncate();
-        Venue::factory(100)->create();
+        // DB::table('organizations')->truncate();
+        // Organization::factory(100)->create();
 
-        DB::table('pools')->truncate();
-        Pool::factory(50)->create();
+        // // DB::table('venues')->truncate();
+        // Venue::factory(100)->create();
 
-        DB::table('competitions')->truncate();
-        Competition::factory(200)->create();
+        // DB::table('pools')->truncate();
+        // Pool::factory(50)->create();
 
-        $this->call([
-            UserRolePermissionSeeder::class,
-        ]);
-        $user = \App\Models\User::orderBy('id')->first();
-        if ($user) {
-            $user->assignRole('super_admin');
-        }
+        // DB::table('competitions')->truncate();
+        // Competition::factory(200)->create();
+
+        // $this->call([
+        //     UserRolePermissionSeeder::class,
+        // ]);
+        // $user = \App\Models\User::orderBy('id')->first();
+        // if ($user) {
+        //     $user->assignRole('super_admin');
+        // }
     }
 }

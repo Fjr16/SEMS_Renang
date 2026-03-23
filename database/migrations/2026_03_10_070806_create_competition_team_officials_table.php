@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('competition_team_id')->nullable(false);
             $table->foreignId('official_id')->nullable(false);
-            $table->string('role_override')->nullable(false);
+            $table->string('role_override', 50)->nullable(false);
             $table->timestamps();
         });
     }

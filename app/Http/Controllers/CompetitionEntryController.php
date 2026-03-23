@@ -3,10 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CompetitionStatus;
+use App\Enums\EventType;
+use App\Models\Athlete;
+use App\Models\Club;
 use App\Models\Competition;
+use App\Models\CompetitionEntry;
+use App\Models\CompetitionEntryRelayMember;
+use App\Models\CompetitionEvent;
 use App\Models\CompetitionTeam;
+use App\Models\CompetitionTeamOfficial;
+use App\Models\Official;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class CompetitionEntryController extends Controller
@@ -40,7 +50,7 @@ class CompetitionEntryController extends Controller
             return view('pages.club.registrations.partials.cards', compact('data', 'compClass'))->render();
         }
 
-        $team_id = auth()->user->club_id ?? null;
+        $team_id = auth()->user()->club_id ?? null;
         $compRegistrations = CompetitionTeam::query()
         ->where('team_id', $team_id)
         ->orderBy('created_at','desc');
@@ -50,16 +60,72 @@ class CompetitionEntryController extends Controller
     }
 
     public function create(Competition $competition){
+        Carbon::setLocale('id');
         $events = $competition->events;
         $club = Auth::user()->club;
         $athletes = $club->athletes;
         $officials = $club->officials;
+        $existingTeam = CompetitionTeam::where('competition_id', $competition->id)
+        ->where('team_id', auth()->user()->club_id)
+        ->with([
+            'competitionEntries' => function($q) {
+                $q->with([
+                    'competitionEntryRelayMembers' => function($q) {
+                        $q->where('status', 'active')->orderBy('leg_order');
+                    },
+                    'athlete',
+                ]);
+            },
+            'competitionTeamOfficials',
+        ])
+        ->first();
+
+        // Format existing data untuk JS
+        $existingJS = null;
+        if ($existingTeam) {
+            $existingJS = [
+                'team_id' => $existingTeam->team_id,
+                'officials' => $existingTeam->competitionTeamOfficials->map(fn($o) => [
+                    'id'   => $o->official_id,
+                    'role' => $o->role_override ?? $o->official->role,
+                ])->values(),
+                'competitionEntries' => $existingTeam->competitionEntries
+                    ->where('status', 'entered') //confirmed bagaimana ?
+                    ->groupBy('competition_event_id')
+                    ->map(function($eventEntries, $eventId) {
+                        $first   = $eventEntries->first();
+                        $isRelay = $first->is_relay;
+
+                        if ($isRelay) {
+                            return [
+                                'event_id'        => $eventId,
+                                'is_relay'        => true,
+                                'team_entry_time' => $first->entry_time,
+                                'athletes'        => $first->competitionEntryRelayMembers->map(fn($m) => [
+                                    'id'        => $m->athlete_id,
+                                    'leg_order' => $m->leg_order,
+                                ])->values(),
+                            ];
+                        }
+
+                        return [
+                            'event_id'  => $eventId,
+                            'is_relay'  => false,
+                            'athletes'  => $eventEntries->map(fn($e) => [
+                                'id'         => $e->athlete_id,
+                                'entry_time' => $e->entry_time,
+                            ])->values(),
+                        ];
+                    })->values(),
+            ];
+        }
         return view('pages.club.registrations.create', [
             'comp' => $competition,
             'events' => $events,
             'club' => $club,
             'athletes' => $athletes,
             'officials' => $officials,
+            'existingJS' => $existingJS
         ]);
     }
 
@@ -98,14 +164,267 @@ class CompetitionEntryController extends Controller
 
     public function store(Request $r){
         $validators = Validator::make($r->all(), [
-            'event_ids' => 'required|array',
-            'event_ids.*' => 'required|exists:competition_events,id',
-            'atlet_ids' => 'required|array',
-            'atlet_ids.*' => 'required|exists:athletes,id',
-            'official_ids' => 'required|array',
-            'official_ids.*' => 'required|exists:officials,id',
-            'competition_id' => 'required',
-            'team_id' => 'required',
+            'team_id' => ['required', 'integer', 'exists:clubs,id'],
+            'competition_id' => ['required', 'integer', 'exists:competitions,id'],
+            'entries' => ['required', 'array', 'min:1'],
+            'entries.*.athletes' => ['required', 'array', 'min:1'],
+            'entries.*.athletes.*' => ['integer', 'exists:athletes,id'],
+            'entries.*.entry_times' => ['nullable', 'array'],
+            'entries.*.entry_times.*' => ['nullable', 'regex:/^\d{2}:\d{2}\.\d{2}$/'],
+            'entries.*.team_entry_time' => ['nullable', 'regex:/^\d{2}:\d{2}\.\d{2}$/'],
+            'entries.*.relay_orders' => ['nullable', 'array'],
+            'entries.*.relay_orders.*' => ['nullable', 'integer', 'min:1'],
+            'comp_officials' => ['nullable', 'array'],
+            'comp_officials.*.id' => ['required', 'integer', 'exists:officials,id'],
+            'comp_officials.*.role' => ['nullable', 'string', 'max:50'],
         ]);
+
+        if ($validators->fails()) {
+            return response()->json([
+                'message' => 'Data Tidak Valid',
+                'errors'  => $validators->errors(),
+            ], 422);
+        }
+
+        try {
+            $errors     = [];
+            $comp       = Competition::find($r->competition_id);
+            $entries    = $r->entries ?? [];
+            $officials  = $r->comp_officials ?? [];
+            $team = Club::find($r->team_id);
+
+            if (!$team || $team->id !== auth()->user()->club_id) {
+                return response()->json([
+                    'message' => 'Data Tidak Valid',
+                    'errors'  => ['Team tidak valid atau bukan milik klub Anda.'],
+                ], 422);
+            }
+
+            foreach ($entries as $eventId => $entry) {
+                $event = CompetitionEvent::where('id', $eventId)
+                    ->whereHas('competitionSession', function($query) use ($comp){
+                        return $query->where('competition_id', $comp->id);
+                    })
+                    ->with('ageGroup')
+                    ->first();
+
+                if (!$event) {
+                    $errors[] = "Event ID {$eventId} tidak valid atau bukan bagian dari kompetisi ini.";
+                    continue;
+                }
+
+                $athleteIds = $entry['athletes'] ?? [];
+                $isRelay    = $event->event_type === EventType::estafet->value;
+                $maxRelay   = $event->max_relay_athletes;
+
+                // Cek atlet milik klub ini
+                $validAthletes = Athlete::whereIn('id', $athleteIds)
+                    ->where('club_id', $team->id)
+                    ->where('status', 'active')
+                    ->get()
+                    ->keyBy('id');
+
+                foreach ($athleteIds as $athId) {
+                    if (!$validAthletes->has($athId)) {
+                        $errors[] = "Atlet ID {$athId} tidak valid atau bukan milik klub Anda.";
+                        continue;
+                    }
+
+                    $athlete = $validAthletes->get($athId);
+
+                    // Validasi kelompok umur
+                    if ($event->ageGroup && $event->ageGroup->label !== 'UMUM') {
+                        $minDob = Carbon::parse($comp->start_date)->subYears($event->ageGroup->max_age)->format('Y-m-d');
+                        $maxDob = Carbon::parse($comp->start_date)->subYears($event->ageGroup->min_age)->format('Y-m-d');
+
+                        if ($athlete->bod < $minDob || $athlete->bod > $maxDob) {
+                            $errors[] = "Atlet {$athlete->name} tidak sesuai kelompok umur event";
+                        }
+                    }
+
+                    // Validasi gender event
+                    if ($event->gender && $event->gender !== 'mixed' && $athlete->gender !== $event->gender) {
+                        $errors[] = "Atlet {$athlete->name} tidak sesuai jenis kelamin event";
+                    }
+                }
+
+                // Validasi khusus estafet
+                if ($isRelay) {
+                    // cek max atlet
+                    if (count($athleteIds) > $maxRelay) {
+                        $errors[] = "Event {$event->event_number}: jumlah atlet melebihi batas estafet ({$maxRelay}).";
+                    }
+
+                    // cek relay_orders
+                    $relayOrders = $entry['relay_orders'] ?? [];
+
+                    // semua atlet harus punya urutan
+                    foreach ($athleteIds as $athId) {
+                        if (empty($relayOrders[$athId]) || $relayOrders[$athId] == 0) {
+                            $errors[] = "Event {$event->event_number}: atlet ID {$athId} belum memiliki urutan estafet.";
+                        }
+                    }
+
+                    // urutan tidak boleh duplikat
+                    $orderValues = array_values($relayOrders);
+                    if (count($orderValues) !== count(array_unique($orderValues))) {
+                        $errors[] = "Event {$event->event_number}: terdapat urutan estafet yang duplikat.";
+                    }
+                }
+            }
+            // ── 3. Validasi official ──────────────────────────────────────────────
+            foreach ($officials as $ofc) {
+                $valid = Official::where('id', $ofc['id'])
+                    ->where('club_id', $team->id)
+                    ->exists();
+
+                if (!$valid) {
+                    $errors[] = "Official ID {$ofc['id']} tidak valid atau bukan milik klub Anda.";
+                }
+            }
+
+            $message = 'Data tidak valid';
+            $oldEntry = CompetitionTeam::where('competition_id', $comp->id)
+                    ->where('team_id', $team->id)
+                    ->first();
+            // Cek masa registrasi //atau gunakan status saja, sehingga jika registration end date telah lewat namun stts masih open bisa update data
+            if (now()->gt($comp->registration_end)) {
+                $message = 'Gagal Simpan Entry';
+                $errors[] = "Masa registrasi telah ditutup";
+            }
+            if ($oldEntry->payment_status == 'paid') {
+                $message = 'Gagal Update Entry';
+                $errors[] = "Pembayaran telah dilakukan, silahkan hubungi panitia kompetisi";
+            }
+            if ($oldEntry->status == 'disqualified') {
+                $message = 'Gagal Update Entry';
+                $errors[] = "Team anda telah di diskualifikasi, silahkan hubungi panitia kompetisi";
+            }
+
+            if (!empty($errors)) {
+                return response()->json([
+                    'message' => $message,
+                    'errors'  => $errors,
+                ], 422);
+            }
+
+
+            // ── 5. Simpan data ────────────────────────────────────────────────────
+            DB::transaction(function () use ($comp, $entries, $officials, $team) {
+
+                // Upsert CompetitionTeam
+                $item = CompetitionTeam::updateOrCreate(
+                    [
+                        'competition_id' => $comp->id,
+                        'team_id'        => $team->id,
+                    ],
+                    [
+                        'status' => 'active',
+                    ]
+                );
+
+                // Upsert officials
+                $incomingOfficialIds = collect($officials)->pluck('id')->toArray();
+                // delete official yang tidak ada di list baru
+                CompetitionTeamOfficial::where('competition_team_id', $item->id)
+                    ->whereNotIn('official_id', $incomingOfficialIds)
+                    ->delete();
+                    // ->update(['status' => 'scratched']);
+
+                foreach ($officials as $ofc) {
+                    $ofcrole = Official::find($ofc['id'])->role ?? null;
+                    CompetitionTeamOfficial::updateOrCreate(
+                        [
+                            'competition_team_id' => $item->id,
+                            'official_id'    => $ofc['id'],
+                        ],
+                        [
+                            'role_override'    =>$ofc['role'] ?? $ofcrole,
+                        ]
+                    );
+                }
+
+                // simpan atau update registrasi per event
+                foreach ($entries as $eventId => $entry) {
+                    $event = CompetitionEvent::find($eventId);
+                    $isRelay    =  $event->event_type === EventType::estafet->value;
+
+                    $athleteIds  = $entry['athletes']     ?? [];
+                    $teamEntryTime  = $entry['team_entry_time']  ?? null;
+                    $entryTimes  = $entry['entry_times']  ?? [];
+                    $relayOrders = $entry['relay_orders'] ?? [];
+
+                    if($isRelay){
+                        $temp = CompetitionEntry::updateOrCreate(
+                            [
+                                'competition_team_id' => $item->id,
+                                'competition_event_id' => $eventId,
+                            ],
+                            [
+                                'athlete_id'     => null,
+                                'is_relay'     => true,
+                                'entry_time'     => $teamEntryTime,
+                                'status' => 'entered',
+                            ]
+                        );
+
+                        // Soft delete anggota yang tidak ada di list baru
+                        CompetitionEntryRelayMember::where('competition_entry_id', $temp->id)
+                            ->whereNotIn('athlete_id', $athleteIds)
+                            ->update(['status' => 'scratched']);
+
+                        foreach ($athleteIds as $athId) {
+                            CompetitionEntryRelayMember::updateOrCreate(
+                                [
+                                    'competition_entry_id' => $temp->id,
+                                    'athlete_id' => $athId,
+                                ],
+                                [
+                                    'leg_order' => $relayOrders[$athId] ?? null,
+                                    'status' => 'active',
+                                ]
+                            );
+                        }
+                    } else {
+                        // Soft delete atlet yang tidak ada di list baru
+                        CompetitionEntry::where('competition_team_id', $item->id)
+                            ->where('competition_event_id', $eventId)
+                            ->whereNotIn('athlete_id', $athleteIds)
+                            ->update(['status' => 'scratched']);
+
+                        foreach ($athleteIds as $athId) {
+                            CompetitionEntry::updateOrCreate(
+                                [
+                                    'competition_team_id' => $item->id,
+                                    'competition_event_id'=> $eventId,
+                                    'athlete_id'     => $athId,
+                                ],
+                                [
+                                    'is_relay'     => false,
+                                    'entry_time'     => $entryTimes[$athId]  ?? null,
+                                    'status' => 'entered',
+                                ]
+                            );
+                        }
+                    }
+                }
+
+                // Soft delete event yang tidak ada di submission baru
+                $incomingEventIds = array_keys($entries);
+                CompetitionEntry::where('competition_team_id', $item->id)
+                    ->whereNotIn('competition_event_id', $incomingEventIds)
+                    ->update(['status' => 'scratched']);
+            });
+
+            return response()->json([
+                'message' => 'Entry berhasil disimpan.',
+            ], 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Gagal menyimpan data. Terjadi kesalahan pada database.',
+                'error'   => config('app.debug') ? $e->getMessage() : null,
+            ], 422);
+        }
     }
+
 }
