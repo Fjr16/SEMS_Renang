@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\License;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,7 +21,7 @@ class OfficialFactory extends Factory
             'name'   => $this->faker->name(),
             'role'    => $this->faker->randomElement(['Pelatih Kepala', 'Asisten Pelatih', 'Manajer Tim', 'Dokter Tim', 'Fisioterapis']),
             'gender' => $this->faker->randomElement(['male','female']),
-            'license' => $this->faker->unique()->regexify('[A-Z]{2}[0-9]{6}'),
+            'license' => $this->faker->randomElement(License::cases()),
             'club_id'=> \App\Models\Club::inRandomOrder()->value('id'), // pastikan club sudah ada
         ];
     }

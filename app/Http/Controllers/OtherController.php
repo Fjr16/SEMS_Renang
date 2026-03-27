@@ -13,14 +13,14 @@ use Illuminate\Http\Request;
 class OtherController extends Controller
 {
     public function getClubByCategory(Request $r){
-        $categoryId = $r->input('category_id');
+        $type = $r->input('team_type');
         $keyword = $r->input('q', '');
         $page = $r->input('page', 1);
         $perPage = 10;
 
         $query = Club::query()
-        ->when($categoryId, function($q) use ($categoryId){
-            $q->where('club_role_category_id', $categoryId);
+        ->when($type, function($q) use ($type){
+            $q->where('team_type', $type);
         })
         ->when($keyword != '', function($q) use ($keyword){
             $q->where(function($qq) use ($keyword){
@@ -42,17 +42,14 @@ class OtherController extends Controller
     public function findAtletById($id){
         try {
             $item = Athlete::findOrFail($id);
-            $categoryId = null;
             $club = null;
             if($item && $item->club_id){
-                $categoryId = $item->club->club_role_category_id;
                 $club = $item->club;
             }
             return response()->json([
                 'status' => true,
                 'data' => [
                     'athlete' => $item,
-                    'category_id' => $categoryId ?? null,
                     'club' => $club ?? null
                 ]
             ]);
@@ -67,17 +64,14 @@ class OtherController extends Controller
     public function findOfficialById($id){
         try {
             $item = Official::findOrFail($id);
-            $categoryId = null;
             $club = null;
             if($item && $item->club_id){
-                $categoryId = $item->club->club_role_category_id;
                 $club = $item->club;
             }
             return response()->json([
                 'status' => true,
                 'data' => [
                     'official' => $item,
-                    'category_id' => $categoryId ?? null,
                     'club' => $club ?? null
                 ]
             ]);

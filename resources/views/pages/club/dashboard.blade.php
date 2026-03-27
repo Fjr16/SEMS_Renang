@@ -99,7 +99,7 @@
 
       <h1 class="h4 fw-bold mb-1 mt-2">Dashboard Team</h1>
       <div class="text-secondary">
-        <span class="fw-semibold">{{ $item?->clubRoleCategory?->name ?? '-' }}</span>
+        <span class="fw-semibold">{{ App\Enums\TeamType::tryFrom($item?->team_type)?->label() ?? '-' }}</span>
         <span class="mx-2">•</span>
         <span>{{ $item?->club_name ?? '-' }}</span>
       </div>

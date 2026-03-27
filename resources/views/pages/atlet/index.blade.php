@@ -83,11 +83,11 @@
                 <div class="row">
                     <div class="col-6">
                         <input type="hidden" name="athlete_id" id="athlete_id">
-                        <label class="form-label" for="club_role_category_id">Kategori Klub</label>
-                        <select name="club_role_category_id" id="club_role_category_id" class="form-control form-control-md">
+                        <label class="form-label" for="team_type">Kategori Klub</label>
+                        <select name="team_type" id="team_type" class="form-control form-control-md">
                             <option value=""></option>
                             @foreach ($clubCategories as $cat)
-                                <option value="{{ $cat->id }}" @selected(old('club_role_category_id') == $cat->id)>{{ $cat->name ?? '' }}</option>
+                                <option value="{{ $cat->value }}" @selected(old('team_type') == $cat->value)>{{ $cat->label() }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -183,7 +183,7 @@
             order:[[2,'asc']]
         });
 
-        $('#club_role_category_id').select2({
+        $('#team_type').select2({
             width:'100%',
             placeholder:'Pilih Kategori Klub',
             allowClear:true,
@@ -204,7 +204,7 @@
                     return {
                         q:params.term || '',
                         page:params.page || 1,
-                        category_id:$('#club_role_category_id').val()
+                        team_type:$('#team_type').val()
                     };
                 },
                 processResults:function(res,params){
@@ -231,7 +231,7 @@
             }
         });
 
-        $('#club_role_category_id').on('change', function () {
+        $('#team_type').on('change', function () {
             const hasCat = !!$(this).val();
             clubSelect.val(null).trigger('change');
 
@@ -294,10 +294,9 @@
             const result = await res.json();
             if(!result.status) throw new Error(result.message || 'Gagal mendapatkan data');
             const atlet = result.data.athlete;
-            const categoryId = result.data.category_id;
             const club = result.data.club;
             // isi data ke form
-            $('#club_role_category_id').val(categoryId).trigger('change');
+            $('#team_type').val(club.team_type ?? '').trigger('change');
             // preload klub
             if(club){
                 const option = new Option(`[${club.club_code}] ${club.club_name}`, club.id, true, true);
@@ -383,7 +382,7 @@
         if(placeholder) placeholder.classList.remove('d-none');
 
         // reset select2 klub
-        $('#club_role_category_id').val(null).trigger('change');
+        $('#team_type').val(null).trigger('change');
         $('#club_id').val(null).trigger('change').prop('disabled', true);
     });
 
