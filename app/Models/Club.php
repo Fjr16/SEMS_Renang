@@ -9,7 +9,6 @@ class Club extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'club_role_category_id',
         'club_name',
         'club_code',
         'club_city',
@@ -20,9 +19,6 @@ class Club extends Model
         'club_logo'
     ];
 
-    public function clubRoleCategory() {
-        return $this->belongsTo(ClubRoleCategory::class);
-    }
     public function athletes(){
         return $this->hasMany(Athlete::class);
     }

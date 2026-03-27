@@ -22,7 +22,7 @@
                         <th>Kategori</th>
                         <th>Kode</th>
                         <th>Nama</th>
-                        <th>Alamat</th>
+                        <th>Kota</th>
                         <th>Provinsi</th>
                         <th>Penanggung Jawab (PJ)</th>
                         <th>HP PJ</th>
@@ -44,10 +44,10 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <input type="hidden" name="club_id" id="club_id">
-                        <label class="form-label" for="club_category_id">Kategori</label>
-                        <select class="form-control" name="club_category_id" id="club_category_id">
+                        <label class="form-label" for="team_type">Kategori</label>
+                        <select class="form-control" name="team_type" id="team_type">
                             @foreach ($data as $category)
-                                <option value="{{ $category->id }}" @selected(old('club_category_id') == $category->id)>{{ '[' . $category->code .']' . ' ' . $category->name }}</option>
+                                <option value="{{ $category->value }}" @selected(old('team_type') == $category->value)>{{ $category->label() }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -76,12 +76,12 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="club_province">Provinsi</label>
-                        <input type="text" class="form-control" id="club_province" name="club_province">
+                        <label class="form-label" for="club_city">Kota</label>
+                        <input type="text" name="club_city" id="club_city" class="form-control">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="club_address">Alamat</label>
-                        <textarea name="club_address" id="club_address" class="form-control" rows="1"></textarea>
+                        <label class="form-label" for="club_province">Provinsi</label>
+                        <input type="text" class="form-control" id="club_province" name="club_province">
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="club_logo">Logo</label>
@@ -111,10 +111,10 @@
                 columns:[
                     {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
                     {data:'club_logo', name:'club_logo',defaultContent:'-', className:'text-center', orderable:false, searchable:false},
-                    {data:'club_role_category_id', name:'category.name',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                    {data:'tipe_klub', name:'team_type',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                     {data:'club_code', name:'club_code',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                     {data:'club_name', name:'club_name',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
-                    {data:'club_address', name:'club_address',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
+                    {data:'club_city', name:'club_city',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                     {data:'club_province', name:'club_province',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                     {data:'club_lead', name:'club_lead',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                     {data:'lead_phone', name:'lead_phone',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
@@ -208,13 +208,13 @@
             const data = table.row(tr).data();
 
             $('#club_id').val(data.id);
-            $('#club_category_id').val(data.category_id);
+            $('#team_type').val(data.team_type);
             $('#club_code').val(data.club_code);
             $('#club_name').val(data.club_name);
             $('#club_lead').val(data.club_lead);
             $('#lead_phone').val(data.lead_phone);
             $('#club_province').val(data.club_province);
-            $('#club_address').val(data.club_address);
+            $('#club_city').val(data.club_city);
             $('#modalClub').modal('show');
         }
 
