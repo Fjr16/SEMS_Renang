@@ -25,8 +25,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'status',
-        // 'role'
     ];
 
     /**
@@ -56,6 +54,6 @@ class User extends Authenticatable
         return $this->belongsTo(Club::class);
     }
     public function organization(){
-        return $this->hasOne(Organization::class);
+        return $this->belongsTo(Organization::class);
     }
 }

@@ -54,47 +54,33 @@
     .dt-actions .btn{ border-radius: .65rem; }
   </style>
 
-  {{-- Header --}}
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
     <div class="page-head flex-grow-1">
       <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
         <div>
           <h2 class="fw-bold mb-1">Roles & Permissions</h2>
-          <p class="text-muted mb-0">Kelola role, permission, dan mapping-nya</p>
+          <p class="text-muted mb-0">Kelola role dan mapping permission-nya</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
           <span class="chip"><i class="bi bi-shield-lock me-1"></i>Access Control</span>
           <span class="chip"><i class="bi bi-gear me-1"></i>Master Setting</span>
+            <button class="btn btn-primary" id="btnAddRole">
+                <i class="bi bi-plus-circle me-1"></i>Tambah Role
+            </button>
         </div>
       </div>
 
-      {{-- Tabs --}}
       <ul class="nav tab-pill mt-3" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabRoles" type="button" role="tab">
             <i class="bi bi-person-badge me-1"></i>Roles
           </button>
         </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabPerms" type="button" role="tab">
-            <i class="bi bi-key me-1"></i>Permissions
-          </button>
-        </li>
       </ul>
-    </div>
-
-    <div class="mt-3 mt-md-0 ms-md-3 d-flex gap-2 flex-wrap">
-      <button class="btn btn-primary" id="btnAddRole">
-        <i class="bi bi-plus-circle me-1"></i>Tambah Role
-      </button>
-      <button class="btn btn-outline-primary" id="btnAddPerm">
-        <i class="bi bi-plus-circle me-1"></i>Tambah Permission
-      </button>
     </div>
   </div>
 
   <div class="tab-content">
-    {{-- ===================== TAB ROLES ===================== --}}
     <div class="tab-pane fade show active" id="tabRoles" role="tabpanel">
       <div class="card soft-card border-0">
         <div class="card-body">
@@ -114,29 +100,8 @@
         </div>
       </div>
     </div>
-
-    {{-- ===================== TAB PERMISSIONS ===================== --}}
-    <div class="tab-pane fade" id="tabPerms" role="tabpanel">
-      <div class="card soft-card border-0">
-        <div class="card-body">
-          <div class="table-responsive">
-            <table id="permsTable" class="table table-hover align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th style="width:120px">Aksi</th>
-                  <th>Permission</th>
-                  <th>Guard</th>
-                  <th>Dibuat</th>
-                </tr>
-              </thead>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
-  {{-- ===================== MODAL ROLE (CREATE/EDIT) ===================== --}}
   <div class="modal fade" id="modalRole" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -166,39 +131,6 @@
       </div>
     </div>
   </div>
-
-  {{-- ===================== MODAL PERMISSION (CREATE/EDIT) ===================== --}}
-  <div class="modal fade" id="modalPerm" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <form id="formPerm">
-          @csrf
-          <input type="hidden" name="id" id="perm_id">
-          <div class="modal-header">
-            <h5 class="modal-title" id="permTitle">Tambah Permission</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label class="form-label">Nama Permission</label>
-              <input type="text" class="form-control" name="name" id="perm_name" required>
-              <div class="form-text">Contoh: <code>users.view</code>, <code>competitions.create</code>, <code>results.export</code></div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Guard</label>
-              <input type="text" class="form-control" name="guard_name" id="perm_guard" value="web">
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-            <button type="submit" class="btn btn-primary">Simpan</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  {{-- ===================== MODAL ASSIGN PERMISSIONS TO ROLE ===================== --}}
   <div class="modal fade" id="modalAssign" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
@@ -230,7 +162,6 @@
             </div>
 
             <div class="perm-box" id="permList">
-              {{-- diisi via JS --}}
             </div>
 
             <div class="text-secondary small mt-2">
@@ -253,10 +184,6 @@
 @push('scripts')
 <script>
   // ===================== Helpers =====================
-  function csrf() {
-    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? "{{ csrf_token() }}";
-  }
-
   function showSpinner(show){
     const el = document.getElementById('loadingSpinner');
     if(!el) return;
@@ -265,7 +192,6 @@
 
   // ===================== Init Modals =====================
   const modalRole   = new bootstrap.Modal(document.getElementById('modalRole'));
-  const modalPerm   = new bootstrap.Modal(document.getElementById('modalPerm'));
   const modalAssign = new bootstrap.Modal(document.getElementById('modalAssign'));
 
   document.getElementById('btnAddRole').addEventListener('click', () => {
@@ -274,14 +200,6 @@
     document.getElementById('role_name').value = '';
     document.getElementById('role_guard').value = 'web';
     modalRole.show();
-  });
-
-  document.getElementById('btnAddPerm').addEventListener('click', () => {
-    document.getElementById('permTitle').textContent = 'Tambah Permission';
-    document.getElementById('perm_id').value = '';
-    document.getElementById('perm_name').value = '';
-    document.getElementById('perm_guard').value = 'web';
-    modalPerm.show();
   });
 
   // ===================== DataTables Roles =====================
@@ -299,20 +217,6 @@
     order: [[1,'asc']],
   });
 
-  // ===================== DataTables Permissions =====================
-  const permsTable = $('#permsTable').DataTable({
-    processing: true,
-    serverSide: true,
-    ajax: "{{ route('permissions.get') }}",
-    columns: [
-      {data:'action', name:'action', className:'text-center dt-actions', orderable:false, searchable:false},
-      {data:'name', name:'name'},
-      {data:'guard_name', name:'guard_name', className:'text-center'},
-      {data:'created_at', name:'created_at', className:'text-center'},
-    ],
-    order: [[1,'asc']],
-  });
-
   // ===================== Submit Role =====================
   document.getElementById('formRole').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -325,7 +229,7 @@
     try{
       const res = await fetch(url, {
         method: 'POST',
-        headers: {'X-CSRF-TOKEN': csrf()},
+        headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}"},
         body: fd
       });
       const json = await res.json();
@@ -342,42 +246,6 @@
            icon:'error',
            text:err.message || 'Gagal simpan role'
        });
-    }finally{
-      showSpinner(false);
-    }
-  });
-
-  // ===================== Submit Permission =====================
-  document.getElementById('formPerm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('perm_id').value;
-    const url = "{{ route('permissions.store') }}";
-
-    const fd = new FormData(e.target);
-
-    showSpinner(true);
-    try{
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {'X-CSRF-TOKEN': csrf()},
-        body: fd
-      });
-      const json = await res.json();
-      if(!res.ok || json.status === false) throw new Error(json.message || 'Gagal simpan permission');
-
-      modalPerm.hide();
-      permsTable.ajax.reload(null,false);
-      rolesTable.ajax.reload(null,false); // update count
-
-      Toast.fire({
-          icon:'success',
-          text:json.message || 'Berhasil simpan permission'
-      });
-    }catch(err){
-        Toast.fire({
-            icon:'error',
-            text:err.message || 'Gagal simpan permission'
-        });
     }finally{
       showSpinner(false);
     }
@@ -464,7 +332,7 @@
     try{
       const res = await fetch(url, {
         method: 'POST',
-        headers: {'X-CSRF-TOKEN': csrf()},
+        headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}"},
         body: fd
       });
       const json = await res.json();
@@ -486,37 +354,5 @@
       showSpinner(false);
     }
   });
-
-  async function deletePermission(permission_id){
-    try {
-        showSpinner(true);
-        const res = await fetch("{{ url('/master/permissions') }}/" + permission_id, {
-            method: 'DELETE',
-            headers: {'X-CSRF-TOKEN': csrf()},
-        });
-        if(!res.ok) throw new Error('Gagal hapus permissions');
-        const data = await res.json();
-
-        permsTable.ajax.reload(null,false);
-        Toast.fire({
-            icon:'success',
-            text:data.message || 'Berhasil hapus permission'
-        });
-    } catch (err) {
-        Toast.fire({
-            icon:'error',
-            text:err.message || 'Gagal hapus permission'
-        });
-    } finally {
-        showSpinner(false);
-    }
-  }
-
-
-    // document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
-    //     btn.addEventListener('shown.bs.tab', () => {
-    //         $($.fn.dataTable.tables(true)).DataTable().columns.adjust().responsive?.recalc?.();
-    //     });
-    // });
 </script>
 @endpush

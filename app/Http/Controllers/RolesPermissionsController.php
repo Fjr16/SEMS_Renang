@@ -47,32 +47,6 @@ class RolesPermissionsController extends Controller
             ->make(true);
     }
 
-    public function permissionsData()
-    {
-        $query = Permission::query()->orderBy('name');
-
-        return DataTables::of($query)
-            ->addColumn('action', function (Permission $perm) {
-                return '
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-danger"
-                                title="Delete"
-                                onclick="deletePermission(' . $perm->id . ')">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                ';
-            })
-            ->editColumn('guard_name', fn($p) =>
-                '<span class="badge bg-light text-dark border">' . e($p->guard_name) . '</span>'
-            )
-            ->editColumn('created_at', fn($p) =>
-                $p->created_at?->format('d/m/Y')
-            )
-            ->rawColumns(['action','guard_name'])
-            ->make(true);
-    }
-
     public function storeRole(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -101,37 +75,6 @@ class RolesPermissionsController extends Controller
         return response()->json([
             'status'  => true,
             'message' => 'Role berhasil disimpan',
-        ]);
-    }
-
-    public function storePermission(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'id'         => 'nullable|exists:permissions,id',
-            'name'       => 'required|string|max:150',
-            'guard_name' => 'required|string|max:50',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status'  => false,
-                'message' => $validator->errors()->first(),
-            ]);
-        }
-
-        app(PermissionRegistrar::class)->forgetCachedPermissions();
-
-        $perm = $request->id
-            ? Permission::findOrFail($request->id)
-            : new Permission();
-
-        $perm->name       = $request->name;
-        $perm->guard_name = $request->guard_name;
-        $perm->save();
-
-        return response()->json([
-            'status'  => true,
-            'message' => 'Permission berhasil disimpan',
         ]);
     }
 
@@ -164,25 +107,5 @@ class RolesPermissionsController extends Controller
             'status'  => true,
             'message' => 'Mapping permission berhasil disimpan',
         ]);
-    }
-
-    public function deletePermission($id)
-    {
-        try {
-            $perm = Permission::findOrFail($id);
-            $perm->delete();
-
-            app(PermissionRegistrar::class)->forgetCachedPermissions();
-
-            return response()->json([
-                'status'  => true,
-                'message' => 'Permission berhasil dihapus',
-            ]);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Permission gagal dihapus',
-            ]);
-        }
     }
 }

@@ -66,12 +66,10 @@ Route::prefix('/master')->group(function(){
         Route::post('/store', [UserController::class, 'store'])->name('users.store');
 
         Route::delete('/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::post('/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
 
         Route::get('/{id}/roles', [UserController::class, 'userRoles']);
         Route::post('/{id}/roles/sync', [UserController::class, 'syncUserRoles']);
-
-        Route::get('/{id}/permissions', [UserController::class, 'userPermissions']);
-        Route::post('/{id}/permissions/sync', [UserController::class, 'syncUserPermissions']);
     });
 
     Route::prefix('/roles')->group(function(){
@@ -84,12 +82,12 @@ Route::prefix('/master')->group(function(){
         Route::post('/{id}/permissions/sync', [RolesPermissionsController::class, 'syncRolePermissions']);
 
     });
-    Route::prefix('/permissions')->group(function(){
-        Route::get('/datatables', [RolesPermissionsController::class, 'permissionsData'])->name('permissions.get');
+    // Route::prefix('/permissions')->group(function(){
+        // Route::get('/datatables', [RolesPermissionsController::class, 'permissionsData'])->name('permissions.get');
 
-        Route::post('/store', [RolesPermissionsController::class, 'storePermission'])->name('permissions.store');
-        Route::delete('/{id}', [RolesPermissionsController::class, 'deletePermission']);
-    });
+        // Route::post('/store', [RolesPermissionsController::class, 'storePermission'])->name('permissions.store');
+        // Route::delete('/{id}', [RolesPermissionsController::class, 'deletePermission']);
+    // });
 });
 
 Route::get('/users/profile/{id}', [UserController::class, 'profile'])->name('user.profile');
