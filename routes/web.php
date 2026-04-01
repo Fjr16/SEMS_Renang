@@ -73,7 +73,6 @@ Route::prefix('/master')->group(function(){
     });
 
     Route::prefix('/roles')->group(function(){
-        Route::get('/', [RolesPermissionsController::class, 'index'])->name('roles.index');
         Route::get('/datatables', [RolesPermissionsController::class, 'rolesData'])->name('roles.get');
 
         Route::post('/store', [RolesPermissionsController::class, 'storeRole'])->name('roles.store');
@@ -82,12 +81,6 @@ Route::prefix('/master')->group(function(){
         Route::post('/{id}/permissions/sync', [RolesPermissionsController::class, 'syncRolePermissions']);
 
     });
-    // Route::prefix('/permissions')->group(function(){
-        // Route::get('/datatables', [RolesPermissionsController::class, 'permissionsData'])->name('permissions.get');
-
-        // Route::post('/store', [RolesPermissionsController::class, 'storePermission'])->name('permissions.store');
-        // Route::delete('/{id}', [RolesPermissionsController::class, 'deletePermission']);
-    // });
 });
 
 Route::get('/users/profile/{id}', [UserController::class, 'profile'])->name('user.profile');

@@ -133,7 +133,6 @@
                             <tr>
                             <th style="width:120px">Aksi</th>
                             <th>Role</th>
-                            <th>Guard</th>
                             <th>Permissions</th>
                             <th>Dibuat</th>
                             </tr>
@@ -261,11 +260,6 @@
             <div class="mb-3">
               <label class="form-label">Nama Role</label>
               <input type="text" class="form-control" name="name" id="role_name" required>
-              <div class="form-text">Contoh: <code>admin</code>, <code>official</code>, <code>club_manager</code></div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Guard</label>
-              <input type="text" class="form-control" name="guard_name" id="role_guard" value="web">
             </div>
           </div>
           <div class="modal-footer">
@@ -301,10 +295,10 @@
                 </button>
               </div>
 
-              <div class="input-group" style="max-width: 320px;">
+              {{-- <div class="input-group" style="max-width: 320px;">
                 <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
                 <input type="text" class="form-control" id="permSearch" placeholder="Cari permission…">
-              </div>
+              </div> --}}
             </div>
 
             <div class="perm-box" id="permList">
@@ -617,13 +611,11 @@
         }
     });
 
-    // lanjut ke roles lagi, user sudah fix
     // ===================== Roles =====================
     document.getElementById('btnAddRole').addEventListener('click', () => {
         document.getElementById('roleTitle').textContent = 'Tambah Role';
         document.getElementById('role_id').value = '';
         document.getElementById('role_name').value = '';
-        document.getElementById('role_guard').value = 'web';
         modalRole.show();
     });
     const rolesTable = $('#rolesTable').DataTable({
@@ -631,11 +623,10 @@
         serverSide: true,
         ajax: "{{ route('roles.get') }}",
         columns: [
-        {data:'action', name:'action', className:'text-center dt-actions', orderable:false, searchable:false},
-        {data:'name', name:'name'},
-        {data:'guard_name', name:'guard_name', className:'text-center'},
-        {data:'permissions_count', name:'permissions_count', className:'text-center'},
-        {data:'created_at', name:'created_at', className:'text-center'},
+            {data:'action', name:'action', className:'text-center dt-actions', orderable:false, searchable:false},
+            {data:'name', name:'name'},
+            {data:'permissions_count', name:'permissions_count', className:'text-center', searchable:false},
+            {data:'created_at', name:'created_at', className:'text-center', searchable:false},
         ],
         order: [[1,'asc']],
     });
@@ -700,27 +691,28 @@
         const box = document.getElementById('permList');
         box.innerHTML = perms.map(p => {
         const checked = assignedSet.has(p.id) ? 'checked' : '';
+        // return `
+        //     <label class="d-flex align-items-center justify-content-between gap-2 mb-2">
+        //     <div class="d-flex align-items-center gap-2">
+        //         <input class="form-check-input perm-check" type="checkbox" name="permissions[]" value="${p.id}" ${checked}>
+        //         <div>
+        //         <div class="fw-semibold">${escapeHtml(p.name)}</div>
+        //         <div class="text-secondary small">guard: ${escapeHtml(p.guard_name ?? 'web')}</div>
+        //         </div>
+        //     </div>
+        //     <span class="badge text-bg-light border">${p.id}</span>
+        //     </label>
+        // `;
         return `
-            <label class="perm-item d-flex align-items-center justify-content-between gap-2 mb-2">
+            <label class="d-flex align-items-center mb-2">
             <div class="d-flex align-items-center gap-2">
                 <input class="form-check-input perm-check" type="checkbox" name="permissions[]" value="${p.id}" ${checked}>
-                <div>
                 <div class="fw-semibold">${escapeHtml(p.name)}</div>
-                <div class="text-secondary small">guard: ${escapeHtml(p.guard_name ?? 'web')}</div>
-                </div>
             </div>
-            <span class="badge text-bg-light border">${p.id}</span>
             </label>
         `;
         }).join('');
     }
-    document.getElementById('permSearch').addEventListener('input', (e) => {
-        const q = e.target.value.toLowerCase().trim();
-        document.querySelectorAll('#permList .perm-item').forEach(item => {
-        const text = item.innerText.toLowerCase();
-        item.style.display = text.includes(q) ? '' : 'none';
-        });
-    });
     document.getElementById('btnSelectAll').addEventListener('click', () => {
         document.querySelectorAll('#permList .perm-check').forEach(ch => ch.checked = true);
     });
@@ -736,28 +728,28 @@
 
         showSpinner(true);
         try{
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}"},
-            body: fd
-        });
-        const json = await res.json();
-        if(!res.ok || json.status === false) throw new Error(json.message || 'Gagal sync permissions');
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}"},
+                body: fd
+            });
+            const json = await res.json();
+            if(!res.ok || json.status === false) throw new Error(json.message || 'Gagal sync permissions');
 
-        modalAssign.hide();
-        rolesTable.ajax.reload(null,false);
+            modalAssign.hide();
+            rolesTable.ajax.reload(null,false);
 
-        Toast.fire({
-            icon:'success',
-            text:json.message || 'Berhasil simpan data'
-        });
+            Toast.fire({
+                icon:'success',
+                text:json.message || 'Berhasil simpan data'
+            });
         }catch(err){
-        Toast.fire({
-            icon:'error',
-            text:err.message || 'Gagal Simpan Data'
-        });
+            Toast.fire({
+                icon:'error',
+                text:err.message || 'Gagal Simpan Data'
+            });
         }finally{
-        showSpinner(false);
+            showSpinner(false);
         }
     });
 </script>

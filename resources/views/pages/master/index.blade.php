@@ -70,17 +70,17 @@
         'route' => route('competition.index'),
         ],
         [
-        'title' => 'User Sistem',
-        'desc'  => 'Kelola data user dan akses sistem',
+        'title' => 'Manajemen User & Hak Akses',
+        'desc'  => 'Kelola data user dan hak akses sistem',
         'icon'  => 'bi-shield-lock',
         'route' => route('users.index'),
         ],
-        [
-        'title' => 'Roles & Permissions',
-        'desc'  => 'Kelola data master roles dan permissions',
-        'icon'  => 'bi-key',
-        'route' => route('roles.index'),
-        ],
+        // [
+        // 'title' => 'Roles & Permissions',
+        // 'desc'  => 'Kelola data master roles dan permissions',
+        // 'icon'  => 'bi-key',
+        // 'route' => route('roles.index'),
+        // ],
     ];
     @endphp
 
