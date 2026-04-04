@@ -137,7 +137,6 @@
 @php
   // $competitionsOpen, $entries (riwayat), $counts (draft,pending,approved,rejected)
   $entries = $entries ?? collect();
-  $counts = $counts ?? ['draft'=>0,'pending'=>0,'approved'=>0,'rejected'=>0];
 @endphp
 
 <div class="page-hero p-3 p-md-4 mb-3">
@@ -178,13 +177,17 @@
   </div>
 
   @if (Route::is('manager.club.registration'))
-  {{-- Summary status --}}
-  <div class="row g-2 mt-3">
-    <div class="col-6 col-md-3"><div class="mini-kv"><small>Draft</small>{{ $counts['draft'] ?? 0 }}</div></div>
-    <div class="col-6 col-md-3"><div class="mini-kv"><small>Pending</small>{{ $counts['pending'] ?? 0 }}</div></div>
-    <div class="col-6 col-md-3"><div class="mini-kv"><small>Approved</small>{{ $counts['approved'] ?? 0 }}</div></div>
-    <div class="col-6 col-md-3"><div class="mini-kv"><small>Rejected</small>{{ $counts['rejected'] ?? 0 }}</div></div>
-  </div>
+    {{-- Summary status --}}
+    <div class="row g-2 mt-3">
+        @foreach (App\Enums\CompetitionTeamStatus::cases() as $registStts)
+            <div class="col-6 col-md">
+                <div class="mini-kv {{ $registStts->class() }} text-white rounded-3 p-2 text-center">
+                    <div class="fs-4 fw-bold">{{ $counts[$registStts->value] ?? 0 }}</div>
+                    <small class="text-white opacity-75">{{ $registStts->label() }}</small>
+                </div>
+            </div>
+        @endforeach
+    </div>
 
   {{-- Tabs --}}
   <ul class="nav tab-pill mt-3 gap-2" role="tablist">
@@ -281,28 +284,6 @@
   @if (Route::is('manager.club.registration'))
   {{-- =============== TAB HISTORY =============== --}}
   <div class="tab-pane fade" id="tabHistory">
-    {{-- <div class="soft-card p-3 mb-3">
-      <div class="d-flex flex-column flex-lg-row gap-2 align-items-lg-center justify-content-between">
-        <div class="fw-bold">Riwayat Pendaftaran</div>
-
-        <div class="d-flex gap-2 flex-wrap">
-          <select id="historyStatus" class="form-select" style="max-width: 210px">
-            <option value="">Semua Status</option>
-            <option value="draft">Draft</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-
-          <div class="searchbar px-3 py-2" style="min-width: 260px;">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-search text-secondary"></i>
-              <input id="historySearch" type="text" class="form-control p-0" placeholder="Cari kompetisi/kode…">
-            </div>
-          </div>
-        </div>
-      </div>
-    </div> --}}
     <div class="soft-card filter-card p-3 mb-3">
         <form method="GET" class="row g-2">
             {{-- Search --}}
@@ -340,7 +321,7 @@
                     </select>
 
                     <button class="btn btn-primary btn-pill" type="submit">
-                    <i class="bi bi-funnel"></i> Filter
+                        <i class="bi bi-funnel"></i> Filter
                     </button>
 
                     <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-ghost" type="button">
@@ -362,69 +343,126 @@
     @else
       <div class="row g-3" id="historyGrid">
         @foreach($entries as $e)
-          @php
-            $st = $e->status ?? 'draft';
-            $pill = match($st){
-              'pending','submitted' => 'status-pill status-pending',
-              'approved' => 'status-pill status-approved',
-              'rejected' => 'status-pill status-rejected',
-              default => 'status-pill status-draft'
-            };
-            $stLabel = strtoupper($st === 'submitted' ? 'PENDING' : $st);
-          @endphp
+            @php
+                $events_count = $e->competitionEntries
+                                ->whereIn('status', [\App\Enums\CompetitionTeamEntryStatus::Pending->value, \App\Enums\CompetitionTeamEntryStatus::Active->value])
+                                ->groupBy('competition_event_id')->count();
+                $individualAtlets = $e->competitionEntries->where('is_relay', false)
+                                    ->whereIn('status', [\App\Enums\CompetitionTeamEntryStatus::Pending->value, \App\Enums\CompetitionTeamEntryStatus::Active->value])
+                                    ->pluck('athlete_id')->unique();
+                $relayAtlets = $e->competitionEntries->where('is_relay', true)
+                            ->flatMap(function($entry){
+                                return $entry->competitionEntryRelayMembers
+                                        ->where('status', 'active')
+                                        ->pluck('athlete_id');
+                            })->unique();
 
-          <div class="col-12 col-lg-6 history-item" data-status="{{ $st }}">
+                $athletes_count = $individualAtlets->merge($relayAtlets)->unique()->count();
+                $st = $e->status instanceof \App\Enums\CompetitionTeamStatus
+                    ? $e->status
+                    : \App\Enums\CompetitionTeamStatus::tryFrom($e->status ?? 'pending');
+                $paySt = $e->payment_status instanceof \App\Enums\CompetitionTeamPaymentStatus
+                    ? $e->payment_status
+                    : \App\Enums\CompetitionTeamPaymentStatus::tryFrom($e->payment_status ?? 'unpaid');
+            @endphp
+
+          <div class="col-12 col-lg-6 history-item" data-status="{{ $st?->value }}">
             <div class="soft-card p-3">
-              <div class="d-flex align-items-start justify-content-between gap-2">
-                <div>
-                  <div class="fw-bold">{{ $e->competition_name ?? 'Kompetisi' }}</div>
-                  <div class="text-secondary small">
-                    <span class="badge text-bg-light border">Entry #{{ $e->code ?? ($e->id ?? '-') }}</span>
-                    <span class="ms-2">{{ $e->created_at_label ?? '-' }}</span>
-                  </div>
+                <div class="d-flex align-items-start justify-content-between gap-2">
+                    <div>
+                        <div class="fw-bold">{{ '[' . ($e->competition?->code ?? '-') . '] ' . ($e->competition?->name ?? '-') }}</div>
+                        <div class="text-secondary small mt-1 d-flex align-items-center gap-2 flex-wrap">
+                            <span class="badge text-bg-light border">Entry #{{ str_pad($e->id,2,'0', STR_PAD_LEFT) }}</span>
+                            <span>
+                                <i class="bi bi-calendar3 me-1"></i>
+                                {{ \Carbon\Carbon::parse($e->created_at)->translatedFormat('d F Y') }}
+                            </span>
+                        </div>
+                    </div>
+                    <span class="badge {{ $st?->class() ?? 'bg-secondary' }} text-white text-nowrap">
+                        <i class="{{ $st?->icon() ?? 'bi bi-circle' }} me-1"></i>
+                        {{ $st?->label() ?? 'Tidak Diketahui' }}
+                    </span>
                 </div>
-                <span class="{{ $pill }}">{{ $stLabel }}</span>
-              </div>
 
-              <div class="row g-2 mt-2">
-                <div class="col-4"><div class="mini-kv"><small>Event</small>{{ $e->events_count ?? 0 }}</div></div>
-                <div class="col-4"><div class="mini-kv"><small>Atlet</small>{{ $e->athletes_count ?? 0 }}</div></div>
-                <div class="col-4"><div class="mini-kv"><small>Official</small>{{ $e->officials_count ?? 0 }}</div></div>
-              </div>
-
-              <div class="d-flex gap-2 flex-wrap mt-3">
-                {{-- <a href="{{ route('cm.entries.show', $e->id ?? 0) ?? '#' }}" class="btn btn-outline-secondary btn-pill btn-sm"> --}}
-                <a href="#" class="btn btn-outline-secondary btn-pill btn-sm">
-                  <i class="bi bi-eye me-1"></i>Detail
-                </a>
-
-                @if(in_array($st, ['draft']))
-                  {{-- <a href="{{ route('cm.registrations.edit', $e->id ?? 0) ?? '#' }}" class="btn btn-primary btn-pill btn-sm"> --}}
-                  <a href="#" class="btn btn-primary btn-pill btn-sm">
-                    <i class="bi bi-pencil-square me-1"></i>Lanjutkan
-                  </a>
-                @endif
-
-                @if(in_array($st, ['approved']))
-                  {{-- <a href="{{ route('cm.entries.export', $e->id ?? 0) ?? '#' }}" class="btn btn-outline-primary btn-pill btn-sm"> --}}
-                  <a href="#" class="btn btn-outline-primary btn-pill btn-sm">
-                    <i class="bi bi-download me-1"></i>Export
-                  </a>
-                @endif
-
-                @if(in_array($st, ['draft','submitted','pending']))
-                  <button type="button" class="btn btn-outline-danger btn-pill btn-sm"
-                          onclick="alert('Nanti sambungkan ke endpoint cancel')">
-                    <i class="bi bi-x-circle me-1"></i>Batalkan
-                  </button>
-                @endif
-              </div>
-
-              @if(!empty($e->last_note))
-                <div class="text-secondary small mt-2">
-                  <i class="bi bi-chat-left-text me-1"></i>{{ $e->last_note }}
+                <div class="row g-2 mt-2">
+                    <div class="col-4">
+                        <div class="mini-kv text-center">
+                            <small><i class="bi bi-flag me-1"></i>Event</small>
+                            {{-- {{ $e->competitionEntries->groupBy('competition_event_id')->count() ?? 0 }} --}}
+                            {{ $events_count }}
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="mini-kv text-center">
+                            <small><i class="bi bi-person-arms-up me-1"></i>Atlet</small>
+                            {{ $athletes_count }}
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="mini-kv text-center">
+                            <small><i class="bi bi-person-badge me-1"></i>Official</small>
+                            {{ $e->competitionTeamOfficials->count() ?? 0 }}
+                        </div>
+                    </div>
                 </div>
-              @endif
+
+              {{-- Payment Info --}}
+                <div class="mt-3 p-2 rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-2"
+                    style="background: var(--bs-light)">
+                    <div class="d-flex align-items-center gap-2">
+                        <small class="text-secondary">Status Pembayaran</small>
+                        <span class="badge {{ $paySt?->class() ?? 'bg-secondary' }}">
+                            <i class="{{ $paySt?->icon() ?? 'bi bi-circle' }} me-1"></i>{{ $paySt?->label() ?? 'Tidak diketahui' }}
+                        </span>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold text-dark">
+                            Rp {{ number_format($e->total_fee ?? 0, 0, ',', '.') }}
+                        </div>
+                        <small class="text-secondary">Total Biaya</small>
+                    </div>
+                </div>
+
+                {{-- Action Buttons --}}
+                <div class="d-flex gap-2 flex-wrap mt-3">
+                    <a href="#" class="btn btn-outline-secondary btn-pill btn-sm">
+                        <i class="bi bi-eye me-1"></i>Detail
+                    </a>
+
+                    @if($st?->value === App\Enums\CompetitionTeamStatus::Pending->value)
+                        <a href="#" class="btn btn-outline-primary btn-pill btn-sm">
+                            <i class="bi bi-pencil-square me-1"></i>Edit Entry
+                        </a>
+                        {{-- <button class="btn btn-outline-danger btn-pill btn-sm">
+                            <i class="bi bi-x-circle me-1"></i>Batalkan Pendaftaran
+                        </button> --}}
+                    @endif
+
+                    @if($st?->value === App\Enums\CompetitionTeamStatus::Active->value)
+                        <a href="#" class="btn btn-outline-success btn-pill btn-sm">
+                            <i class="bi bi-download me-1"></i>Export Start List
+                        </a>
+                        @if(($e->payment_status ?? 'unpaid') !== App\Enums\CompetitionTeamPaymentStatus::Paid->value)
+                            <a href="#" class="btn btn-primary btn-pill btn-sm">
+                                <i class="bi bi-credit-card me-1"></i>Bayar Sekarang
+                            </a>
+                        @endif
+                    @endif
+
+                    @if($st?->value === App\Enums\CompetitionTeamStatus::Rejected->value)
+                        <a href="#" class="btn btn-outline-secondary btn-pill btn-sm">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Daftar Ulang
+                        </a>
+                    @endif
+
+                    @if(in_array($st?->value, [App\Enums\CompetitionTeamStatus::Withdrawn->value, App\Enums\CompetitionTeamStatus::Disqualified->value]))
+                        <span class="text-secondary small fst-italic align-self-center">
+                            <i class="bi bi-info-circle me-1"></i>
+                            {{ $st?->value === App\Enums\CompetitionTeamStatus::Withdrawn->value ? 'Tim dinyatakan tidak hadir oleh panitia' : 'Tim didiskualifikasi oleh panitia' }}
+                        </span>
+                    @endif
+                </div>
             </div>
           </div>
         @endforeach

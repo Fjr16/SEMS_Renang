@@ -19,7 +19,7 @@ return new class extends Migration
             $table->boolean('is_relay')->nullable(false);
             $table->string('entry_time',20)->nullable(true);
             $table->string('seed_time',20)->nullable(true);
-            $table->enum('status', ['entered', 'confirmed', 'scratched'])->default('entered');
+            $table->string('status',20)->nullable(false);
             $table->timestamps();
         });
     }

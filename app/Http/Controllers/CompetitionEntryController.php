@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CompetitionStatus;
+use App\Enums\CompetitionTeamEntryStatus;
+use App\Enums\CompetitionTeamPaymentStatus;
+use App\Enums\CompetitionTeamStatus;
 use App\Enums\EventType;
 use App\Models\Athlete;
 use App\Models\Club;
@@ -22,6 +25,7 @@ use Illuminate\Support\Facades\Validator;
 class CompetitionEntryController extends Controller
 {
     public function index(){
+        Carbon::setLocale('id');
         $q = request('q');
         $stts = request('status', null);
 
@@ -51,12 +55,33 @@ class CompetitionEntryController extends Controller
         }
 
         $team_id = auth()->user()->club_id ?? null;
-        $compRegistrations = CompetitionTeam::query()
-        ->where('team_id', $team_id)
-        ->orderBy('created_at','desc');
-        $entries = $compRegistrations->paginate(21)->withQueryString();
 
-        return view('pages.club.registrations.index',compact('data', 'compClass', 'entries'));
+        // Hitung counts per status
+        $counts = CompetitionTeam::query()
+            ->where('team_id', $team_id)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
+
+        // Pastikan semua status ada (default 0)
+        foreach (CompetitionTeamStatus::cases() as $case) {
+            $counts[$case->value] = $counts[$case->value] ?? 0;
+        }
+
+        $entries = CompetitionTeam::query()
+        ->where('team_id', $team_id)
+        ->with([
+            'competitionEntries',
+            'competitionEntries.competitionEntryRelayMembers'
+        ])
+        ->orderBy('created_at','desc')
+        ->paginate(21)
+        ->withQueryString();
+
+        // $events_count = $entries
+
+        return view('pages.club.registrations.index',compact('data', 'compClass', 'entries', 'counts'));
     }
 
     public function create(Competition $competition){
@@ -90,7 +115,10 @@ class CompetitionEntryController extends Controller
                     'role' => $o->role_override ?? $o->official->role,
                 ])->values(),
                 'competitionEntries' => $existingTeam->competitionEntries
-                    ->where('status', 'entered') //confirmed bagaimana ?
+                    ->whereIn('status', [
+                        CompetitionTeamEntryStatus::Pending->value,
+                        CompetitionTeamEntryStatus::Active->value
+                    ])
                     ->groupBy('competition_event_id')
                     ->map(function($eventEntries, $eventId) {
                         $first   = $eventEntries->first();
@@ -288,17 +316,14 @@ class CompetitionEntryController extends Controller
                     ->where('team_id', $team->id)
                     ->first();
             // Cek masa registrasi //atau gunakan status saja, sehingga jika registration end date telah lewat namun stts masih open bisa update data
-            if (now()->gt($comp->registration_end)) {
+            if (now()->toDateString() > $comp->registration_end) {
                 $message = 'Gagal Simpan Entry';
                 $errors[] = "Masa registrasi telah ditutup";
             }
-            if ($oldEntry->payment_status == 'paid') {
+            // ditolak tidak di larang update karena memikirkan kemungkinan untuk perbaikan data agar diterima
+            if ($oldEntry?->status == CompetitionTeamStatus::Disqualified->value || $oldEntry?->status == CompetitionTeamStatus::Withdrawn->value) {
                 $message = 'Gagal Update Entry';
-                $errors[] = "Pembayaran telah dilakukan, silahkan hubungi panitia kompetisi";
-            }
-            if ($oldEntry->status == 'disqualified') {
-                $message = 'Gagal Update Entry';
-                $errors[] = "Team anda telah di diskualifikasi, silahkan hubungi panitia kompetisi";
+                $errors[] = "Team anda telah ". CompetitionTeamStatus::from($oldEntry->status)->label() .", silahkan hubungi panitia kompetisi";
             }
 
             if (!empty($errors)) {
@@ -311,6 +336,18 @@ class CompetitionEntryController extends Controller
 
             // ── 5. Simpan data ────────────────────────────────────────────────────
             DB::transaction(function () use ($comp, $entries, $officials, $team) {
+                $existingActiveRegistration = CompetitionTeam::where('competition_id', $comp->id)
+                    ->where('team_id', $team->id)
+                    ->where('status', CompetitionTeamStatus::Active->value)
+                    ->first();
+
+                // Tambah atlet ya
+                // event baru Ya
+                // Ganti anggota relay Ya
+                // CompetitionTeam->status == active ya
+                // Update entry time saja❌ Tidak perlu, panitia yang urus seed time
+                // Cek apakah ada perubahan yang perlu verifikasi ulang
+                $needsReview = $this->needReviewCheck($existingActiveRegistration, $entries);
 
                 // Upsert CompetitionTeam
                 $item = CompetitionTeam::updateOrCreate(
@@ -319,7 +356,8 @@ class CompetitionEntryController extends Controller
                         'team_id'        => $team->id,
                     ],
                     [
-                        'status' => 'active',
+                        'status' => $needsReview ? CompetitionTeamStatus::Pending->value : ($existingActiveRegistration?->status ?? CompetitionTeamStatus::Pending->value),
+                        'payment_status' => $needsReview ? CompetitionTeamPaymentStatus::Unpaid->value : ($existingActiveRegistration?->status ?? CompetitionTeamPaymentStatus::Unpaid->value),
                     ]
                 );
 
@@ -329,7 +367,6 @@ class CompetitionEntryController extends Controller
                 CompetitionTeamOfficial::where('competition_team_id', $item->id)
                     ->whereNotIn('official_id', $incomingOfficialIds)
                     ->delete();
-                    // ->update(['status' => 'scratched']);
 
                 foreach ($officials as $ofc) {
                     $ofcrole = Official::find($ofc['id'])->role ?? null;
@@ -347,14 +384,37 @@ class CompetitionEntryController extends Controller
                 // simpan atau update registrasi per event
                 foreach ($entries as $eventId => $entry) {
                     $event = CompetitionEvent::find($eventId);
-                    $isRelay    =  $event->event_type === EventType::estafet->value;
+                    $isRelay =  $event->event_type === EventType::estafet->value;
 
-                    $athleteIds  = $entry['athletes']     ?? [];
-                    $teamEntryTime  = $entry['team_entry_time']  ?? null;
-                    $entryTimes  = $entry['entry_times']  ?? [];
+                    $athleteIds  = $entry['athletes'] ?? [];
+                    $teamEntryTime  = $entry['team_entry_time'] ?? null;
+                    $entryTimes  = $entry['entry_times'] ?? [];
                     $relayOrders = $entry['relay_orders'] ?? [];
 
+                    // jika status entry diskulfikasi maka abaikan perubahan atau penambahan, pengurangan data terhadap entry ini
+                    $checkDiskualifikasi = CompetitionEntry::where('competition_team_id', $item->id)
+                            ->where('competition_event_id', $eventId)
+                            ->where('status', CompetitionTeamEntryStatus::Disqualified->value)
+                            ->exists();
+                    if($checkDiskualifikasi) continue;
+
                     if($isRelay){
+                        $existingEntry = CompetitionEntry::where('competition_team_id', $item->id)
+                                ->where('competition_event_id', $eventId)
+                                ->first();
+
+                        $entryStatus = $existingEntry ? $existingEntry->status : CompetitionTeamEntryStatus::Pending->value;
+
+                        // Jika ada anggota baru → pending
+                        $existingMemberIds = $existingEntry
+                            ? $existingEntry->competitionEntryRelayMembers->where('status', 'active')->pluck('athlete_id')->toArray()
+                            : [];
+
+                        $newMembers = array_diff($athleteIds, $existingMemberIds);
+                        if (!empty($newMembers)) $entryStatus = CompetitionTeamEntryStatus::Pending->value;
+
+                        // jika status entry sebelumnya adalah scratch, withdrawn, atau active, maka jika ada perubahan pada data entry,
+                        // dianggap sebagai pengjuan ulang entry yang perlu di review oleh panitia kembali, makanya status entry menjadi pending
                         $temp = CompetitionEntry::updateOrCreate(
                             [
                                 'competition_team_id' => $item->id,
@@ -364,7 +424,7 @@ class CompetitionEntryController extends Controller
                                 'athlete_id'     => null,
                                 'is_relay'     => true,
                                 'entry_time'     => $teamEntryTime,
-                                'status' => 'entered',
+                                'status' => $entryStatus,
                             ]
                         );
 
@@ -392,7 +452,18 @@ class CompetitionEntryController extends Controller
                             ->whereNotIn('athlete_id', $athleteIds)
                             ->update(['status' => 'scratched']);
 
+                        // jika atlet yang sebelumnya berstatus selain aktif, mis: scratched, withdrawn, atau pending, kecuali diskualifikasi karena akan diabaikan update datanya
+                        // maka entry tersebut dibaca sebagai entry baru dengan status pending
+                        // jika atlet memang sudah ada dan aktif maka jika ada pergantian atlet, juga dihitung sebagai entry baru, bukan ubah entry lama, entry lama dijadikan scratched dengan status pending
+                        // namun jika atlet memang sudah ada dan aktif dan jika ada perubahan data selain pergantian atlet, maka status tetap aktif
+                        $existingAthleteIds = CompetitionEntry::where('competition_team_id', $item->id)
+                            ->where('competition_event_id', $eventId)
+                            ->where('status', CompetitionTeamEntryStatus::Active->value)
+                            ->pluck('athlete_id')
+                            ->toArray() ?? [];
+
                         foreach ($athleteIds as $athId) {
+                            $isNew = !in_array($athId, $existingAthleteIds);
                             CompetitionEntry::updateOrCreate(
                                 [
                                     'competition_team_id' => $item->id,
@@ -402,7 +473,7 @@ class CompetitionEntryController extends Controller
                                 [
                                     'is_relay'     => false,
                                     'entry_time'     => $entryTimes[$athId]  ?? null,
-                                    'status' => 'entered',
+                                    'status' => $isNew ? CompetitionTeamEntryStatus::Pending->value : CompetitionTeamEntryStatus::Active->value,
                                 ]
                             );
                         }
@@ -425,6 +496,41 @@ class CompetitionEntryController extends Controller
                 'error'   => config('app.debug') ? $e->getMessage() : null,
             ], 422);
         }
+    }
+
+    private function needReviewCheck($competitionTeam, $entries){
+        if(!$competitionTeam) return false;
+        $events = CompetitionEvent::whereIn('id', array_keys($entries))
+                ->pluck('event_type', 'id');
+        foreach ($entries as $eventId => $entry) {
+            $existingEntry = CompetitionEntry::where('competition_team_id', $competitionTeam->id)
+                            ->where('competition_event_id', $eventId)
+                            ->where('status', CompetitionTeamEntryStatus::Active->value)
+                            ->first();
+            dd($existingEntry);
+            if(!$existingEntry) return true;
+
+            $athleteIds  = $entry['athletes'] ?? [];
+            $isRelay = $events[$eventId] === EventType::estafet->value;
+
+            if($isRelay){
+                // jika ada penambahan atlet pada team relay
+                $existingAthleteIds = $existingEntry
+                    ? $existingEntry->competitionEntryRelayMembers->where('status', 'active')->pluck('athlete_id')->toArray()
+                    : [];
+                $newAthletes = array_diff($athleteIds, $existingAthleteIds);
+                if (!empty($newAthletes)) return true;
+            }else{
+                // jika ada penambahan atlet baru
+                if ($competitionTeam && $competitionTeam->status === CompetitionTeamStatus::Active->value) {
+                    $newAthlete = !in_array($existingEntry->athlete_id,$athleteIds);
+                    if (!empty($newAthlete)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
 }

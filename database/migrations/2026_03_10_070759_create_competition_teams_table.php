@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('competition_id')->nullable(false);
             $table->foreignId('team_id')->nullable(false);
-            $table->enum('status',['active','withdrawn','disqualified'])->default('active');
+            $table->string('status', 20)->nullable(false);
             $table->decimal('total_fee',12,2)->default(0);
-            $table->enum('payment_status', ['paid', 'unpaid'])->default('unpaid');
+            $table->string('payment_status', 20)->nullable(false);
             $table->softDeletes();
             $table->timestamps();
         });
