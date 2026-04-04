@@ -103,7 +103,10 @@
     </div>
 
     <!-- Entries -->
-    <div class="tab-pane fade" id="entries" role="tabpanel" data-url="{{ route('competition.tab.entries', $competition) }}"></div>
+    <div class="tab-pane fade" id="entries" role="tabpanel">
+        @include('pages.competition.tabs.entries')
+    </div>
+    {{-- <div class="tab-pane fade" id="entries" role="tabpanel" data-url="{{ route('competition.tab.entries', $competition) }}"></div> --}}
     {{-- <div class="tab-pane fade" id="entries" role="tabpanel">
       @include('pages.competition.tabs.entries')
     </div> --}}
@@ -160,6 +163,8 @@
                     }else if(paneSelected.id === 'events'){
                         paneSelected.dataset.loaded = '1';
                         initEventTabScripts();
+                    }else{
+                        paneSelected.dataset.loaded = '1';
                     }
                 }
             } catch (e) {

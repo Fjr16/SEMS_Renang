@@ -8,6 +8,7 @@ use App\Enums\Gender;
 use App\Enums\Stroke;
 use App\Models\AgeGroup;
 use App\Models\Competition;
+use App\Models\CompetitionTeam;
 use App\Models\Pool;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -167,6 +168,11 @@ class CompetitionController extends Controller
                 ->where('venue_id', $competition->venue_id)
                 ->where('status', 'active')
                 ->get();
+        $query = CompetitionTeam::query();
+        $entries = $query->select('id','competition_id', 'team_id', 'status', 'total_fee', 'payment_status')->get();
+        $entriesByteam = $query
+                        ->select('id','competition_id', 'team_id', 'status', 'total_fee', 'payment_status')
+                        ->groupBy('team_id');
         $counts = [
             'sessions'  => $competition->sessions()->count(),
             'events'    => $competition->events()->count(),
@@ -177,6 +183,17 @@ class CompetitionController extends Controller
             // 'officials' => $competition->officials()->count(),
             // 'payments'  => $competition->payments()->count(),
         ];
-        return view('pages.competition.show', compact('competition', 'counts', 'enumStts', 'enumStroke', 'enumGender', 'enumEType', 'ageGroups', 'pools'));
+        return view('pages.competition.show', compact(
+            'competition',
+            'counts',
+            'enumStts',
+            'enumStroke',
+            'enumGender',
+            'enumEType',
+            'ageGroups',
+            'pools',
+            'entries',
+            'entriesByteam'
+        ));
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\CompetitionController;
 use App\Http\Controllers\CompetitionEntryController;
 use App\Http\Controllers\CompetitionEventController;
 use App\Http\Controllers\CompetitionSessionController;
+use App\Http\Controllers\CompetitionTabEntriesController;
 use App\Http\Controllers\MyTeamController;
 use App\Http\Controllers\OfficialController;
 use App\Http\Controllers\OtherController;
@@ -114,12 +115,16 @@ Route::prefix('/competition/{competition}')->group(function(){
     Route::put('/tab/events/update/{event}', [CompetitionEventController::class, 'update'])->name('competition.tab.events.update');
     Route::delete('/tab/events/destroy/{event}', [CompetitionEventController::class, 'destroy'])->name('competition.tab.events.destroy');
 
-    Route::get('/tab/entries',  [CompetitionSessionController::class, 'entries'])->name('competition.tab.entries');
-    Route::get('/tab/heats',    [CompetitionSessionController::class, 'heats'])->name('competition.tab.heats');
-    Route::get('/tab/results',  [CompetitionSessionController::class, 'results'])->name('competition.tab.results');
-    Route::get('/tab/points',   [CompetitionSessionController::class, 'points'])->name('competition.tab.points');
-    Route::get('/tab/officials',[CompetitionSessionController::class, 'officials'])->name('competition.tab.officials');
-    Route::get('/tab/payments', [CompetitionSessionController::class, 'payments'])->name('competition.tab.payments');
+    Route::get('/tab/entries', [CompetitionTabEntriesController::class, 'partialReload'])->name('competition.tab.entries');
+    // Route::get('/tab/entries/data', [CompetitionTabEntriesController::class, 'data'])->name('competition.tab.entries.data');
+    // Route::post('/tab/entries/store', [CompetitionTabEntriesController::class, 'store'])->name('competition.tab.entries.store');
+    // Route::delete('/tab/entries/destroy/{id}', [CompetitionTabEntriesController::class, 'destroy'])->name('competition.tab.entries.destroy');
+
+    // Route::get('/tab/heats',    [CompetitionSessionController::class, 'heats'])->name('competition.tab.heats');
+    // Route::get('/tab/results',  [CompetitionSessionController::class, 'results'])->name('competition.tab.results');
+    // Route::get('/tab/points',   [CompetitionSessionController::class, 'points'])->name('competition.tab.points');
+    // Route::get('/tab/officials',[CompetitionSessionController::class, 'officials'])->name('competition.tab.officials');
+    // Route::get('/tab/payments', [CompetitionSessionController::class, 'payments'])->name('competition.tab.payments');
 });
 
 Route::prefix('/guest')->group(function(){
@@ -159,6 +164,7 @@ Route::get('/findAtletById/{id}', [OtherController::class, 'findAtletById'])->na
 Route::get('/findOfficialById/{id}', [OtherController::class, 'findOfficialById'])->name('findOfficialById');
 Route::get('/select2/getOrganization', [OtherController::class, 'getOrganization'])->name('getOrganization');
 Route::get('/select2/getVenue', [OtherController::class, 'getVenue'])->name('getVenue');
+Route::get('/select2/getAllEvent', [OtherController::class, 'getAllEvent'])->name('getAllEvent');
 
 
 require __DIR__ . '/auth.php';

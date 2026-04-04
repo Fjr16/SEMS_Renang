@@ -268,9 +268,27 @@
             $('#competition_id').val(data.id);
             $('#name').val(data.name);
             $('#organization_id').val(data.organization_id).trigger('change');
+            if (data.organization_id) {
+                const option = new Option(
+                    data.organization.name,
+                    data.organization_id,
+                    true,
+                    true
+                );
+                $('#organization_id').append(option).trigger('change');
+            }
             $('#start_date').flatpickr().setDate(data.start_date);
             $('#end_date').flatpickr().setDate(data.end_date);
             $('#venue_id').val(data.venue_id).trigger('change');
+            if (data.venue_id) {
+                const option = new Option(
+                    `[${data.venue.code ?? ''}] ${data.venue.name ?? ''}`,
+                    data.venue_id,
+                    true,
+                    true
+                );
+                $('#venue_id').append(option).trigger('change');
+            }
             $('#registration_start').flatpickr().setDate(data.registration_start);
             $('#registration_end').flatpickr().setDate(data.registration_end);
             $('#status').val(data.status);

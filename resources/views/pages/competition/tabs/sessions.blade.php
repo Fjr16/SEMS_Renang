@@ -52,8 +52,9 @@
             <div class="col-6">
               <label>Kolam</label>
               <select class="form-select form-select-md" name="pool_id" id="pool_id" required>
+                <option value="">Pilih Kolam</option>
                 @foreach ($pools as $pool)
-                    <option value="{{ $pool->id }}">{{ '[' . ($pool->code ?? '-') . '] ' . ($pool->name ?? '-') }}</option>
+                    <option value="{{ $pool->id }}" @selected(old('pool_id') == $pool->id)>{{ '[' . ($pool->code ?? '-') . '] ' . ($pool->name ?? '-') }}</option>
                 @endforeach
               </select>
             </div>
