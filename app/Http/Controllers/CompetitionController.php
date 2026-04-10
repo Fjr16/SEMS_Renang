@@ -3,12 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CompetitionStatus;
-use App\Enums\EventType;
-use App\Enums\Gender;
-use App\Enums\Stroke;
-use App\Models\AgeGroup;
 use App\Models\Competition;
-use App\Models\CompetitionTeam;
+use App\Models\CompetitionEntry;
 use App\Models\Pool;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -160,40 +156,20 @@ class CompetitionController extends Controller
     public function show(Competition $competition){
         Carbon::setLocale('id');
         $enumStts = CompetitionStatus::class;
-        $enumStroke = Stroke::cases();
-        $enumGender = Gender::cases();
-        $enumEType = EventType::cases();
-        $ageGroups = AgeGroup::all();
         $pools = Pool::select('name', 'code', 'id')
                 ->where('venue_id', $competition->venue_id)
                 ->where('status', 'active')
                 ->get();
-        $query = CompetitionTeam::query();
-        $entries = $query->select('id','competition_id', 'team_id', 'status', 'total_fee', 'payment_status')->get();
-        $entriesByteam = $query
-                        ->select('id','competition_id', 'team_id', 'status', 'total_fee', 'payment_status')
-                        ->groupBy('team_id');
         $counts = [
             'sessions'  => $competition->sessions()->count(),
             'events'    => $competition->events()->count(),
-            // 'entries'   => $competition->entries()->count(),
-            // 'heats'     => $competition->heats()->count(),
-            // 'results'   => $competition->results()->count(),
-            // 'points'    => $competition->teamPoints()->count(),
-            // 'officials' => $competition->officials()->count(),
-            // 'payments'  => $competition->payments()->count(),
+            'entries'   => CompetitionEntry::count(),
         ];
         return view('pages.competition.show', compact(
             'competition',
             'counts',
             'enumStts',
-            'enumStroke',
-            'enumGender',
-            'enumEType',
-            'ageGroups',
             'pools',
-            'entries',
-            'entriesByteam'
         ));
     }
 }

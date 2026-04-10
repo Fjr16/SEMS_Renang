@@ -15,7 +15,7 @@ enum CompetitionTeamEntryStatus : string
         return match($this) {
             self::Pending      => 'Menunggu Verifikasi',
             self::Active       => 'Aktif',
-            self::Scratched    => 'Scratch',
+            self::Scratched    => 'Scratch', //ketika entry sebelumnya diganti dengan entry yang berbeda maka otomatis jadi scratch atau soft delet
             self::Withdrawn    => 'Mengundurkan Diri',
             self::Disqualified => 'Didiskualifikasi',
         };

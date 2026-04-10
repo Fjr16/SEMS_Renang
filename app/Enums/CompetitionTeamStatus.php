@@ -16,7 +16,8 @@ enum CompetitionTeamStatus : string
             self::Pending      => 'Menunggu Verifikasi',
             self::Active       => 'Aktif',
             self::Rejected     => 'Ditolak',
-            self::Withdrawn    => 'Batal Tanding',
+            // self::Withdrawn    => 'Batal Tanding',
+            self::Withdrawn    => 'Mengundurkan Diri',
             self::Disqualified => 'Didiskualifikasi',
         };
     }

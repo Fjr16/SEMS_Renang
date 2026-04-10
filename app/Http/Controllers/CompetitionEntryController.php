@@ -316,9 +316,13 @@ class CompetitionEntryController extends Controller
                     ->where('team_id', $team->id)
                     ->first();
             // Cek masa registrasi //atau gunakan status saja, sehingga jika registration end date telah lewat namun stts masih open bisa update data
-            if (now()->toDateString() > $comp->registration_end) {
+            // if (now()->toDateString() > $comp->registration_end) {
+            //     $message = 'Gagal Simpan Entry';
+            //     $errors[] = "Masa registrasi telah berakhir";
+            // }
+            if ($comp->status != CompetitionStatus::register->value) {
                 $message = 'Gagal Simpan Entry';
-                $errors[] = "Masa registrasi telah ditutup";
+                $errors[] = "Masa registrasi telah berakhir";
             }
             // ditolak tidak di larang update karena memikirkan kemungkinan untuk perbaikan data agar diterima
             if ($oldEntry?->status == CompetitionTeamStatus::Disqualified->value || $oldEntry?->status == CompetitionTeamStatus::Withdrawn->value) {
@@ -485,6 +489,16 @@ class CompetitionEntryController extends Controller
                 CompetitionEntry::where('competition_team_id', $item->id)
                     ->whereNotIn('competition_event_id', $incomingEventIds)
                     ->update(['status' => 'scratched']);
+
+                // perhitungan total biaya entries
+                $totalFee = CompetitionEntry::where('competition_team_id', $item->id)
+                            ->whereIn('competition_entries.status', [
+                                CompetitionTeamEntryStatus::Pending->value,
+                                CompetitionTeamEntryStatus::Active->value,
+                            ])
+                            ->join('competition_events', 'competition_entries.competition_event_id', '=', 'competition_events.id')
+                            ->sum(DB::raw('COALESCE(competition_events.registration_fee, 0)'));
+                $item->update(['total_fee' => (float) $totalFee]);
             });
 
             return response()->json([
@@ -507,7 +521,7 @@ class CompetitionEntryController extends Controller
                             ->where('competition_event_id', $eventId)
                             ->where('status', CompetitionTeamEntryStatus::Active->value)
                             ->first();
-            dd($existingEntry);
+            // dd($existingEntry);
             if(!$existingEntry) return true;
 
             $athleteIds  = $entry['athletes'] ?? [];

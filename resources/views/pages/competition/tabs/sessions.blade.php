@@ -79,33 +79,3 @@
     </div>
   </div>
 </div>
-
-@push('scripts')
-    <script>
-        async function editSession(element) {
-            const tableId = '#'+element.dataset.table;
-            const modalId = '#'+element.dataset.modal;
-
-            const form = document.getElementById(element.dataset.form);
-            form.reset();
-
-            const tr = $(element).closest('tr');
-            const data = $(tableId).DataTable().row(tr).data();
-
-            $('#competition_session_id').val(data.id);
-            $('#name').val(data.name);
-            $('#session_date').flatpickr().setDate(data.session_date);
-            $('#pool_id').val(data.pool_id);
-            $('#session_order').val(data.session_order);
-
-            $(modalId).modal('show');
-        }
-
-        function resetSessionForm(){
-            let form = document.getElementById('sessionForm');
-            form.reset();
-
-            document.getElementById('competition_session_id').value = '';
-        }
-    </script>
-@endpush

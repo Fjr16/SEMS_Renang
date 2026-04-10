@@ -15,6 +15,7 @@ class CompetitionTeam extends Model
         'status',
         'total_fee',
         'payment_status',
+        'notes'
     ];
 
     public function competition(){

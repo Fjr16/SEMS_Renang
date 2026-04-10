@@ -115,10 +115,12 @@ Route::prefix('/competition/{competition}')->group(function(){
     Route::put('/tab/events/update/{event}', [CompetitionEventController::class, 'update'])->name('competition.tab.events.update');
     Route::delete('/tab/events/destroy/{event}', [CompetitionEventController::class, 'destroy'])->name('competition.tab.events.destroy');
 
-    Route::get('/tab/entries', [CompetitionTabEntriesController::class, 'partialReload'])->name('competition.tab.entries');
-    // Route::get('/tab/entries/data', [CompetitionTabEntriesController::class, 'data'])->name('competition.tab.entries.data');
-    // Route::post('/tab/entries/store', [CompetitionTabEntriesController::class, 'store'])->name('competition.tab.entries.store');
-    // Route::delete('/tab/entries/destroy/{id}', [CompetitionTabEntriesController::class, 'destroy'])->name('competition.tab.entries.destroy');
+    Route::get('/tab/entries/partial/reload', [CompetitionTabEntriesController::class, 'partialReload'])->name('competition.tab.entries.partial');
+    Route::post('/tab/entries/update', [CompetitionTabEntriesController::class, 'store'])->name('competition.tab.entries.store');
+    Route::post('/tab/entries/verification', [CompetitionTabEntriesController::class, 'verification'])->name('competition.tab.entries.verification');
+    Route::post('/tab/entries/update-seed-time', [CompetitionTabEntriesController::class, 'updateSeedTime'])->name('competition.tab.entries.updateSeedTime');
+    Route::post('/tab/entries/update-status-entry', [CompetitionTabEntriesController::class, 'updateStatusEntry'])->name('competition.tab.entries.updateStatusEntry');
+    Route::delete('/tab/entries/delete-entry/{id}', [CompetitionTabEntriesController::class, 'destroyEntry'])->name('competition.tab.entries.deleteEntry');
 
     // Route::get('/tab/heats',    [CompetitionSessionController::class, 'heats'])->name('competition.tab.heats');
     // Route::get('/tab/results',  [CompetitionSessionController::class, 'results'])->name('competition.tab.results');
@@ -164,7 +166,7 @@ Route::get('/findAtletById/{id}', [OtherController::class, 'findAtletById'])->na
 Route::get('/findOfficialById/{id}', [OtherController::class, 'findOfficialById'])->name('findOfficialById');
 Route::get('/select2/getOrganization', [OtherController::class, 'getOrganization'])->name('getOrganization');
 Route::get('/select2/getVenue', [OtherController::class, 'getVenue'])->name('getVenue');
-Route::get('/select2/getAllEvent', [OtherController::class, 'getAllEvent'])->name('getAllEvent');
+// Route::get('/select2/getAllEvent', [OtherController::class, 'getAllEvent'])->name('getAllEvent');
 
 
 require __DIR__ . '/auth.php';

@@ -125,35 +125,35 @@ class OtherController extends Controller
         ]);
     }
 
-    public function getAllEvent(Request $r){
-        $competition_id = $r->input('competition_id');
-        $keyword = $r->input('q', '');
-        $page = $r->input('page', 1);
-        $perPage = 10;
+    // public function getAllEvent(Request $r){
+    //     $competition_id = $r->input('competition_id');
+    //     $keyword = $r->input('q', '');
+    //     $page = $r->input('page', 1);
+    //     $perPage = 10;
 
-        $query = CompetitionEvent::query()
-        ->whereHas('competitionSession', function($sesi) use ($competition_id){
-            $sesi->where('competition_id', $competition_id);
-        })
-        ->when($keyword != '', function($q) use ($keyword){
-            $q->where(function($qq) use ($keyword){
-                $qq->where('event_number', 'like', "%{$keyword}%")
-                   ->orWhere('stroke', 'like', "%{$keyword}%")
-                   ->orWhere('gender', 'like', "%{$keyword}%")
-                   ->orWhere('event_type', 'like', "%{$keyword}%");
-            });
-        })
-        ->orderBy('event_number', 'asc');
+    //     $query = CompetitionEvent::query()
+    //     ->whereHas('competitionSession', function($sesi) use ($competition_id){
+    //         $sesi->where('competition_id', $competition_id);
+    //     })
+    //     ->when($keyword != '', function($q) use ($keyword){
+    //         $q->where(function($qq) use ($keyword){
+    //             $qq->where('event_number', 'like', "%{$keyword}%")
+    //                ->orWhere('stroke', 'like', "%{$keyword}%")
+    //                ->orWhere('gender', 'like', "%{$keyword}%")
+    //                ->orWhere('event_type', 'like', "%{$keyword}%");
+    //         });
+    //     })
+    //     ->orderBy('event_number', 'asc');
 
-        $paginated = $query->simplePaginate($perPage, ['*'], 'page', $page);
+    //     $paginated = $query->simplePaginate($perPage, ['*'], 'page', $page);
 
-        return response()->json([
-            'data' => $paginated->items(),
-            'pagination' => [
-                'more' => $paginated->hasMorePages(),
-            ],
-        ]);
-    }
+    //     return response()->json([
+    //         'data' => $paginated->items(),
+    //         'pagination' => [
+    //             'more' => $paginated->hasMorePages(),
+    //         ],
+    //     ]);
+    // }
 
     // public function getPoolByVenue(Request $r){
     //     $keyword = $r->input('q', '');

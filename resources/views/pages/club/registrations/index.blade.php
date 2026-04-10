@@ -430,13 +430,26 @@
                         <i class="bi bi-eye me-1"></i>Detail
                     </a>
 
-                    @if($st?->value === App\Enums\CompetitionTeamStatus::Pending->value)
-                        <a href="#" class="btn btn-outline-primary btn-pill btn-sm">
+                    @if($st?->value === App\Enums\CompetitionTeamStatus::Pending->value || $st?->value === App\Enums\CompetitionTeamStatus::Rejected->value)
+                        <a href="{{ route('manager.club.registration.create', ['competition' => $e->competition]) }}" class="btn btn-outline-primary btn-pill btn-sm">
                             <i class="bi bi-pencil-square me-1"></i>Edit Entry
                         </a>
                         {{-- <button class="btn btn-outline-danger btn-pill btn-sm">
                             <i class="bi bi-x-circle me-1"></i>Batalkan Pendaftaran
                         </button> --}}
+                        @if($st?->value === App\Enums\CompetitionTeamStatus::Rejected->value)
+                            {{-- tombol info --}}
+                            <button
+                                class="btn btn-outline-info btn-pill btn-sm"
+                                title="Alasan penolakan"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalReason"
+                                data-reason="{{ $e->notes ?? '' }}"
+                            >
+                                <i class="bi bi-info-circle"></i>
+                                Info
+                            </button>
+                        @endif
                     @endif
 
                     @if($st?->value === App\Enums\CompetitionTeamStatus::Active->value)
@@ -444,22 +457,17 @@
                             <i class="bi bi-download me-1"></i>Export Start List
                         </a>
                         @if(($e->payment_status ?? 'unpaid') !== App\Enums\CompetitionTeamPaymentStatus::Paid->value)
-                            <a href="#" class="btn btn-primary btn-pill btn-sm">
-                                <i class="bi bi-credit-card me-1"></i>Bayar Sekarang
-                            </a>
+                            <span class="text-secondary small fst-italic align-self-center">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Segera lakukan pembayaran agar tim anda terdaftar pada kompetisi
+                            </span>
                         @endif
-                    @endif
-
-                    @if($st?->value === App\Enums\CompetitionTeamStatus::Rejected->value)
-                        <a href="#" class="btn btn-outline-secondary btn-pill btn-sm">
-                            <i class="bi bi-arrow-clockwise me-1"></i>Daftar Ulang
-                        </a>
                     @endif
 
                     @if(in_array($st?->value, [App\Enums\CompetitionTeamStatus::Withdrawn->value, App\Enums\CompetitionTeamStatus::Disqualified->value]))
                         <span class="text-secondary small fst-italic align-self-center">
                             <i class="bi bi-info-circle me-1"></i>
-                            {{ $st?->value === App\Enums\CompetitionTeamStatus::Withdrawn->value ? 'Tim dinyatakan tidak hadir oleh panitia' : 'Tim didiskualifikasi oleh panitia' }}
+                            {{ $st?->value === App\Enums\CompetitionTeamStatus::Withdrawn->value ? 'Tim dinyatakan telah mengundurkan diri oleh panitia' : 'Tim didiskualifikasi oleh panitia' }}
                         </span>
                     @endif
                 </div>
@@ -476,6 +484,21 @@
     @endif
   </div>
   @endif
+</div>
+
+{{-- modal menampilkan alasan reject entry --}}
+<div class="modal fade" id="modalReason" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Alasan Penolakan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="reasonText">-</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
@@ -546,35 +569,45 @@
         }, { rootMargin: '400px' });
 
         if (sentinel) observer.observe(sentinel);
+
+        // open modal info alasan penolakan
+        const modal = document.getElementById('modalReason');
+
+        modal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const reason = button.getAttribute('data-reason');
+
+            document.getElementById('reasonText').textContent = reason || '-';
+        });
     })();
 
     if("{{ Route::is('manager.club.registration') }}"){
         (function(){
-        const statusSel = document.getElementById('historyStatus');
-        const searchInp = document.getElementById('historySearch');
-        const items = () => document.querySelectorAll('#historyGrid .history-item');
+            const statusSel = document.getElementById('historyStatus');
+            const searchInp = document.getElementById('historySearch');
+            const items = () => document.querySelectorAll('#historyGrid .history-item');
 
-        function applyFilter(){
-            const st = (statusSel?.value || '').toLowerCase().trim();
-            const q  = (searchInp?.value || '').toLowerCase().trim();
+            function applyFilter(){
+                const st = (statusSel?.value || '').toLowerCase().trim();
+                const q  = (searchInp?.value || '').toLowerCase().trim();
 
-            items().forEach(el=>{
-            const okStatus = !st || (el.dataset.status || '').toLowerCase() === st
-                || (st === 'pending' && ['pending','submitted'].includes((el.dataset.status || '').toLowerCase()));
+                items().forEach(el=>{
+                const okStatus = !st || (el.dataset.status || '').toLowerCase() === st
+                    || (st === 'pending' && ['pending','submitted'].includes((el.dataset.status || '').toLowerCase()));
 
-            const okText = !q || el.innerText.toLowerCase().includes(q);
+                const okText = !q || el.innerText.toLowerCase().includes(q);
 
-            el.style.display = (okStatus && okText) ? '' : 'none';
+                el.style.display = (okStatus && okText) ? '' : 'none';
+                });
+            }
+
+            statusSel?.addEventListener('change', applyFilter);
+            searchInp?.addEventListener('input', applyFilter);
+
+            // Fix DataTables/tab issue? (jaga-jaga kalau nanti tab ini ada table)
+            document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn=>{
+                btn.addEventListener('shown.bs.tab', ()=> window.dispatchEvent(new Event('resize')));
             });
-        }
-
-        statusSel?.addEventListener('change', applyFilter);
-        searchInp?.addEventListener('input', applyFilter);
-
-        // Fix DataTables/tab issue? (jaga-jaga kalau nanti tab ini ada table)
-        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn=>{
-            btn.addEventListener('shown.bs.tab', ()=> window.dispatchEvent(new Event('resize')));
-        });
         })();
     }
 </script>
