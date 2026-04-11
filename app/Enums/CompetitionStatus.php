@@ -22,4 +22,11 @@ enum CompetitionStatus:string
             self::closed => 'bg-danger text-white'
         };
     }
+    public function fontClass(){
+        return match($this){
+            self::register => 'text-success',
+            self::running => 'text-secondary',
+            self::closed => 'text-danger'
+        };
+    }
 }

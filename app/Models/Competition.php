@@ -46,6 +46,16 @@ class Competition extends Model
             'id'              // PK di sessions
         );
     }
+    public function entries(){
+        return $this->hasManyThrough(
+            CompetitionEntry::class,
+            CompetitionTeam::class,
+            'competition_id', // FK di comp team
+            'competition_team_id',     // FK di entry
+            'id',             // PK di competitions
+            'id'              // PK di comp team
+        );
+    }
 
 
     protected static function booted()

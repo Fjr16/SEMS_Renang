@@ -1,5 +1,169 @@
 @extends('layouts.main')
 
+<style>
+    .split-action {
+        position: relative;
+        display: inline-flex;
+        align-items: stretch;
+        font-family: inherit;
+    }
+
+    /* MAIN BUTTON */
+    .split-main {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+
+        font-size: 13px;
+        font-weight: 500;
+
+        border: 1px solid #5ab8ff;
+        border-right: none;
+        border-radius: 8px 0 0 8px;
+
+        background: #e7f5ff;
+        color: #1971c2;
+
+        cursor: pointer;
+        text-decoration: none;
+
+        transition: all 0.15s ease;
+    }
+
+    .split-main:hover {
+        background: #d0ebff;
+        color: #1864ab;
+    }
+
+    /* CARET BUTTON */
+    .split-caret {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 32px;
+
+        border: 1px solid #dee2e6;
+        border-left: 1px solid #e9ecef;
+        border-radius: 0 8px 8px 0;
+
+        background: #a7a4a4;
+        color: #fafafa;
+
+        cursor: pointer;
+
+        transition: all 0.15s ease;
+        font-size: 12px;
+    }
+
+    .split-caret:hover {
+        background: #f1f3f5;
+        color: #212529;
+    }
+
+    /* ACTIVE STATE (biar berasa klik) */
+    .split-main:active,
+    .split-caret:active {
+        background: #e9ecef;
+        transform: scale(0.97);
+    }
+
+    /* FOCUS (aksesibilitas + modern glow) */
+    .split-main:focus,
+    .split-caret:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(13,110,253,0.15);
+    }
+
+    /* ICON ROTATION */
+    .split-caret i {
+        transition: transform 0.2s ease;
+    }
+    .split-caret.open i {
+        transform: rotate(180deg);
+    }
+
+    /* DROPDOWN */
+    .split-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+
+        min-width: 160px;
+
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+
+        z-index: 1050;
+        overflow: hidden;
+
+        animation: fadeIn 0.15s ease;
+    }
+
+    .split-dropdown.show {
+        display: block;
+    }
+
+    /* ITEM */
+    .split-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        padding: 9px 14px;
+
+        font-size: 13px;
+        color: #212529;
+
+        cursor: pointer;
+
+        transition: all 0.12s ease;
+    }
+
+    .split-item:hover {
+        background: #f1f3f5;
+    }
+
+    /* DANGER ITEM */
+    .split-item.danger {
+        color: #dc3545;
+    }
+    .split-item.danger:hover {
+        background: #fff1f2;
+    }
+
+    /* DIVIDER */
+    .split-divider {
+        height: 1px;
+        background: #f1f3f5;
+        margin: 4px 0;
+    }
+
+    /* ANIMATION */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-4px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+
+    /* Pastikan kolom action tidak terpotong */
+    #competitionTable td:first-child,
+    #competitionTable th:first-child {
+        overflow: visible !important;
+    }
+    #competitionTable tbody tr { overflow: visible; }
+</style>
 @section('content')
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
         <div>
@@ -17,17 +181,14 @@
         <div class="card-body">
             <table id="competitionTable" class="table table-striped">
                 <thead>
-                    <tr>
+                    <tr class="text-nowrap">
                         <th>Aksi</th>
                         <th>Nama Kompetisi</th>
                         <th>Penyelenggara</th>
                         <th>Waktu Kompetisi</th>
-                        <th>Venue</th>
+                        <th>Arena</th>
                         <th>Waktu Pendaftaran</th>
-                        <th>No. Legalisasi</th>
-                        <th>Deskripsi</th>
                         <th>Status</th>
-                        <th>Dibuat Pada</th>
                     </tr>
                 </thead>
             </table>
@@ -62,7 +223,7 @@
                         <input type="text" class="form-control" name="sanction_number" id="sanction_number">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="venue_id">Lokasi Kompetisi (Venue)</label>
+                        <label class="form-label" for="venue_id">Lokasi Kompetisi / Arena / Venue</label>
                         <select name="venue_id" class="form-control" id="venue_id" style="width: 100%"></select>
                     </div>
                     <div class="mb-3">
@@ -202,13 +363,48 @@
                     {data:'comp_date', name:'start_date', orderable:true, searchable:true},
                     {data:'venue_desc', name:'venue.name', orderable:true, searchable:true},
                     {data:'registration_date', name:'registration_start', orderable:true, searchable:true},
-                    {data:'sanction_number', name:'sanction_number', orderable:true, searchable:true},
-                    {data:'description', name:'description', orderable:true, searchable:true},
                     {data:'statusAttr', name:'status', className:'text-center', orderable:true, searchable:true},
-                    {data:'created_at', name:'created_at', className:'text-center', orderable:true, searchable:true},
                 ],
-                order:[[7,'asc']]
+                order:[[6,'asc']],
+                // Pastikan overflow visible di table & wrapper agar dropdown tidak clip
+                initComplete: function () {
+                    $('#competitionTable').css('overflow', 'visible');
+                    $('#competitionTable').closest('.dataTables_wrapper').css('overflow', 'visible');
+                    $('#competitionTable').closest('.card-body').css('overflow', 'visible');
+                }
             });
+        });
+
+        function toggleSplit(caretBtn) {
+            const dropdown = $(caretBtn).siblings('.split-dropdown').add(
+                $(caretBtn).closest('.split-action').find('.split-dropdown')
+            ).first();
+            const isOpen = dropdown.hasClass('show');
+
+            // Tutup semua dropdown lain dulu
+            closeAllSplitDropdowns();
+
+            if (!isOpen) {
+                dropdown.addClass('show');
+                $(caretBtn).addClass('open');
+            }
+        }
+
+        function closeAllSplitDropdowns() {
+            $('.split-dropdown').removeClass('show');
+            $('.split-caret').removeClass('open');
+        }
+
+        // Klik di luar → tutup semua dropdown
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.split-action').length) {
+                closeAllSplitDropdowns();
+            }
+        });
+
+        // Tutup dropdown saat table redraw (pagination, search, dll)
+        $(document).on('draw.dt', '#competitionTable', function () {
+            closeAllSplitDropdowns();
         });
 
         $('#form-submit').on('submit', async function(e){
@@ -260,6 +456,7 @@
         });
 
         function edit(element){
+            closeAllSplitDropdowns();
             $('#modalTitle').text('Edit Kompetisi');
             $('#form-submit')[0].reset();
             const tr = $(element).closest('tr');
@@ -298,6 +495,7 @@
         }
 
         async function destroy(element){
+            closeAllSplitDropdowns();
             const { isConfirmed } = await Swal.fire({
                 title: "Konfirmasi Hapus",
                 text: "Apakah anda yakin ingin menghapus data ini?",

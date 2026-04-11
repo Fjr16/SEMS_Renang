@@ -103,6 +103,7 @@ Route::middleware(['auth'])->group(function(){
 
 Route::prefix('/competition/{competition}')->group(function(){
     Route::get('/', [CompetitionController::class, 'show'])->name('competition.show');
+    Route::put('/update-status', [CompetitionController::class, 'updateStatus'])->name('competition.updateStatus');
 
     // tiap tab sebagai partial HTML (untuk Bootstrap tab)
     Route::get('/tab/sessions/data', [CompetitionSessionController::class, 'data'])->name('competition.tab.sessions.data');

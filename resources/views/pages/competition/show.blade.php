@@ -5,16 +5,34 @@
   <!-- Header -->
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
     <div>
-        <div class="d-flex gap-2">
-            <h2 class="fw-bold mb-1">
+        <div class="d-flex align-items-center gap-3 flex-wrap mb-1">
+            <h2 class="fw-bold mb-0">
                 Kompetisi: {{ $competition->name ?? '-' }}
             </h2>
+
+            @php
+                $compStts = App\Enums\CompetitionStatus::from($competition->status);
+            @endphp
+
+            <div class="dropdown">
+                <button class="btn btn-sm {{ $compStts->class() }} d-flex align-items-center gap-2 px-3" data-bs-toggle="dropdown" style="border-radius: 999px;">
+                    <span style="width:8px;height:8px;background:white;border-radius:50%;display:inline-block;"></span>
+                    {{  $compStts->label() }}
+                    <i class="bi bi-chevron-down ms-1"></i>
+                </button>
+
+                <ul class="dropdown-menu shadow-sm">
+                    @foreach (App\Enums\CompetitionStatus::cases() as $enumStts)
+                        <li><a class="dropdown-item {{ ($compStts?->value && $compStts->value === $enumStts->value) ? $enumStts->fontClass() : '' }}" onclick="updateStatusCompetition('{{ $enumStts?->value ?? '' }}')">{{ $enumStts?->label() ?? '-' }}</a></li>
+                    @endforeach
+                </ul>
+            </div>
         </div>
-      <p class="text-muted mb-1">Tanggal: {{ Carbon\Carbon::parse($competition->start_date)->translatedFormat('d F Y') . ' - ' . Carbon\Carbon::parse($competition->end_date)->translatedFormat('d F Y') }}</p>
-      <p class="text-muted mb-0">Arena: {{ '['.($competition->venue?->code ?? '-').'] ' . ($competition->venue?->name ?? '-') }}</p>
+        <p class="text-muted mb-1">Tanggal pelaksanaan: {{ Carbon\Carbon::parse($competition->start_date)->translatedFormat('d F Y') . ' - ' . Carbon\Carbon::parse($competition->end_date)->translatedFormat('d F Y') }}</p>
+        <p class="text-muted mb-0">Lokasi / Venue / Arena: {{ '['.($competition->venue?->code ?? '-').'] ' . ($competition->venue?->name ?? '-') }}</p>
     </div>
-    <div class="mt-3 mt-md-0">
-      <a href="{{ route('competition.index') }}" class="btn btn-secondary">
+    <div class="">
+      <a href="{{ route('competition.index') }}" class="btn btn-sm btn-outline-dark">
         <i class="bi bi-arrow-left me-1"></i> Kembali
       </a>
     </div>
@@ -23,23 +41,23 @@
   <!-- Tabs -->
   <ul class="nav nav-tabs" id="competitionTabs" role="tablist">
     <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">Overview</button>
+      <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">Ringkasan</button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="sessions-tab" data-bs-toggle="tab" data-bs-target="#sessions" type="button" role="tab" aria-controls="overview" aria-selected="false">
-            Sessions
+            Sesi
             <span class="badge bg-secondary">{{ $counts['sessions'] ?? 0 }}</span>
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button" role="tab" aria-controls="overview" aria-selected="false">
-            Events
+            Acara
             <span class="badge bg-secondary">{{ $counts['events'] ?? 0 }}</span>
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="entries-tab" data-bs-toggle="tab" data-bs-target="#entries" type="button" role="tab" aria-controls="overview" aria-selected="false">
-            Entries
+            Pendaftaran
             <span class="badge bg-secondary">{{ $counts['entries'] ?? 0 }}</span>
         </button>
     </li>
@@ -62,6 +80,10 @@
             {{ $competition->created_at->translatedFormat('d F Y') }}
         </p>
         <p class="mb-1">
+            <strong>No. Legalisasi / sanction number:</strong>
+            {{ $competition->sanction_number ?? '-' }}
+        </p>
+        <p class="mb-1">
             <strong>Nama Kompetisi:</strong>
             {{ $competition->name ?? '' }}
         </p>
@@ -79,7 +101,24 @@
         </p>
         <p class="mb-1">
             <strong>Arena:</strong>
-            {{ '['.($competition->venue?->code ?? '-').'] ' . ($competition->venue?->name ?? '-') }}
+            {{
+                '['.($competition->venue?->code ?? '-').'] '
+                . ($competition->venue?->name ?? '-')
+            }}
+
+        </p>
+        <p class="mb-1">
+            <strong>Alamat Arena:</strong>
+            {{
+                $competition->venue->address . ', Kota '
+                . $competition->venue?->city . ', Provinsi '
+                . $competition->venue?->province
+            }}
+
+        </p>
+        <p class="mb-1">
+            <strong>Deskripsi:</strong>
+            {{ $competition->description ?? '-'}}
         </p>
         <p class="mb-1">
             <strong>Status:</strong>
@@ -155,6 +194,58 @@
                 paneSelected.innerHTML = '<div class="py-4 text-danger text-center">Gagal memuat konten.</div>';
             }
         });
+
+        async function updateStatusCompetition(sttsValue){
+            const confirm = await Swal.fire({
+                title: "Yakin ingin mengubah status kompetisi ?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                cancelButtonText: "Batal",
+                confirmButtonText: "Ya, Lanjutkan!",
+                reverseButtons:true
+            });
+            if (confirm.isConfirmed){
+                try {
+                    const res = await fetch("{{ route('competition.updateStatus', $competition) }}", {
+                        method:'PUT',
+                        headers: {
+                            'Content-Type' : 'application/json',
+                            'X-CSRF-TOKEN' : "{{ csrf_token() }}",
+                        },
+                        body:JSON.stringify({
+                            status: sttsValue
+                        })
+                    });
+                    if (!res.ok) throw new Error("Terjadi Kesalahan pada server");
+                    const result = await res.json();
+                    if (!result.status) {
+                        Toast.fire({
+                            icon:'error',
+                            title:result.message || 'Gagal memperbarui status kompetisi'
+                        });
+                    }else{
+
+                        const info = await Swal.fire({
+                            title: "Sukses!",
+                            text: result.message || "Berhasil memperbarui status kompetisi",
+                            icon: "success"
+                        });
+                        if(info.isConfirmed){
+                            window.location.reload();
+                        }
+                    }
+
+                } catch (error) {
+                    Toast.fire({
+                        icon:'error',
+                        title:error.message || 'Gagal memperbarui status kompetisi'
+                    });
+                }
+
+            }
+        }
     </script>
 
     <script>

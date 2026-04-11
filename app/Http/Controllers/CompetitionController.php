@@ -22,17 +22,22 @@ class CompetitionController extends Controller
         return DataTables::of($data)
         ->addColumn('action', function($row){
             $routeShow = route('competition.show', $row);
-            $edit = '<button class="btn btn-warning btn-sm" onclick="edit(this)"><i class="bi bi-pencil"></i></button>';
-            $dlt = '<button class="btn btn-danger btn-sm" data-id="'.$row->id.'" onclick="destroy(this)"><i class="bi bi-trash"></i></button>';
-            $show = '<a href="'.$routeShow.'" class="btn btn-info btn-sm text-white"><i class="bi bi-eye"></i></a>';
+            $edit = '<div class="split-item" onclick="edit(this)"><i class="bi bi-pencil"></i> Edit</div>';
+            $dlt = '<div class="split-item danger" data-id="'.$row->id.'" onclick="destroy(this)"><i class="bi bi-trash"></i> Hapus</div>';
+            $show = '<a href="'.$routeShow.'" class="split-main"><i class="bi bi-eye"></i> Detail</a>';
 
-            return '<div class="btn-group">
-                        '.
-                        $show .
-                        $edit .
-                        $dlt
-                        .'
-                    </div>';
+                    return '
+                        <div class="split-action">
+                            '. $show .
+                            '<button class="split-caret" onclick="toggleSplit(this)">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="split-dropdown">
+                                '. $edit .
+                                '<div class="split-divider"></div>
+                                ' . $dlt .
+                            '</div>
+                        </div>';
         })
         ->addColumn('comp_date',function($row){
             if(!$row->start_date || !$row->end_date){
@@ -65,13 +70,7 @@ class CompetitionController extends Controller
             return $row->organization?->name;
         })
         ->addColumn('venue_desc', function($row){
-            return $row->venue?->name . ' - ' .
-                    $row->venue->address . '</br>,' .
-                    $row->venue?->city . '</br>,' .
-                    $row->venue?->province;
-        })
-        ->editColumn('created_at', function($row){
-            return $row?->created_at->format('d/m/Y');
+            return $row->venue?->name;
         })
         ->rawColumns(['action','statusAttr', 'venue_desc'])
         ->make(true);
@@ -163,7 +162,8 @@ class CompetitionController extends Controller
         $counts = [
             'sessions'  => $competition->sessions()->count(),
             'events'    => $competition->events()->count(),
-            'entries'   => CompetitionEntry::count(),
+            // 'entries'   => CompetitionEntry::count(),
+            'entries'   => $competition->entries()->count(),
         ];
         return view('pages.competition.show', compact(
             'competition',
@@ -171,5 +171,33 @@ class CompetitionController extends Controller
             'enumStts',
             'pools',
         ));
+    }
+    public function updateStatus(Competition $competition, Request $req){
+        $validators = Validator::make($req->all(), [
+            'status' => ['required', new Enum(CompetitionStatus::class)]
+        ]);
+
+        if ($validators->fails()){
+            return response()->json([
+                'status' => false,
+                'message' => $validators->errors()->first()
+            ]);
+        }
+
+        try {
+            $competition->update([
+                'status' => $req->status
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Berhasil memperbarui status kompetisi'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => substr($th->getMessage() ?: 'Gagal memperbarui status', 0, 150)
+            ]);
+        }
     }
 }
