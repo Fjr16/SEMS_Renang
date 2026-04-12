@@ -22,7 +22,7 @@ class CompetitionController extends Controller
         return DataTables::of($data)
         ->addColumn('action', function($row){
             $routeShow = route('competition.show', $row);
-            $edit = '<div class="split-item" onclick="edit(this)"><i class="bi bi-pencil"></i> Edit</div>';
+            $edit = '<div class="split-item" data-id="'.$row->id.'" onclick="edit(this)"><i class="bi bi-pencil"></i> Edit</div>';
             $dlt = '<div class="split-item danger" data-id="'.$row->id.'" onclick="destroy(this)"><i class="bi bi-trash"></i> Hapus</div>';
             $show = '<a href="'.$routeShow.'" class="split-main"><i class="bi bi-eye"></i> Detail</a>';
 
@@ -85,7 +85,7 @@ class CompetitionController extends Controller
             'organization_id' => 'required|exists:organizations,id',
             'venue_id' => 'required|exists:venues,id',
             'description' => 'nullable|string|max:255',
-            'start_date' => 'required|date|before_or_equal:end_date',
+            'start_date' => 'required|date|before_or_equal:end_date|after:registration_end',
             'end_date' => 'required|date|after_or_equal:start_date',
             'registration_start' => 'required|date|before_or_equal:registration_end',
             'registration_end' => 'required|date|after_or_equal:registration_start',
@@ -94,6 +94,7 @@ class CompetitionController extends Controller
             'competition_id' => 'nullable|integer|exists:competitions,id',
         ],[
             'start_date.before_or_equal' => 'Tanggal Mulai Kompetisi harus kecil dari tanggal selesai kompetisi',
+            'start_date.after' => 'Tanggal Mulai Kompetisi minimal dimulai dari H+1 tanggal tutup registrasi',
             'end_date.after_or_equal' => 'Tanggal Selesai Kompetisi harus besar dari tanggal mulai kompetisi',
             'registration_start.before_or_equal' => 'Tanggal buka registrasi harus kecil dari tanggal tutup registrasi',
             'registration_end.after_or_equal' => 'Tanggal tutup registrasi harus besar dari tanggal buka registrasi',

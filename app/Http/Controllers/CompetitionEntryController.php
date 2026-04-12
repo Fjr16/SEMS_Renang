@@ -316,10 +316,14 @@ class CompetitionEntryController extends Controller
                     ->where('team_id', $team->id)
                     ->first();
             // Cek masa registrasi //atau gunakan status saja, sehingga jika registration end date telah lewat namun stts masih open bisa update data
-            // if (now()->toDateString() > $comp->registration_end) {
-            //     $message = 'Gagal Simpan Entry';
-            //     $errors[] = "Masa registrasi telah berakhir";
-            // }
+            //sekarang ditambahkan validasi periode tanggal registrasi kompetisi, fungsi nya agar sistem dapat menblokir entry yang masuk
+            // setelah periode tanggal registrasi berakhir, sehingga penyelenggara dapat fokus untuk melakukan approval entry, dan dapat segera mengubah status kompetisi menjadi running
+            // jika tidak dibatasi input entry by tanggal, nantinya penyelenggara akan susak melakukan approval entry, karena jika hanya bergantung pada status, ketika status di ubah jadi running
+            // penyelenggara tidak dapat menerima entry lagi
+            if (now()->toDateString() > $comp->registration_end) {
+                $message = 'Gagal Simpan Entry';
+                $errors[] = "Periode tanggal registrasi telah berakhir";
+            }
             if ($comp->status != CompetitionStatus::register->value) {
                 $message = 'Gagal Simpan Entry';
                 $errors[] = "Masa registrasi telah berakhir";

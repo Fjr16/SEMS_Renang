@@ -14,20 +14,15 @@
         align-items: center;
         gap: 6px;
         padding: 6px 12px;
-
         font-size: 13px;
         font-weight: 500;
-
         border: 1px solid #5ab8ff;
         border-right: none;
         border-radius: 8px 0 0 8px;
-
         background: #e7f5ff;
         color: #1971c2;
-
         cursor: pointer;
         text-decoration: none;
-
         transition: all 0.15s ease;
     }
 
@@ -41,18 +36,13 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-
         width: 32px;
-
         border: 1px solid #dee2e6;
         border-left: 1px solid #e9ecef;
         border-radius: 0 8px 8px 0;
-
         background: #a7a4a4;
         color: #fafafa;
-
         cursor: pointer;
-
         transition: all 0.15s ease;
         font-size: 12px;
     }
@@ -90,18 +80,13 @@
         position: absolute;
         top: calc(100% + 6px);
         left: 0;
-
         min-width: 160px;
-
         background: #ffffff;
         border: 1px solid #dee2e6;
         border-radius: 10px;
-
         box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-
         z-index: 1050;
         overflow: hidden;
-
         animation: fadeIn 0.15s ease;
     }
 
@@ -114,14 +99,10 @@
         display: flex;
         align-items: center;
         gap: 10px;
-
         padding: 9px 14px;
-
         font-size: 13px;
         color: #212529;
-
         cursor: pointer;
-
         transition: all 0.12s ease;
     }
 
@@ -155,14 +136,6 @@
             transform: translateY(0);
         }
     }
-
-
-    /* Pastikan kolom action tidak terpotong */
-    #competitionTable td:first-child,
-    #competitionTable th:first-child {
-        overflow: visible !important;
-    }
-    #competitionTable tbody tr { overflow: visible; }
 </style>
 @section('content')
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
@@ -366,44 +339,61 @@
                     {data:'statusAttr', name:'status', className:'text-center', orderable:true, searchable:true},
                 ],
                 order:[[6,'asc']],
-                // Pastikan overflow visible di table & wrapper agar dropdown tidak clip
-                initComplete: function () {
-                    $('#competitionTable').css('overflow', 'visible');
-                    $('#competitionTable').closest('.dataTables_wrapper').css('overflow', 'visible');
-                    $('#competitionTable').closest('.card-body').css('overflow', 'visible');
-                }
             });
         });
 
-        function toggleSplit(caretBtn) {
-            const dropdown = $(caretBtn).siblings('.split-dropdown').add(
-                $(caretBtn).closest('.split-action').find('.split-dropdown')
-            ).first();
-            const isOpen = dropdown.hasClass('show');
+        const $globalDropdown = $('<div class="split-dropdown" id="globalSplitDropdown"></div>').appendTo('body');
+        let $currentCaret = null;
 
-            // Tutup semua dropdown lain dulu
+        function toggleSplit(caretBtn) {
+            const $caret = $(caretBtn);
+            const $originalDropdown = $caret.closest('.split-action').find('.split-dropdown');
+
+            // Kalau klik caret yang sama → tutup
+            if ($currentCaret && $currentCaret.is($caret) && $globalDropdown.hasClass('show')) {
+                closeAllSplitDropdowns();
+                return;
+            }
+
             closeAllSplitDropdowns();
 
-            if (!isOpen) {
-                dropdown.addClass('show');
-                $(caretBtn).addClass('open');
-            }
+            // Salin konten dropdown ke global dropdown
+            $globalDropdown.html($originalDropdown.html());
+
+            // Posisikan
+            const rect = caretBtn.getBoundingClientRect();
+            $globalDropdown.css({
+                position: 'fixed',
+                top: rect.bottom + 6,
+                left: rect.left,
+                zIndex: 9999,
+            }).addClass('show');
+
+            $caret.addClass('open');
+            $currentCaret = $caret;
         }
 
         function closeAllSplitDropdowns() {
-            $('.split-dropdown').removeClass('show');
+            $globalDropdown.removeClass('show').html('');
             $('.split-caret').removeClass('open');
+            $currentCaret = null;
         }
 
-        // Klik di luar → tutup semua dropdown
-        $(document).on('click', function (e) {
-            if (!$(e.target).closest('.split-action').length) {
+        $(document).on('click', '.split-caret', function(e) {
+            e.stopPropagation();
+        });
+
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.split-action').length && !$(e.target).closest('#globalSplitDropdown').length) {
                 closeAllSplitDropdowns();
             }
         });
 
-        // Tutup dropdown saat table redraw (pagination, search, dll)
-        $(document).on('draw.dt', '#competitionTable', function () {
+        $(document).on('draw.dt', '#competitionTable', function() {
+            closeAllSplitDropdowns();
+        });
+
+        $(window).on('scroll resize', function() {
             closeAllSplitDropdowns();
         });
 
@@ -459,12 +449,12 @@
             closeAllSplitDropdowns();
             $('#modalTitle').text('Edit Kompetisi');
             $('#form-submit')[0].reset();
-            const tr = $(element).closest('tr');
-            const data = table.row(tr).data();
+
+            const compId = $(element).data('id');
+            const data = table.rows().data().toArray().find(r => r.id == compId);
 
             $('#competition_id').val(data.id);
             $('#name').val(data.name);
-            $('#organization_id').val(data.organization_id).trigger('change');
             if (data.organization_id) {
                 const option = new Option(
                     data.organization.name,
@@ -476,7 +466,6 @@
             }
             $('#start_date').flatpickr().setDate(data.start_date);
             $('#end_date').flatpickr().setDate(data.end_date);
-            $('#venue_id').val(data.venue_id).trigger('change');
             if (data.venue_id) {
                 const option = new Option(
                     `[${data.venue.code ?? ''}] ${data.venue.name ?? ''}`,
