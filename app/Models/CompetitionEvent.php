@@ -36,4 +36,7 @@ class CompetitionEvent extends Model
     public function ageGroup(){
         return $this->belongsTo(AgeGroup::class);
     }
+    public function entries(){
+        return $this->hasMany(CompetitionEntry::class);
+    }
 }

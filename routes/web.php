@@ -6,6 +6,7 @@ use App\Http\Controllers\ClubController;
 use App\Http\Controllers\CompetitionController;
 use App\Http\Controllers\CompetitionEntryController;
 use App\Http\Controllers\CompetitionEventController;
+use App\Http\Controllers\CompetitionHeatLaneController;
 use App\Http\Controllers\CompetitionSessionController;
 use App\Http\Controllers\CompetitionTabEntriesController;
 use App\Http\Controllers\MyTeamController;
@@ -169,5 +170,6 @@ Route::get('/select2/getOrganization', [OtherController::class, 'getOrganization
 Route::get('/select2/getVenue', [OtherController::class, 'getVenue'])->name('getVenue');
 // Route::get('/select2/getAllEvent', [OtherController::class, 'getAllEvent'])->name('getAllEvent');
 
+Route::get('generate/heat/lane', [CompetitionHeatLaneController::class, 'generateHeat']);
 
 require __DIR__ . '/auth.php';
