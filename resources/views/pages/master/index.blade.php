@@ -64,6 +64,12 @@
         'route' => route('club.index'),
         ],
         [
+        'title' => 'Master Kelompok Umur',
+        'desc'  => 'Kelola data master kelompok umur',
+        'icon'  => 'bi-person-vcard',
+        'route' => route('age.group.index'),
+        ],
+        [
         'title' => 'Kompetisi',
         'desc'  => 'Daftar & kelola kompetisi',
         'icon'  => 'bi-trophy',
@@ -75,12 +81,6 @@
         'icon'  => 'bi-shield-lock',
         'route' => route('users.index'),
         ],
-        // [
-        // 'title' => 'Roles & Permissions',
-        // 'desc'  => 'Kelola data master roles dan permissions',
-        // 'icon'  => 'bi-key',
-        // 'route' => route('roles.index'),
-        // ],
     ];
     @endphp
 

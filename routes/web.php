@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AgeGroupController;
 use App\Http\Controllers\AthleteController;
 use App\Http\Controllers\AuthenticateController;
 use App\Http\Controllers\ClubController;
@@ -82,6 +83,13 @@ Route::prefix('/master')->group(function(){
         Route::get('/{id}/permissions', [RolesPermissionsController::class, 'rolePermissions']);
         Route::post('/{id}/permissions/sync', [RolesPermissionsController::class, 'syncRolePermissions']);
 
+    });
+
+    Route::prefix('/age/group')->group(function(){
+        Route::get('/', [AgeGroupController::class, 'index'])->name('age.group.index');
+        Route::get('/data', [AgeGroupController::class, 'data'])->name('age.group.data');
+        Route::post('/store', [AgeGroupController::class, 'store'])->name('age.group.store');
+        Route::delete('/destroy/{id}', [AgeGroupController::class, 'destroy'])->name('age.group.destroy');
     });
 });
 
