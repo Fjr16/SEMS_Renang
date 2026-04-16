@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\EventType;
+use App\Enums\Gender;
+use App\Enums\Stroke;
 use Illuminate\Database\Eloquent\Model;
 
 class CompetitionEvent extends Model
@@ -38,5 +41,17 @@ class CompetitionEvent extends Model
     }
     public function entries(){
         return $this->hasMany(CompetitionEntry::class);
+    }
+    public function heats(){
+        return $this->hasMany(CompetitionHeat::class);
+    }
+    public function getLabel(){
+        return 'Event ' . $this->event_number . ' - '
+            . $this->distance . ' M '
+            . ($this->stroke ? Stroke::from($this->stroke)->label() : '###') . ' • '
+            . ($this->gender === 'mixed' ? 'Campuran' : Gender::from($this->gender)->label()) . ' • '
+            . $this->ageGroup->label . ' / '
+            . ($this->event_type ? EventType::from($this->event_type)->label() : '-')
+        ;
     }
 }

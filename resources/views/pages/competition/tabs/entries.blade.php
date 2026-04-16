@@ -209,7 +209,8 @@
                                         $eventGender = $entry->competitionEvent->gender ? ($entry->competitionEvent->gender != 'mixed' ? (App\Enums\Gender::from($entry->competitionEvent->gender)->label()) : 'Campuran') : '-';
                                         $tipeEvent = $entry->competitionEvent->event_type ? App\Enums\EventType::from($entry->competitionEvent->event_type)->label() : '-';
                                         $eventKu = $entry->competitionEvent->ageGroup ? $entry->competitionEvent->ageGroup->label : '';
-                                        $meta  = (($entry->competitionEvent->distance ?? '-') . ' M ' . ($entry->competitionEvent->stroke ?? '-') . ' • ' . ($eventGender) . ' • '. ($eventKu));
+                                        $stroke = $entry->competitionEvent->stroke ? App\Enums\Stroke::from($entry->competitionEvent->stroke)->label() : '-';
+                                        $meta  = (($entry->competitionEvent->distance ?? '-') . ' M ' . ($stroke) . ' • ' . ($eventGender) . ' • '. ($eventKu));
                                     @endphp
 
                                     @if($entry->is_relay)

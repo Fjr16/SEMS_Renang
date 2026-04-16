@@ -182,7 +182,8 @@
         $eventKu = $ev->ageGroup ? $ev->ageGroup->label : '';
         $minDob = $ev->ageGroup ? Carbon\Carbon::parse($comp->start_date)->subYears($ev->ageGroup->max_age)->translatedFormat('d F Y') : '-';
         $maxDob = $ev->ageGroup ? Carbon\Carbon::parse($comp->start_date)->subYears($ev->ageGroup->min_age)->translatedFormat('d F Y') : '-';
-        $meta  = (($ev->distance ?? '-') . ' M ' . ($ev->stroke ?? '-') . ' • ' . ($eventGender) . ' • '. ($eventKu) . ' - ' . ($tipeEvent == 'Estafet' ? $tipeEvent . ' (maks. Atlet : '. ($ev->max_relay_athletes ?? '-') .')' : $tipeEvent));
+        $stroke = $ev->stroke ? App\Enums\Stroke::from($ev->stroke)->label() : '###';
+        $meta  = (($ev->distance ?? '-') . ' M ' . ($stroke) . ' • ' . ($eventGender) . ' • '. ($eventKu) . ' - ' . ($tipeEvent == 'Estafet' ? $tipeEvent . ' (maks. Atlet : '. ($ev->max_relay_athletes ?? '-') .')' : $tipeEvent));
         return [
             'id' => $ev->id,
             'label' => '[Event ' . trim($label) .'] ' . trim($meta),
@@ -233,7 +234,8 @@
                     $eventGender = $ev->gender ? ($ev->gender != 'mixed' ? (App\Enums\Gender::from($ev->gender)->label()) : 'Campuran') : '-';
                     $tipeEvent = $ev->event_type ? App\Enums\EventType::from($ev->event_type)->label() : '-';
                     $eventKu = $ev->ageGroup ? $ev->ageGroup->label : '';
-                    $meta  = (($ev->distance ?? '-') . ' M ' . ($ev->stroke ?? '-') . ' • ' . ($eventGender) . ' • '. ($eventKu) . ' - ' . ($tipeEvent == 'Estafet' ? $tipeEvent . ' (maks. Atlet : '. ($ev->max_relay_athletes ?? '-') .')' : $tipeEvent));
+                    $stroke = $ev->stroke ? App\Enums\Stroke::from($ev->stroke)->label() : '###';
+                    $meta  = (($ev->distance ?? '-') . ' M ' . ($stroke ?? '-') . ' • ' . ($eventGender) . ' • '. ($eventKu) . ' - ' . ($tipeEvent == 'Estafet' ? $tipeEvent . ' (maks. Atlet : '. ($ev->max_relay_athletes ?? '-') .')' : $tipeEvent));
                     @endphp
 
                     <div class="ev-card mb-2" data-evcard data-evtext="{{ strtolower($label.' '.$meta) }}">

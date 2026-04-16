@@ -124,7 +124,7 @@ Route::prefix('/competition/{competition}')->group(function(){
     Route::post('/tab/entries/update-status-entry', [CompetitionTabEntriesController::class, 'updateStatusEntry'])->name('competition.tab.entries.updateStatusEntry');
     Route::delete('/tab/entries/delete-entry/{id}', [CompetitionTabEntriesController::class, 'destroyEntry'])->name('competition.tab.entries.deleteEntry');
 
-    // Route::get('/tab/heats',    [CompetitionSessionController::class, 'heats'])->name('competition.tab.heats');
+    Route::get('/tab/heats/partial/reload',    [CompetitionHeatLaneController::class, 'partialReload'])->name('competition.tab.heats.partial');
     // Route::get('/tab/results',  [CompetitionSessionController::class, 'results'])->name('competition.tab.results');
     // Route::get('/tab/points',   [CompetitionSessionController::class, 'points'])->name('competition.tab.points');
     // Route::get('/tab/officials',[CompetitionSessionController::class, 'officials'])->name('competition.tab.officials');

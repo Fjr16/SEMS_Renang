@@ -11,6 +11,17 @@ use App\Models\CompetitionHeatLane;
 
 class CompetitionHeatLaneController extends Controller
 {
+    public function partialReload(Competition $competition, $event_id = null){
+        $event = !$event_id
+        ? $competition->events()->first()
+        : CompetitionEvent::find($event_id);
+        $event->load(['heats']);
+
+        return view('pages.competition.tabs.heats', compact(
+            'competition',
+            'event'
+        ));
+    }
     public function generateHeat(){
         $competition = Competition::find(1);
         $events = $competition->events;

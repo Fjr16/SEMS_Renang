@@ -62,8 +62,8 @@
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="heats-tab" data-bs-toggle="tab" data-bs-target="#heats" type="button" role="tab" aria-controls="overview" aria-selected="false">
-            Heats & Lanes
+        <button class="nav-link" id="heats-tab" data-bs-toggle="tab" data-bs-target="#heat_lanes" type="button" role="tab" aria-controls="overview" aria-selected="false">
+            Seri & Lintasan
             <span class="badge bg-secondary">{{ $counts['heats'] ?? 0 }}</span>
         </button>
     </li>
@@ -137,6 +137,8 @@
     <div class="tab-pane fade" id="events" role="tabpanel" data-table="eventsTable"></div>
     <!-- Entries -->
     <div class="tab-pane fade" id="entries" role="tabpanel"></div>
+    {{-- heats & lanes --}}
+    <div class="tab-pane fade" id="heat_lanes" role="tabpanel"></div>
 
     <!-- Heats -->
     {{-- <div class="tab-pane fade" id="heats" role="tabpanel" data-url="{{ route('competition.tab.heats', $competition) }}"></div> --}}
@@ -151,6 +153,7 @@
     <script>
         const EVENTS_PARTIAL_URL = "{{ route('competition.tab.events.partial', $competition) }}";
         const ENTRIES_PARTIAL_URL = "{{ route('competition.tab.entries.partial', $competition) }}";
+        const HEATS_PARTIAL_URL = "{{ route('competition.tab.heats.partial', $competition) }}";
 
         document.addEventListener('shown.bs.tab', async function(ev) {
             const paneSelector = ev.target.getAttribute('data-bs-target');
@@ -184,6 +187,9 @@
                     // Reload hanya konten tab entries
                     paneSelected.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
                     fetchPartialEntriesTab();
+                }else if(paneSelected.id === 'heat_lanes'){
+                    paneSelected.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+                    fetchPartialHeatsTab();
                 }else if(paneSelected.id === 'sessions'){
                     getDataSessions();
                 }else{
@@ -960,7 +966,7 @@
                 this.value = formatted;
             });
             $(document).on('keydown', '.seed_time_input', async function(e) {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' || e.key === 'Tab') {
                     e.preventDefault();
 
                     const value = $(this).val();
@@ -1022,6 +1028,57 @@
                 .then(html => {
                     tab.innerHTML = html;
                     initEntryTabScripts();
+                })
+                .catch(err => {
+                    console.error('Fetch error:', err.message);
+                    tab.innerHTML = '<div class="py-4 text-danger text-center">Gagal memuat konten.</div>';
+                });
+        }
+    </script>
+
+    {{-- scripts tab heats lanes --}}
+    <script>
+        function toggleGroup(teamId) {
+            const body   = document.getElementById('team-body-' + teamId);
+            const chev   = document.getElementById('chevron-' + teamId);
+            const isOpen = body.style.display !== 'none';
+            body.style.display = isOpen ? 'none' : '';
+            chev.style.transform = isOpen ? '' : 'rotate(90deg)';
+        }
+
+        // switch mini tab
+        function switchTab(teamId, tab, btnEl) {
+            // Reset semua tab button dalam group ini
+            document.querySelectorAll(`#team-group-${teamId} .tab-btn`).forEach(btn => {
+                btn.style.borderBottom = '2px solid transparent';
+                btn.style.color = '#6c757d';
+            });
+            // Aktifkan tab yang dipilih
+            btnEl.style.borderBottom = '2px solid #2563EB';
+            btnEl.style.color = '#2563EB';
+
+            // Tampilkan/sembunyikan konten
+            document.getElementById(`tab-entry-${teamId}`).style.display    = tab === 'entry'    ? '' : 'none';
+            document.getElementById(`tab-official-${teamId}`).style.display = tab === 'official' ? '' : 'none';
+        }
+
+        function fetchPartialHeatsTab(){
+            console.log('berhasil');
+            const tab = document.getElementById('heat_lanes');
+            // const status = document.getElementById('f-status')?.value ?? '';
+            // const clubId = document.getElementById('club_id')?.value ?? '';
+
+            const url = new URL(HEATS_PARTIAL_URL);
+            // if (status) url.searchParams.set('status', status);
+            // if (clubId)  url.searchParams.set('club_id', clubId);
+
+            tab.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+
+            fetch(url)
+                .then(r => r.text())
+                .then(html => {
+                    tab.innerHTML = html;
+                    // initEntryTabScripts();
                 })
                 .catch(err => {
                     console.error('Fetch error:', err.message);
