@@ -13,9 +13,9 @@ class CompetitionHeatLaneController extends Controller
 {
     public function partialReload(Competition $competition, $event_id = null){
         $event = !$event_id
-        ? $competition->events()->first()
+        ? $competition->events->first()
         : CompetitionEvent::find($event_id);
-        $event->load(['heats']);
+        $event->load(['heats.heatLanes.entry.athlete.club']);
 
         return view('pages.competition.tabs.heats', compact(
             'competition',

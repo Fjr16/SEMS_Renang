@@ -22,27 +22,22 @@
     .official-avatar { width: 28px; height: 28px; border-radius: 50%; background: #DBEAFE; color: #1D4ED8; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 </style>
 <!-- Tab Heats -->
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-2">
   <div>
     <h5 class="fw-bold mb-1">Manajemen Seri Perlombaan</h5>
     <p class="text-muted mb-0">Kelola seri perlombaan untuk tiap event</p>
   </div>
   <div class="mt-3 mt-md-0">
-    <button data-bs-toggle="modal" data-bs-target="#modalHeat" class="btn btn-primary">
-      <i class="bi bi-plus-circle me-1"></i> Tambah Heat
+    <button data-bs-toggle="modal" data-bs-target="#modalHeat" class="btn btn-outline-primary">
+      <i class="bi bi-magic me-1"></i> Generate Seri
     </button>
   </div>
 </div>
 
 <div class="card shadow-sm border-0">
-    <div class="card-body">
+    <div class="card-body px-2">
         <div id="view-group">
-            {{-- @forelse($event->heats as $heat)
-                @php
-                    $team     = $compTeam['team'];
-                    $teamEntries = $compTeam['competitionEntries'];
-                @endphp --}}
-
+            @if(!empty($event->heats))
                 <div class="team-group" id="team-group-{{ $event->id }}">
                     <div class="team-group-header" onclick="toggleGroup('{{ $event->id }}')">
                         <div class="d-flex align-items-center gap-2 w-100">
@@ -105,447 +100,53 @@
                     </div>
                     <div class="team-group-body" id="team-body-1">
                         <div class="d-flex border-bottom px-3" style="background:#fafafa">
-                            <button class="btn btn-link btn-sm text-decoration-none fw-semibold px-3 py-2 tab-btn active"
-                                style="font-size:12px;border-bottom:2px solid #2563EB;border-radius:0;color:#2563EB"
-                                onclick="switchTab(1, 'entry', this)">
-                                Entry Atlet
-                                {{-- <span class="badge rounded-pill ms-1" style="background:#e9ecef;color:#495057;font-size:10px">
-                                    {{ $teamEntries->count() }}
-                                </span> --}}
-                            </button>
-                            <button class="btn btn-link btn-sm text-decoration-none fw-semibold px-3 py-2 tab-btn"
-                                style="font-size:12px;border-bottom:2px solid transparent;border-radius:0;color:#6c757d"
-                                onclick="switchTab(1, 'official', this)">
-                                Official
-                                {{-- <span class="badge rounded-pill ms-1" style="background:#e9ecef;color:#495057;font-size:10px">
-                                    {{ $compTeam['competitionTeamOfficials']->count() }}
-                                </span> --}}
-                            </button>
+                            @foreach ($event->heats as $heat)
+                                <button class="btn btn-link btn-sm text-decoration-none fw-semibold px-3 py-2 tab-heat-btn"
+                                    data-heat="{{ $heat->heat_number }}"
+                                    style="font-size:12px;border-bottom:2px solid transparent;border-radius:0;color:#2563EB;">
+                                    {{ 'Seri ' . $heat->heat_number }}
+                                </button>
+                            @endforeach
                         </div>
 
-                        <div id="tab-entry-1" class="table-responsive">
+                        @foreach ($event->heats as $heat)
+                        <div class="heat-panel table-responsive" data-heat="{{ $heat->heat_number }}" style="display:none">
                             <table class="table table-hover mb-0">
                                 <thead>
-                                    <tr>
-                                        <th>#</th>
+                                    <tr class="text-center">
+                                        <th>Peringkat</th>
+                                        <th>Lintasan</th>
                                         <th>Atlet</th>
-                                        <th>Event</th>
-                                        <th>Maks. Atlet</th>
-                                        <th>Entry Time</th>
-                                        <th>Seed Time</th>
-                                        <th>Status</th>
-                                        <th>Biaya Pendaftaran</th>
-                                        <th>Aksi</th>
+                                        <th>Tim / Klub</th>
+                                        <th>Waktu Tercepat</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {{-- @foreach($teamEntries as $i => $entry)
-                                    @php
-                                        $label = 'Event ' . ($entry->competitionEvent->event_number ?? '-');
-                                        $eventGender = $entry->competitionEvent->gender ? ($entry->competitionEvent->gender != 'mixed' ? (App\Enums\Gender::from($entry->competitionEvent->gender)->label()) : 'Campuran') : '-';
-                                        $tipeEvent = $entry->competitionEvent->event_type ? App\Enums\EventType::from($entry->competitionEvent->event_type)->label() : '-';
-                                        $eventKu = $entry->competitionEvent->ageGroup ? $entry->competitionEvent->ageGroup->label : '';
-                                        $meta  = (($entry->competitionEvent->distance ?? '-') . ' M ' . ($entry->competitionEvent->stroke ?? '-') . ' • ' . ($eventGender) . ' • '. ($eventKu));
-                                    @endphp
-
-                                    @if($entry->is_relay)
-                                        <tr id="entry-row-g-{{ $entry->id }}" onclick="toggleRelayMembers({{ $entry->id }})">
-                                            <td class="text-muted">{{ $i + 1 }}</td>
-                                            <td>
-                                                <span class="fw-medium">
-                                                    {{ $entry->is_relay ? $team->club_name : ($entry?->athlete?->name ?? '-') }}
-                                                </span>
-                                                @if($entry->is_relay)
-                                                    <span class="relay-tag">Estafet</span>
-                                                @endif
-                                            </td>
-                                            <td>{{ $meta }}</td>
-                                            <td><code>{{ $entry->competitionEvent->max_relay_athletes ?? '—' }}</code></td>
-                                            <td><code>{{ $entry->entry_time ?? '—' }}</code></td>
-                                            <td style="width: max-content;">
-                                                <input
-                                                    type="text"
-                                                    class="seed_time_input form-control form-control-sm rounded-3 w-auto"
-                                                    placeholder="00:00.00"
-                                                    maxlength="8"
-                                                    value="{{ $entry->seed_time ?? '' }}"
-                                                    style="min-width: 75px; max-width: 90px;"
-                                                    data-entry-id = "{{ $entry->id ?? '' }}"
-                                                    @disabled($compTeam->competition->status !== App\Enums\CompetitionStatus::register->value)
-                                                >
-                                            </td>
-                                            <td>
-                                                <span class="badge rounded-pill badge-{{ $entry->status }}" id="badge-g-{{ $entry->id }}">
-                                                    {{ App\Enums\CompetitionTeamEntryStatus::tryFrom($entry->status)->label() ?? 'Tidak Dikenali' }}
-                                                </span>
-                                            </td>
-                                            <td><code>Rp {{ number_format($entry->competitionEvent->registration_fee, 0, ',', '.') }}</code></td>
-                                            <td>
-                                                <div class="d-flex gap-1">
-                                                    @if (
-                                                        $compTeam->competition->status === App\Enums\CompetitionStatus::register->value
-                                                    )
-                                                    <button class="btn btn-danger btn-action" title="Hapus"
-                                                        onclick="deleteEntry({{ $entry->id }})">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                                                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                                                        </svg>
-                                                    </button>
-                                                    @elseif(
-                                                    $compTeam->competition->status === App\Enums\CompetitionStatus::running->value
-                                                    && $compTeam->status === App\Enums\CompetitionTeamStatus::Pending->value
-                                                    )
-                                                    <button class="btn btn-danger btn-action" title="Hapus"
-                                                        onclick="deleteEntry({{ $entry->id }})">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                                                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                                                        </svg>
-                                                    </button>
-                                                    @elseif(
-                                                    $compTeam->competition->status === App\Enums\CompetitionStatus::running->value
-                                                    && $compTeam->status === App\Enums\CompetitionTeamStatus::Active->value
-                                                    )
-                                                    @if ($entry->status === App\Enums\CompetitionTeamEntryStatus::Active->value )
-                                                        <button class="btn btn-danger btn-action" title="Diskualifikasi"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Disqualified->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
-                                                            </svg>
-                                                        </button>
-                                                        <button class="btn btn-warning btn-action" title="Undur Diri"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Withdrawn->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
-                                                                <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-                                                            </svg>
-                                                        </button>
-                                                    @elseif ($entry->status === App\Enums\CompetitionTeamEntryStatus::Disqualified->value )
-                                                        <button class="btn btn-success btn-action" title="Aktifkan"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Active->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                                                <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
-                                                            </svg>
-                                                        </button>
-                                                        <button class="btn btn-warning btn-action" title="Undur Diri"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Withdrawn->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
-                                                                <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-                                                            </svg>
-                                                        </button>
-                                                    @elseif ($entry->status === App\Enums\CompetitionTeamEntryStatus::Withdrawn->value )
-                                                        <button class="btn btn-success btn-action" title="Aktifkan"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Active->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                                                <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
-                                                            </svg>
-                                                        </button>
-                                                        <button class="btn btn-danger btn-action" title="Diskualifikasi"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Disqualified->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
-                                                            </svg>
-                                                        </button>
-                                                    @endif
-                                                    @elseif(
-                                                    $compTeam->competition->status === App\Enums\CompetitionStatus::running->value
-                                                    && $compTeam->status !== App\Enums\CompetitionTeamStatus::Active->value
-                                                    && $compTeam->status !== App\Enums\CompetitionTeamStatus::Pending->value
-                                                    )
-                                                    <span class="badge bg-secondary">
-                                                        {{ 'Tim Telah ' . App\Enums\CompetitionTeamStatus::from($compTeam->status)->label() ?? '-' }}
-                                                    </span>
-                                                    @elseif( $compTeam->competition->status === App\Enums\CompetitionStatus::closed->value)
-                                                    <span class="badge bg-secondary">
-                                                        {{ 'Kompetisi Telah ' . App\Enums\CompetitionStatus::from($compTeam->competition->status)->label() ?? '-' }}
-                                                    </span>
-                                                    @else
-                                                    <span class="badge bg-secondary">
-                                                        'Status Tidak Diketahui'
-                                                    </span>
-                                                    @endif
-                                                </div>
-                                            </td>
+                                    @forelse ($heat->heatLanes as $lane)
+                                        <tr class="text-center">
+                                            <td>{{ $lane->lane_order ?? '-' }}</td>
+                                            <td>{{ $lane->lane_number ?? '-' }}</td>
+                                            <td>{{ $lane->entry->athlete?->name ?? '-' }}</td>
+                                            <td>{{ $lane->entry->athlete?->club?->club_name ?? '-' }}</td>
+                                            <td>{{ $lane->entry?->seed_time ?? 'NT' }}</td>
                                         </tr>
-                                        <tr id="relay-members-{{ $entry->id }}" style="display:none;background:#f8fafc">
-                                            <td colspan="9" class="px-4 py-2">
-                                                <div class="d-flex align-items-center gap-2 mb-2">
-                                                    <span style="font-size:11px;font-weight:600;color:#374151">Anggota Estafet</span>
-                                                    <span class="badge rounded-pill" style="background:#e9ecef;color:#495057;font-size:10px">
-                                                        {{ $entry->competitionEntryRelayMembers->where('status','active')->count() }} atlet
-                                                    </span>
-                                                </div>
-                                                <table class="table table-sm mb-0" style="font-size:12px">
-                                                    <thead>
-                                                        <tr style="background:#f1f5f9">
-                                                            <th style="width:60px">Urutan</th>
-                                                            <th>Nama Atlet</th>
-                                                            <th>Status</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @forelse($entry->competitionEntryRelayMembers->sortBy('leg_order') as $member)
-                                                        <tr>
-                                                            <td>
-                                                                <span style="background:#2563EB;color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">
-                                                                    {{ $member->leg_order ?? '?' }}
-                                                                </span>
-                                                            </td>
-                                                            <td class="fw-medium">{{ $member->athlete->name ?? '-' }}</td>
-                                                            <td>
-                                                                <span class="badge rounded-pill badge-{{ $member->status }}" style="font-size:10px">
-                                                                    {{ $member->status === 'active' ? 'Aktif' : '?' }}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                        @empty
-                                                        <tr>
-                                                            <td colspan="3" class="text-center text-muted py-2">Belum ada anggota relay</td>
-                                                        </tr>
-                                                        @endforelse
-                                                    </tbody>
-                                                </table>
-                                            </td>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">Belum ada data.</td>
                                         </tr>
-                                    @else
-                                        <tr id="entry-row-g-{{ $entry->id }}">
-                                            <td class="text-muted">{{ $i + 1 }}</td>
-                                            <td>
-                                                <span class="fw-medium">
-                                                    {{ $entry->is_relay ? $team->club_name : ($entry?->athlete?->name ?? '-') }}
-                                                </span>
-                                                @if($entry->is_relay)
-                                                    <span class="relay-tag">Estafet</span>
-                                                @endif
-                                            </td>
-                                            <td>{{ $meta }}</td>
-                                            <td><code>{{ $entry->competitionEvent->max_relay_athletes ?? '—' }}</code></td>
-                                            <td><code>{{ $entry->entry_time ?? '—' }}</code></td>
-                                            <td>
-                                                <input
-                                                    type="text"
-                                                    class="seed_time_input form-control form-control-sm rounded-3 w-auto"
-                                                    placeholder="00:00.00"
-                                                    maxlength="8"
-                                                    value="{{ $entry->seed_time ?? '' }}"
-                                                    style="min-width: 75px;max-width:90px;"
-                                                    data-entry-id = "{{ $entry->id ?? '' }}"
-                                                    @disabled($compTeam->competition->status !== App\Enums\CompetitionStatus::register->value)
-                                                >
-                                            </td>
-                                            <td>
-                                                <span class="badge rounded-pill badge-{{ $entry->status }}" id="badge-g-{{ $entry->id }}">
-                                                    {{ App\Enums\CompetitionTeamEntryStatus::tryFrom($entry->status)->label() ?? 'Tidak Dikenali' }}
-                                                </span>
-                                            </td>
-                                            <td><code>Rp {{ number_format($entry->competitionEvent->registration_fee, 0, ',', '.') }}</code></td>
-                                            <td>
-                                                <div class="d-flex gap-1">
-                                                   @if (
-                                                        $compTeam->competition->status === App\Enums\CompetitionStatus::register->value
-                                                    )
-                                                    <button class="btn btn-danger btn-action" title="Hapus"
-                                                        onclick="deleteEntry({{ $entry->id }})">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                                                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                                                        </svg>
-                                                    </button>
-                                                    @elseif(
-                                                    $compTeam->competition->status === App\Enums\CompetitionStatus::running->value
-                                                    && $compTeam->status === App\Enums\CompetitionTeamStatus::Pending->value
-                                                    )
-                                                    <button class="btn btn-danger btn-action" title="Hapus"
-                                                        onclick="deleteEntry({{ $entry->id }})">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                                                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                                                        </svg>
-                                                    </button>
-                                                    @elseif(
-                                                    $compTeam->competition->status === App\Enums\CompetitionStatus::running->value
-                                                    && $compTeam->status === App\Enums\CompetitionTeamStatus::Active->value
-                                                    )
-                                                    @if ($entry->status === App\Enums\CompetitionTeamEntryStatus::Active->value )
-                                                        <button class="btn btn-danger btn-action" title="Diskualifikasi"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Disqualified->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
-                                                            </svg>
-                                                        </button>
-                                                        <button class="btn btn-warning btn-action" title="Undur Diri"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Withdrawn->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
-                                                                <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-                                                            </svg>
-                                                        </button>
-                                                    @elseif ($entry->status === App\Enums\CompetitionTeamEntryStatus::Disqualified->value )
-                                                        <button class="btn btn-success btn-action" title="Aktifkan"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Active->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                                                <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
-                                                            </svg>
-                                                        </button>
-                                                        <button class="btn btn-warning btn-action" title="Undur Diri"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Withdrawn->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
-                                                                <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-                                                            </svg>
-                                                        </button>
-                                                    @elseif ($entry->status === App\Enums\CompetitionTeamEntryStatus::Withdrawn->value )
-                                                        <button class="btn btn-success btn-action" title="Aktifkan"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Active->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                                                <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
-                                                            </svg>
-                                                        </button>
-                                                        <button class="btn btn-danger btn-action" title="Diskualifikasi"
-                                                            onclick="updateStatusEntry('{{ $entry->id }}', '{{ App\Enums\CompetitionTeamEntryStatus::Disqualified->value }}')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
-                                                            </svg>
-                                                        </button>
-                                                    @endif
-
-                                                    @elseif(
-                                                    $compTeam->competition->status === App\Enums\CompetitionStatus::running->value
-                                                    && $compTeam->status !== App\Enums\CompetitionTeamStatus::Active->value
-                                                    && $compTeam->status !== App\Enums\CompetitionTeamStatus::Pending->value
-                                                    )
-                                                    <span class="badge bg-secondary">
-                                                        {{ 'Tim Telah ' . App\Enums\CompetitionTeamStatus::from($compTeam->status)->label() ?? '-' }}
-                                                    </span>
-                                                    @elseif( $compTeam->competition->status === App\Enums\CompetitionStatus::closed->value)
-                                                    <span class="badge bg-secondary">
-                                                        {{ 'Kompetisi Telah ' . App\Enums\CompetitionStatus::from($compTeam->competition->status)->label() ?? '-' }}
-                                                    </span>
-                                                    @else
-                                                    <span class="badge bg-secondary">
-                                                        'Status Tidak Diketahui'
-                                                    </span>
-                                                    @endif
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endif
-                                    @endforeach --}}
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
-
-                        {{-- Tab: Official --}}
-                        <div id="tab-official-1" style="display:none">
-                            <div class="p-3">
-                                {{-- @forelse($compTeam['competitionTeamOfficials'] as $ofc)
-                                <div class="official-row" id="official-row-{{ $ofc->id }}">
-                                    <div class="official-avatar">
-                                        {{ strtoupper(substr($ofc->official->name, 0, 1)) }}{{ strtoupper(substr(strstr($ofc->official->name, ' '), 1, 1)) }}
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-medium" style="font-size:13px">{{ $ofc->official->name }}</div>
-                                        <div class="text-muted" style="font-size:11px">
-                                            {{ $ofc->role_override ?? '-' }}
-                                            @if($ofc->official->license)
-                                                · <code style="font-size:10px">{{ $ofc->official->license }}</code>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                                @empty --}}
-                                    <div class="text-center text-muted py-4" style="font-size:13px">
-                                        Tidak ada official terdaftar untuk tim ini.
-                                    </div>
-                                {{-- @endforelse --}}
-                            </div>
-                        </div>
-
+                        @endforeach
                     </div>
                 </div>
-            {{-- @empty
-                <div class="text-center text-muted py-5" style="font-size:13px">Belum ada entry untuk kompetisi ini.</div>
-            @endforelse --}}
+            @else
+                <div class="text-center text-muted py-5" style="font-size:13px">Belum ada seri dalam kompetisi ini.</div>
+            @endif
         </div>
     </div>
 </div>
-
-<!-- Card Table -->
-{{-- <div class="card shadow-sm border-0">
-  <div class="card-body">
-    <div class="table-responsive">
-      <table id="heatsTable" class="table table-striped align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>#</th>
-            <th>Event</th>
-            <th>Heat</th>
-            <th>Jumlah Entries</th>
-            <th>Input results</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Contoh data statis -->
-          <tr>
-            <td>1</td>
-            <td>100m Freestyle</td>
-            <td>Heat 1</td>
-            <td>8</td>
-            <td>
-                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalResultsHeat1">
-                    <i class="bi bi-flag-checkered"></i> Input Results
-                </button>
-            </td>
-            <td>
-              <div class="btn-group">
-                <button data-bs-toggle="modal" data-bs-target="#modalHeatDetail" class="btn btn-sm btn-info">
-                  <i class="bi bi-eye"></i>
-                </button>
-                <button data-bs-toggle="modal" data-bs-target="#modalHeat" class="btn btn-sm btn-warning">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>100m Freestyle</td>
-            <td>Heat 2</td>
-            <td>6</td>
-            <td>
-                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalResultsHeat1">
-                    <i class="bi bi-flag-checkered"></i> Input Results
-                </button>
-            </td>
-            <td>
-              <div class="btn-group">
-                <button data-bs-toggle="modal" data-bs-target="#modalHeatDetail" class="btn btn-sm btn-info">
-                  <i class="bi bi-eye"></i>
-                </button>
-                <button data-bs-toggle="modal" data-bs-target="#modalHeat" class="btn btn-sm btn-warning">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div> --}}
 
 <!-- Modal Create/Edit Heat -->
 <div class="modal fade" id="modalHeat" tabindex="-1">

@@ -1038,32 +1038,7 @@
 
     {{-- scripts tab heats lanes --}}
     <script>
-        function toggleGroup(teamId) {
-            const body   = document.getElementById('team-body-' + teamId);
-            const chev   = document.getElementById('chevron-' + teamId);
-            const isOpen = body.style.display !== 'none';
-            body.style.display = isOpen ? 'none' : '';
-            chev.style.transform = isOpen ? '' : 'rotate(90deg)';
-        }
-
-        // switch mini tab
-        function switchTab(teamId, tab, btnEl) {
-            // Reset semua tab button dalam group ini
-            document.querySelectorAll(`#team-group-${teamId} .tab-btn`).forEach(btn => {
-                btn.style.borderBottom = '2px solid transparent';
-                btn.style.color = '#6c757d';
-            });
-            // Aktifkan tab yang dipilih
-            btnEl.style.borderBottom = '2px solid #2563EB';
-            btnEl.style.color = '#2563EB';
-
-            // Tampilkan/sembunyikan konten
-            document.getElementById(`tab-entry-${teamId}`).style.display    = tab === 'entry'    ? '' : 'none';
-            document.getElementById(`tab-official-${teamId}`).style.display = tab === 'official' ? '' : 'none';
-        }
-
         function fetchPartialHeatsTab(){
-            console.log('berhasil');
             const tab = document.getElementById('heat_lanes');
             // const status = document.getElementById('f-status')?.value ?? '';
             // const clubId = document.getElementById('club_id')?.value ?? '';
@@ -1078,12 +1053,37 @@
                 .then(r => r.text())
                 .then(html => {
                     tab.innerHTML = html;
-                    // initEntryTabScripts();
+                    initHeatTabs();
                 })
                 .catch(err => {
                     console.error('Fetch error:', err.message);
                     tab.innerHTML = '<div class="py-4 text-danger text-center">Gagal memuat konten.</div>';
                 });
+        }
+        function initHeatTabs() {
+            const buttons = document.querySelectorAll('.tab-heat-btn');
+            const panels  = document.querySelectorAll('.heat-panel');
+
+            function activateHeat(heatNumber) {
+                panels.forEach(p => {
+                    p.style.display = p.dataset.heat == heatNumber ? 'block' : 'none';
+                });
+                buttons.forEach(b => {
+                    const active = b.dataset.heat == heatNumber;
+                    b.style.borderBottom = active ? '2px solid #2563EB' : '2px solid transparent';
+                    b.style.color        = active ? '#2563EB' : '#6c757d';
+                    b.style.fontWeight   = active ? '600' : '400';
+                });
+            }
+
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => activateHeat(btn.dataset.heat));
+            });
+
+            // Aktifkan heat pertama otomatis
+            if (buttons.length > 0) {
+                activateHeat(buttons[0].dataset.heat);
+            }
         }
     </script>
 @endpush
