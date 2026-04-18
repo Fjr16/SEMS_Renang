@@ -8,22 +8,29 @@ use App\Models\Competition;
 use App\Models\CompetitionEvent;
 use App\Models\CompetitionHeat;
 use App\Models\CompetitionHeatLane;
+use Illuminate\Http\Request;
 
 class CompetitionHeatLaneController extends Controller
 {
-    public function partialReload(Competition $competition, $event_id = null){
+    public function partialReload(Competition $competition, Request $r){
+        $event_id = $r->input('event_id');
         $event = !$event_id
         ? $competition->events->first()
         : CompetitionEvent::find($event_id);
         $event->load(['heats.heatLanes.entry.athlete.club']);
 
+        $selectEvents = $competition->events;
+        $totalLanes = $event->competitionSession->pool->total_lanes;
+        $totalEntries = $event->entries->where('status', CompetitionTeamEntryStatus::Active->value)->count();
         return view('pages.competition.tabs.heats', compact(
             'competition',
-            'event'
+            'event',
+            'selectEvents',
+            'totalLanes',
+            'totalEntries'
         ));
     }
-    public function generateHeat(){
-        $competition = Competition::find(1);
+    public function generateHeat(Competition $competition){
         $events = $competition->events;
         $roundType = 'PRELIM';
 

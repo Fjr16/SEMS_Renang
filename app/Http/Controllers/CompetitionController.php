@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\CompetitionStatus;
 use App\Models\Competition;
 use App\Models\CompetitionEntry;
+use App\Models\CompetitionHeat;
 use App\Models\Pool;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -160,11 +161,16 @@ class CompetitionController extends Controller
                 ->where('venue_id', $competition->venue_id)
                 ->where('status', 'active')
                 ->get();
+        $heats_count = CompetitionHeat::query()
+                        ->join('competition_events as ev', 'ev.id', '=', 'competition_heats.competition_event_id')
+                        ->join('competition_sessions as sesi', 'sesi.id', '=', 'ev.competition_session_id')
+                        ->where('sesi.competition_id', $competition->id)
+                        ->count();
         $counts = [
             'sessions'  => $competition->sessions()->count(),
             'events'    => $competition->events()->count(),
-            // 'entries'   => CompetitionEntry::count(),
             'entries'   => $competition->entries()->count(),
+            'heats'   => $heats_count,
         ];
         return view('pages.competition.show', compact(
             'competition',

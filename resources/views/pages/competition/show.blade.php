@@ -1040,12 +1040,10 @@
     <script>
         function fetchPartialHeatsTab(){
             const tab = document.getElementById('heat_lanes');
-            // const status = document.getElementById('f-status')?.value ?? '';
-            // const clubId = document.getElementById('club_id')?.value ?? '';
+            const eventId = document.getElementById('heat_competition_event_id')?.value ?? '';
 
             const url = new URL(HEATS_PARTIAL_URL);
-            // if (status) url.searchParams.set('status', status);
-            // if (clubId)  url.searchParams.set('club_id', clubId);
+            if (eventId)  url.searchParams.set('event_id', eventId);
 
             tab.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
 
@@ -1084,6 +1082,20 @@
             if (buttons.length > 0) {
                 activateHeat(buttons[0].dataset.heat);
             }
+
+            // initiate select 2 event
+            $('#heat_competition_event_id').select2({
+                width:'100%',
+                placeholder:'Pilih Acara',
+                allowClear:false,
+                theme: "classic",
+            }).on('change', function(){
+                fetchPartialHeatsTab();
+            });
         }
+
+        // async function generateHeats(eventId){
+        //     const res = await fetch()
+        // }
     </script>
 @endpush
