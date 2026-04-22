@@ -138,6 +138,10 @@ Route::prefix('/competition/{competition}')->group(function(){
     // Route::get('/tab/points',   [CompetitionSessionController::class, 'points'])->name('competition.tab.points');
     // Route::get('/tab/officials',[CompetitionSessionController::class, 'officials'])->name('competition.tab.officials');
     // Route::get('/tab/payments', [CompetitionSessionController::class, 'payments'])->name('competition.tab.payments');
+
+    Route::get('/heats/',          [CompetitionHeatLaneController::class, 'partialReload'])->name('competition.heats.partial');
+    Route::post('/heats/generate', [CompetitionHeatLaneController::class, 'generate'])->name('competition.heats.generate');
+    Route::delete('/heats/generate/by/round',  [CompetitionHeatLaneController::class, 'generateByRound'])->name('competition.heats.generateByRound');
 });
 
 Route::prefix('/guest')->group(function(){

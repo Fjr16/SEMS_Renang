@@ -153,7 +153,8 @@
     <script>
         const EVENTS_PARTIAL_URL = "{{ route('competition.tab.events.partial', $competition) }}";
         const ENTRIES_PARTIAL_URL = "{{ route('competition.tab.entries.partial', $competition) }}";
-        const HEATS_PARTIAL_URL = "{{ route('competition.tab.heats.partial', $competition) }}";
+        // const HEATS_PARTIAL_URL = "{{ route('competition.tab.heats.partial', $competition) }}";
+        const HEATS_PARTIAL_URL = "{{ route('competition.heats.partial', $competition) }}";
 
         document.addEventListener('shown.bs.tab', async function(ev) {
             const paneSelector = ev.target.getAttribute('data-bs-target');
@@ -1037,7 +1038,7 @@
     </script>
 
     {{-- scripts tab heats lanes --}}
-    <script>
+    {{-- <script>
         function fetchPartialHeatsTab(){
             const tab = document.getElementById('heat_lanes');
             const eventId = document.getElementById('heat_competition_event_id')?.value ?? '';
@@ -1093,9 +1094,321 @@
                 fetchPartialHeatsTab();
             });
         }
+    </script> --}}
+    <script>
+        // Selalu baca dari window.HEAT_CONFIG, bukan dari variabel lokal
+        // karena nilai ini berubah setiap kali partial di-reload
+        // ── Config helper ─────────────────────────────────────────────
+        function getConfig() {
+            return window.HEAT_CONFIG ?? {};
+        }
 
-        // async function generateHeats(eventId){
-        //     const res = await fetch()
-        // }
+        // ── Shortcut agar tidak perlu destructure tiap fungsi ─────────
+        function cfg(key) {
+            return (window.HEAT_CONFIG ?? {})[key];
+        }
+
+        function executeScripts(container) {
+            container.querySelectorAll('script').forEach(oldScript => {
+                const newScript = document.createElement('script');
+                newScript.textContent = oldScript.textContent;
+                document.head.appendChild(newScript);
+                document.head.removeChild(newScript);
+            });
+        }
+
+        function fetchPartialHeatsTab(){
+            const tab = document.getElementById('heat_lanes');
+            const eventId = document.getElementById('heat_competition_event_id')?.value ?? '';
+
+            const url = new URL(HEATS_PARTIAL_URL);
+            if (eventId)  url.searchParams.set('event_id', eventId);
+
+            tab.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+
+            fetch(url)
+                .then(r => r.text())
+                .then(html => {
+                    tab.innerHTML = html;
+                    executeScripts(tab);
+                    initHeatTabs();
+                })
+                .catch(err => {
+                    console.error('Fetch error:', err.message);
+                    tab.innerHTML = '<div class="py-4 text-danger text-center">Gagal memuat konten.</div>';
+                });
+        }
+        function initHeatTabs() {
+            // ── Konstanta dari Blade ──────────────────────────────────────
+            // POOL_LANES, TOTAL_ATLET, EVENT_ID, GENERATE_URL, RELOAD_URL, CSRF
+            // diinject dari Blade via <script> tag
+
+            window.selectedRoundType = null;
+
+            // ── Round Option ──────────────────────────────────────────────
+
+            // Re-init ROUND_DEFS (tidak perlu diinject dari Blade, ini static)
+            window.ROUND_DEFS = {
+                final:          [
+                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"App\Enums\RoundTypeEnum::final->background()",  color:"App\Enums\RoundTypeEnum::final->color()",    lolos:false,}
+                                ],
+                pre_final:      [
+                                    { key:"{{ App\Enums\RoundTypeEnum::prelim->value }}",   label:"{{ App\Enums\RoundTypeEnum::prelim->label() }}", bg:"App\Enums\RoundTypeEnum::prelim->background()", color:"App\Enums\RoundTypeEnum::prelim->color()",   lolos:true  },
+                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"App\Enums\RoundTypeEnum::final->background()",  color:"App\Enums\RoundTypeEnum::final->color()",    lolos:false }
+                                ],
+                pre_semi_final: [
+                                    { key:"{{ App\Enums\RoundTypeEnum::prelim->value }}",   label:"{{ App\Enums\RoundTypeEnum::prelim->label() }}", bg:"App\Enums\RoundTypeEnum::prelim->background()", color:"App\Enums\RoundTypeEnum::prelim->color()",   lolos:true  },
+                                    { key:"{{ App\Enums\RoundTypeEnum::semi->value }}",     label:"{{ App\Enums\RoundTypeEnum::semi->label() }}",   bg:"App\Enums\RoundTypeEnum::semi->background()",   color:"App\Enums\RoundTypeEnum::semi->color()",     lolos:true  },
+                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"App\Enums\RoundTypeEnum::final->background()",  color:"App\Enums\RoundTypeEnum::final->color()",    lolos:false }
+                                ],
+            };
+
+
+            // Aktifkan tab ronde pertama
+            const firstRoundBtn = document.querySelector('.tab-round-btn');
+            if (firstRoundBtn) firstRoundBtn.click();
+
+            // Aktifkan heat tab pertama per ronde
+            document.querySelectorAll('.round-panel').forEach(panel => {
+                const firstHeatBtn = panel.querySelector('.tab-heat-btn');
+                if (firstHeatBtn) firstHeatBtn.click();
+            });
+
+            // Init select2
+            initEventSelect();
+        }
+        // ── Select2 Event ─────────────────────────────────────────────
+        function initEventSelect() {
+            $('#heat_competition_event_id').select2({
+                width: '100%',
+                placeholder: 'Pilih Acara',
+                allowClear: false,
+                theme: 'classic',
+                dropdownParent: $('body'),
+            }).off('change').on('change', function () {
+                reloadHeatTab($(this).val());
+            });
+        }
+
+        // ── Reload Partial ────────────────────────────────────────────
+        function reloadHeatTab(eventId) {
+            const url = `${cfg('reloadUrl')}?event_id=${eventId}`;
+            fetch(url)
+                .then(r => r.text())
+                .then(html => {
+                    const container = document.getElementById('heatMainContent');
+                    container.innerHTML = html;
+                    executeScripts(container);
+                    initHeatTabs();
+                });
+        }
+
+        function selectRoundOption(type, el) {
+            document.querySelectorAll('.round-option').forEach(o => {
+                o.classList.remove('border-primary');
+                o.style.background = '';
+            });
+            el.classList.add('border-primary');
+            el.style.background = '#E6F1FB';
+
+            window.selectedRoundType = type;
+            renderRoundConfig(window.ROUND_DEFS[type]);
+            document.getElementById('roundConfigSection').style.display = 'block';
+            document.getElementById('btnGenerateHeat').disabled = false;
+            updateEstimasi();
+        }
+
+        function renderRoundConfig(rounds) {
+            const POOL_LANES = cfg('poolLanes');
+            const tbody = document.getElementById('roundConfigRows');
+            tbody.innerHTML = rounds.map((r, i) => {
+                const isLast = i === rounds.length - 1;
+                return `<tr>
+                    <td><span class="badge rounded-pill" style="font-size:11px;
+                        background:${r.bg};
+                        color:${r.color}>
+                        ${r.label}
+                    </span></td>
+                    <td>
+                        <input class="form-control form-control-sm d-inline-block used-lane-input"
+                            style="width:60px; text-align:center; font-size:12px"
+                            type="number" value="${POOL_LANES}" min="1" max="${POOL_LANES}"
+                            data-round="${r.key}"
+                            oninput="onLaneInput(this, '${r.key}')">
+                        <span class="text-muted" style="font-size:11px"> / ${POOL_LANES}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1 flex-wrap" id="preview-${r.key}">
+                            ${renderLanePreview(POOL_LANES)}
+                        </div>
+                    </td>
+                    <td>
+                        ${!isLast
+                            ? `<input class="form-control form-control-sm d-inline-block"
+                                    style="width:60px; text-align:center; font-size:12px"
+                                    type="number" value="${Math.floor(POOL_LANES/2)}" min="1" max="${POOL_LANES*2}"
+                                    data-lolos="${r.key}">
+                            <span class="text-muted" style="font-size:11px"> atlet</span>`
+                            : `<span class="text-muted" style="font-size:11px">ronde terakhir</span>`
+                        }
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ── Lane Preview ──────────────────────────────────────────────
+        function onLaneInput(input, roundKey) {
+            const POOL_LANES = cfg('poolLanes');
+            let val = parseInt(input.value);
+            if (val > POOL_LANES) { val = POOL_LANES; input.value = POOL_LANES; }
+            if (val < 1 || isNaN(val)) { val = 1; input.value = 1; }
+            document.getElementById(`preview-${roundKey}`).innerHTML = renderLanePreview(val);
+            updateEstimasi();
+        }
+
+        function updateEstimasi() {
+            const POOL_LANES  = cfg('poolLanes');
+            const TOTAL_ATLET = cfg('totalAtlet');
+            const firstInput = document.querySelector('.used-lane-input');
+            if (!firstInput) { document.getElementById('estimasiSeri').textContent = '—'; return; }
+            const used = parseInt(firstInput.value) || POOL_LANES;
+            const seri = Math.ceil(TOTAL_ATLET / used);
+            document.getElementById('estimasiSeri').textContent = `${seri} seri (penyisihan)`;
+        }
+
+        function renderLanePreview(used) {
+            const POOL_LANES = cfg('poolLanes');
+            const active = getActiveLanes(used);
+            return Array.from({ length: POOL_LANES }, (_, i) => {
+                const lane    = i + 1;
+                const isActive = active.includes(lane);
+                return `<div style="width:22px;height:22px;border-radius:4px;font-size:10px;font-weight:500;
+                    display:flex;align-items:center;justify-content:center;border:0.5px solid;
+                    background:${isActive?'#E6F1FB':'#f1f3f5'};
+                    color:${isActive?'#0C447C':'#adb5bd'};
+                    border-color:${isActive?'#B5D4F4':'#dee2e6'};
+                    opacity:${isActive?1:.5}">
+                    ${lane}
+                </div>`;
+            }).join('');
+        }
+
+        function getActiveLanes(used) {
+            const POOL_LANES = cfg('poolLanes');
+            const start = Math.floor((POOL_LANES - used) / 2) + 1;
+            return Array.from({ length: used }, (_, i) => start + i);
+        }
+
+        // ── Tab Round & Heat ──────────────────────────────────────────
+        function switchRoundTab(round, el) {
+            document.querySelectorAll('.tab-round-btn').forEach(b => {
+                b.style.borderBottomColor = 'transparent';
+                b.style.color = '#6c757d';
+            });
+            el.style.borderBottomColor = '#2563EB';
+            el.style.color = '#2563EB';
+
+            document.querySelectorAll('.round-panel').forEach(p => {
+                p.style.display = p.dataset.round === round ? 'block' : 'none';
+            });
+        }
+
+        function switchHeatTab(round, heatNum, el) {
+            document.querySelectorAll(`.tab-heat-btn[data-round="${round}"]`).forEach(b => {
+                b.style.borderBottomColor = 'transparent';
+                b.style.color = '#6c757d';
+            });
+            el.style.borderBottomColor = '#2563EB';
+            el.style.color = '#2563EB';
+
+            document.querySelectorAll(`.heat-panel[data-round="${round}"]`).forEach(p => {
+                p.style.display = (p.dataset.heat == heatNum) ? 'block' : 'none';
+            });
+        }
+
+        // ── Reset ─────────────────────────────────────────────────────
+        async function resetHeatConfig() {
+            const { generateUrl, eventId } = getConfig();
+            const confirm = await Swal.fire({
+                title: "Reset konfigurasi seri? Data seri yang sudah di-generate akan dihapus.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                cancelButtonText: "Batal",
+                confirmButtonText: "Ya, Lanjutkan!",
+                reverseButtons:true
+            });
+            if (confirm.isConfirmed){
+                try {
+                    const res = await fetch(generateUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                        body:JSON.stringify({
+                            event_id:eventId,
+                        })
+                    });
+                    if (!res.ok) throw new Error("Terjadi Kesalahan pada server");
+                    const result = await res.json();
+                    if (!result.status) {
+                        Toast.fire({
+                            icon:'error',
+                            title:result.message || 'Gagal memperbarui status kompetisi'
+                        });
+
+                        reloadHeatTab(eventId)
+                    }else{
+
+                        const info = await Swal.fire({
+                            title: "Sukses!",
+                            text: result.message || "Berhasil memperbarui status kompetisi",
+                            icon: "success"
+                        });
+                        if(info.isConfirmed){
+                            window.location.reload();
+                        }
+                    }
+
+                } catch (error) {
+                    Toast.fire({
+                        icon:'error',
+                        title:error.message || 'Gagal memperbarui status kompetisi'
+                    });
+                }
+
+            }
+        }
+
+        // ── Submit Generate ───────────────────────────────────────────
+        function submitGenerate() {
+            const { generateUrl, eventId, poolLanes } = getConfig();
+            if (!window.selectedRoundType) return;
+
+            const rounds = window.ROUND_DEFS[window.selectedRoundType].map(r => ({
+                type:  r.key,
+                lanes: parseInt(document.querySelector(`[data-round="${r.key}"]`)?.value) || poolLanes,
+                lolos: parseInt(document.querySelector(`[data-lolos="${r.key}"]`)?.value) || null,
+            }));
+
+            document.getElementById('btnGenerateHeat').disabled = true;
+            document.getElementById('btnGenerateHeat').innerHTML =
+                '<span class="spinner-border spinner-border-sm me-1"></span> Memproses...';
+
+            fetch(generateUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                body: JSON.stringify({ event_id: eventId, rounds }),
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) reloadHeatTab(eventId);
+            })
+            .catch(() => {
+                alert('Gagal generate seri. Silakan coba lagi.');
+                document.getElementById('btnGenerateHeat').disabled = false;
+                document.getElementById('btnGenerateHeat').innerHTML =
+                    '<i class="bi bi-grid me-1"></i> Generate Seri';
+            });
+        }
     </script>
 @endpush
