@@ -1150,16 +1150,16 @@
             // Re-init ROUND_DEFS (tidak perlu diinject dari Blade, ini static)
             window.ROUND_DEFS = {
                 final:          [
-                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"App\Enums\RoundTypeEnum::final->background()",  color:"App\Enums\RoundTypeEnum::final->color()",    lolos:false,}
+                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"{{ App\Enums\RoundTypeEnum::final->background() }}",  color:"{{ App\Enums\RoundTypeEnum::final->color() }}",    lolos:false,}
                                 ],
                 pre_final:      [
-                                    { key:"{{ App\Enums\RoundTypeEnum::prelim->value }}",   label:"{{ App\Enums\RoundTypeEnum::prelim->label() }}", bg:"App\Enums\RoundTypeEnum::prelim->background()", color:"App\Enums\RoundTypeEnum::prelim->color()",   lolos:true  },
-                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"App\Enums\RoundTypeEnum::final->background()",  color:"App\Enums\RoundTypeEnum::final->color()",    lolos:false }
+                                    { key:"{{ App\Enums\RoundTypeEnum::prelim->value }}",   label:"{{ App\Enums\RoundTypeEnum::prelim->label() }}", bg:"{{ App\Enums\RoundTypeEnum::prelim->background() }}", color:"{{ App\Enums\RoundTypeEnum::prelim->color() }}",   lolos:true  },
+                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"{{ App\Enums\RoundTypeEnum::final->background() }}",  color:"{{ App\Enums\RoundTypeEnum::final->color() }}",    lolos:false }
                                 ],
                 pre_semi_final: [
-                                    { key:"{{ App\Enums\RoundTypeEnum::prelim->value }}",   label:"{{ App\Enums\RoundTypeEnum::prelim->label() }}", bg:"App\Enums\RoundTypeEnum::prelim->background()", color:"App\Enums\RoundTypeEnum::prelim->color()",   lolos:true  },
-                                    { key:"{{ App\Enums\RoundTypeEnum::semi->value }}",     label:"{{ App\Enums\RoundTypeEnum::semi->label() }}",   bg:"App\Enums\RoundTypeEnum::semi->background()",   color:"App\Enums\RoundTypeEnum::semi->color()",     lolos:true  },
-                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"App\Enums\RoundTypeEnum::final->background()",  color:"App\Enums\RoundTypeEnum::final->color()",    lolos:false }
+                                    { key:"{{ App\Enums\RoundTypeEnum::prelim->value }}",   label:"{{ App\Enums\RoundTypeEnum::prelim->label() }}", bg:"{{ App\Enums\RoundTypeEnum::prelim->background() }}", color:"{{ App\Enums\RoundTypeEnum::prelim->color() }}",   lolos:true  },
+                                    { key:"{{ App\Enums\RoundTypeEnum::semi->value }}",     label:"{{ App\Enums\RoundTypeEnum::semi->label() }}",   bg:"{{ App\Enums\RoundTypeEnum::semi->background() }}",   color:"{{ App\Enums\RoundTypeEnum::semi->color() }}",     lolos:true  },
+                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"{{ App\Enums\RoundTypeEnum::final->background() }}",  color:"{{ App\Enums\RoundTypeEnum::final->color() }}",    lolos:false }
                                 ],
             };
 
@@ -1224,11 +1224,13 @@
             tbody.innerHTML = rounds.map((r, i) => {
                 const isLast = i === rounds.length - 1;
                 return `<tr>
-                    <td><span class="badge rounded-pill" style="font-size:11px;
-                        background:${r.bg};
-                        color:${r.color}>
-                        ${r.label}
-                    </span></td>
+                    <td>
+                        <span class="badge rounded-pill" style="font-size:11px;
+                            background:${r.bg};
+                            color:${r.color}">
+                            ${r.label}
+                        </span>
+                    </td>
                     <td>
                         <input class="form-control form-control-sm d-inline-block used-lane-input"
                             style="width:60px; text-align:center; font-size:12px"
@@ -1330,7 +1332,7 @@
         async function resetHeatConfig() {
             const { generateUrl, eventId } = getConfig();
             const confirm = await Swal.fire({
-                title: "Reset konfigurasi seri? Data seri yang sudah di-generate akan dihapus.",
+                title: "Reset konfigurasi seri ? Data seri dan lintasan yang sudah di-generate akan dihapus.",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",

@@ -54,7 +54,7 @@
                 </div>
                 <div class="ms-auto">
                     <button class="btn btn-sm btn-outline-secondary" style="font-size:11px"
-                        onclick="resetHeatConfig()">Atur Ulang</button>
+                        onclick="resetHeatConfig()">Reset & atur ulang</button>
                 </div>
             </div>
 

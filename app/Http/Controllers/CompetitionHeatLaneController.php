@@ -256,4 +256,76 @@ class CompetitionHeatLaneController extends Controller
 
         return $order;
     }
+
+    // public function reset(Competition $competition, Request $request)
+    // {
+    //     $request->validate([
+    //         'event_id'       => 'required|exists:competition_events,id',
+    //         'rounds'         => 'required|array',
+    //         'rounds.*.type'  => 'required|in:preliminary,semifinal,final',
+    //         'rounds.*.lanes' => 'required|integer|min:1|max:10',
+    //         'rounds.*.lolos' => 'nullable|integer|min:1',
+    //     ]);
+
+    //     $event      = CompetitionEvent::findOrFail($request->event_id);
+    //     $totalLanes = $event->competitionSession->pool->lane_count ?? 8;
+
+    //     // Hapus heats lama jika ada
+    //     foreach ($event->heats as $heat) {
+    //         $heat->heatLanes()->delete();
+    //     }
+    //     $event->heats()->delete();
+
+    //     // Ambil semua entry aktif, sort by seed_time (NT paling belakang)
+    //     $entries = $event->entries()
+    //         ->where('status', CompetitionTeamEntryStatus::Active->value)
+    //         ->whereHas('competitionTeam', fn($q) => $q->where('status', 'active'))
+    //         ->orderByRaw("CASE WHEN seed_time IS NULL THEN 1 ELSE 0 END")
+    //         ->orderBy('seed_time')
+    //         ->get();
+
+    //     if ($entries->isEmpty()) return;
+
+    //     // Generate hanya untuk ronde pertama (penyisihan/final)
+    //     // Ronde berikutnya diisi via "Promosi Atlet"
+    //     $firstRound = $request->rounds[0];
+    //     $usedLanes  = min($firstRound['lanes'], $totalLanes);
+
+    //     $activeLanes = $this->getActiveLanes($usedLanes, $totalLanes);
+    //     $laneOrder   = $this->getCircleSeedOrder($activeLanes);
+
+    //     $totalHeats = (int) ceil($entries->count() / $usedLanes);
+
+    //     // Distribute atlet — terkencang di heat terakhir
+    //     $chunks = $entries->reverse()->chunk($usedLanes)->values()->reverse()->values();
+
+    //     foreach ($chunks as $heatIndex => $chunk) {
+    //         $heat = CompetitionHeat::create([
+    //             'competition_event_id' => $event->id,
+    //             'heat_number'          => $heatIndex + 1,
+    //             'round_type'           => $firstRound['type'],
+    //             'used_lanes'           => $usedLanes,
+    //         ]);
+
+    //         foreach ($chunk->values() as $pos => $entry) {
+    //             CompetitionHeatLane::create([
+    //                 'competition_heat_id'  => $heat->id,
+    //                 'competition_entry_id' => $entry->id,
+    //                 'lane_number'          => $laneOrder[$pos] ?? ($pos + 1),
+    //                 'lane_order'           => $pos + 1,
+    //                 'seed_time'            => $entry->seed_time,
+    //             ]);
+    //         }
+    //     }
+
+    //     // Simpan konfigurasi round berikutnya ke session/cache
+    //     // agar saat "Promosi Atlet" diklik, sistem tahu konfigurasinya
+    //     cache()->put(
+    //         "heat_config_{$event->id}",
+    //         $request->rounds,
+    //         now()->addHours(24)
+    //     );
+
+    //     return response()->json(['success' => true]);
+    // }
 }
