@@ -5,6 +5,7 @@
         totalAtlet:  {{ $totalEntries }},
         eventId:     {{ $event->id }},
         generateUrl: "{{ route('competition.heats.generate', $competition) }}",
+        resetUrl: "{{ route('competition.heats.resetByEvent', $competition) }}",
         generateByRound: "{{ route('competition.heats.generateByRound', $competition) }}",
         reloadUrl:   "{{ route('competition.heats.partial', $competition) }}",
     };

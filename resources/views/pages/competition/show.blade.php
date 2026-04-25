@@ -1330,9 +1330,9 @@
 
         // ── Reset ─────────────────────────────────────────────────────
         async function resetHeatConfig() {
-            const { generateUrl, eventId } = getConfig();
+            const { resetUrl, eventId } = getConfig();
             const confirm = await Swal.fire({
-                title: "Reset konfigurasi seri ? Data seri dan lintasan yang sudah di-generate akan dihapus.",
+                text: "Reset konfigurasi seri acara ini ? Data seri dan lintasan yang sudah di-generate akan dihapus.",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
@@ -1343,38 +1343,33 @@
             });
             if (confirm.isConfirmed){
                 try {
-                    const res = await fetch(generateUrl, {
+                    const res = await fetch(resetUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
                         body:JSON.stringify({
                             event_id:eventId,
                         })
                     });
+                    console.log(res);
                     if (!res.ok) throw new Error("Terjadi Kesalahan pada server");
                     const result = await res.json();
                     if (!result.status) {
                         Toast.fire({
                             icon:'error',
-                            title:result.message || 'Gagal memperbarui status kompetisi'
+                            title:result.message || 'Gagal melakukan reset seri'
                         });
-
-                        reloadHeatTab(eventId)
                     }else{
-
-                        const info = await Swal.fire({
-                            title: "Sukses!",
-                            text: result.message || "Berhasil memperbarui status kompetisi",
-                            icon: "success"
+                        Toast.fire({
+                            icon:'success',
+                            title:result.message || "Berhasil melakukan reset seri"
                         });
-                        if(info.isConfirmed){
-                            window.location.reload();
-                        }
+                        reloadHeatTab(eventId)
                     }
 
                 } catch (error) {
                     Toast.fire({
                         icon:'error',
-                        title:error.message || 'Gagal memperbarui status kompetisi'
+                        title:error.message || 'Gagal melakukan reset seri'
                     });
                 }
 
@@ -1403,10 +1398,24 @@
             })
             .then(r => r.json())
             .then(data => {
-                if (data.success) reloadHeatTab(eventId);
+                if (data.status){
+                    Toast.fire({
+                        icon:'success',
+                        title:data.message || 'Sukses'
+                    });
+                    reloadHeatTab(eventId);
+                }else{
+                    Toast.fire({
+                        icon:'error',
+                        title:error.message || 'Gagal'
+                    });
+                }
             })
             .catch(() => {
-                alert('Gagal generate seri. Silakan coba lagi.');
+                Toast.fire({
+                    icon:'error',
+                    title:'Gagal generate seri. Silakan coba lagi.'
+                });
                 document.getElementById('btnGenerateHeat').disabled = false;
                 document.getElementById('btnGenerateHeat').innerHTML =
                     '<i class="bi bi-grid me-1"></i> Generate Seri';
