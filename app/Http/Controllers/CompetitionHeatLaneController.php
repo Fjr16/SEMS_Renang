@@ -177,11 +177,18 @@ class CompetitionHeatLaneController extends Controller
         $entries = $event->entries()
             ->where('status', CompetitionTeamEntryStatus::Active->value)
             ->whereHas('competitionTeam', fn($q) => $q->where('status', 'active'))
-            ->orderByRaw("CASE WHEN seed_time IS NULL THEN 1 ELSE 0 END")
-            ->orderBy('seed_time')
+            // ->orderByRaw("CASE WHEN seed_time IS NULL THEN 1 ELSE 0 END")
+            // ->orderBy('seed_time')
             ->get();
 
         if ($entries->isEmpty()) return;
+
+        $orderedEntry = $entries->sortByDesc(function ($e) {
+            if (!$e->seed_time) return PHP_INT_MAX; // null = paling lambat
+
+            [$minute, $second] = explode(':', $e->seed_time);
+            return ((int) $minute * 60) + (float) $second;
+        })->values();
 
         // Generate hanya untuk ronde pertama (penyisihan/final)
         // Ronde berikutnya diisi via "Promosi Atlet"
@@ -191,10 +198,27 @@ class CompetitionHeatLaneController extends Controller
         $activeLanes = $this->getActiveLanes($usedLanes, $totalLanes);
         $laneOrder   = $this->getCircleSeedOrder($activeLanes);
 
-        $totalHeats = (int) ceil($entries->count() / $usedLanes);
+        $totalEntries = $orderedEntry->count();
+        $totalHeats = (int) ceil($totalEntries / $usedLanes);
 
+        if($totalEntries <= $usedLanes){
+            $fixEntry = $orderedEntry->sortBy(function ($e) {
+                if (!$e->seed_time) return PHP_INT_MAX;
+                [$minute, $second] = explode(':', $e->seed_time);
+                return ((int)$minute * 60) + (float)$second;
+            })->values();
+
+            // foreach ($fixEntry->values() as $laneIndex => $item) {
+            //     $lane = $laneOrder[$laneIndex];
+            //     $arrHeats[$heatIndex]['lanes'][$laneIndex]['lane_number'] = $lane;
+            //     $arrHeats[$heatIndex]['lanes'][$laneIndex]['entry_id'] = $item->id;
+            //     $arrHeats[$heatIndex]['lanes'][$laneIndex]['seed_time'] = $item->seed_time;
+            // }
+        }
+        return [$laneOrder, $fixEntry];
+        $chunks = $orderedEntry->reverse()->chunk($usedLanes)->values();
         // Distribute atlet — terkencang di heat terakhir
-        $chunks = $entries->reverse()->chunk($usedLanes)->values()->reverse()->values();
+        return[$totalHeats, $orderedEntry, $chunks];
 
         foreach ($chunks as $heatIndex => $chunk) {
             $heat = CompetitionHeat::create([
@@ -240,25 +264,24 @@ class CompetitionHeatLaneController extends Controller
     {
         $sorted = $activeLanes;
         sort($sorted);
-        $mid   = (int) floor(count($sorted) / 2);
-        $order = [];
-        $l = $mid - 1;
-        $r = $mid;
+        $total  = count($sorted);
+        $order  = [];
+        $l      = (int) floor(($total - 1) / 2);
+        $r      = (int) floor($total / 2);
 
-        if (count($sorted) % 2 === 0) {
-            // $order[] = $sorted[$r++];
-            // $order[] = $sorted[$l--];
-            $order[] = $sorted[$l--];
-            $order[] = $sorted[$r++];
+        if ($total % 2 !== 0) {
+            $order[] = $sorted[$l];
+            $l--;
+            $r++;
+            while ($l >= 0 || $r < $total) {
+                if ($r < $total)  $order[] = $sorted[$r++];
+                if ($l >= 0)      $order[] = $sorted[$l--];
+            }
         } else {
-            $order[] = $sorted[$mid];
-            $r = $mid + 1;
-            $l = $mid - 1;
-        }
-
-        while ($r < count($sorted) || $l >= 0) {
-            if ($r < count($sorted)) $order[] = $sorted[$r++];
-            if ($l >= 0)             $order[] = $sorted[$l--];
+            while ($l >= 0 || $r < $total) {
+                if ($l >= 0)      $order[] = $sorted[$l--];
+                if ($r < $total)  $order[] = $sorted[$r++];
+            }
         }
 
         return $order;
