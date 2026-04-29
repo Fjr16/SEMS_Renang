@@ -8,6 +8,7 @@ use App\Models\Competition;
 use App\Models\CompetitionEvent;
 use App\Models\CompetitionHeat;
 use App\Models\CompetitionHeatLane;
+use App\Models\EventRoundConfig;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Enum;
 
@@ -167,21 +168,25 @@ class CompetitionHeatLaneController extends Controller
         $event      = CompetitionEvent::findOrFail($request->event_id);
         $totalLanes = $event->competitionSession->pool->total_lanes ?? 8;
 
+        // Ambil semua entry aktif, sort by seed_time (NT paling belakang)
+        $entries = $event->entries()
+            ->where('status', CompetitionTeamEntryStatus::Active->value)
+            ->whereHas('competitionTeam', fn($q) => $q->where('status', 'active'))
+            ->get();
+
+        if ($entries->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'messsage' => 'Data entri atlet tidak ditemukan'
+            ]);
+        };
+
         // Hapus heats lama jika ada
         foreach ($event->heats as $heat) {
             $heat->heatLanes()->delete();
         }
         $event->heats()->delete();
-
-        // Ambil semua entry aktif, sort by seed_time (NT paling belakang)
-        $entries = $event->entries()
-            ->where('status', CompetitionTeamEntryStatus::Active->value)
-            ->whereHas('competitionTeam', fn($q) => $q->where('status', 'active'))
-            // ->orderByRaw("CASE WHEN seed_time IS NULL THEN 1 ELSE 0 END")
-            // ->orderBy('seed_time')
-            ->get();
-
-        if ($entries->isEmpty()) return;
+        // end Hapus heats lama jika ada
 
         $orderedEntry = $entries->sortByDesc(function ($e) {
             if (!$e->seed_time) return PHP_INT_MAX; // null = paling lambat
@@ -198,54 +203,56 @@ class CompetitionHeatLaneController extends Controller
         $activeLanes = $this->getActiveLanes($usedLanes, $totalLanes);
         $laneOrder   = $this->getCircleSeedOrder($activeLanes);
 
-        $totalEntries = $orderedEntry->count();
-        $totalHeats = (int) ceil($totalEntries / $usedLanes);
-
-        if($totalEntries <= $usedLanes){
-            $fixEntry = $orderedEntry->sortBy(function ($e) {
-                if (!$e->seed_time) return PHP_INT_MAX;
-                [$minute, $second] = explode(':', $e->seed_time);
-                return ((int)$minute * 60) + (float)$second;
-            })->values();
-
-            // foreach ($fixEntry->values() as $laneIndex => $item) {
-            //     $lane = $laneOrder[$laneIndex];
-            //     $arrHeats[$heatIndex]['lanes'][$laneIndex]['lane_number'] = $lane;
-            //     $arrHeats[$heatIndex]['lanes'][$laneIndex]['entry_id'] = $item->id;
-            //     $arrHeats[$heatIndex]['lanes'][$laneIndex]['seed_time'] = $item->seed_time;
-            // }
-        }
-        return [$laneOrder, $fixEntry];
-        $chunks = $orderedEntry->reverse()->chunk($usedLanes)->values();
         // Distribute atlet — terkencang di heat terakhir
-        return[$totalHeats, $orderedEntry, $chunks];
+        $chunks = $orderedEntry->chunk($usedLanes)->values();
 
         foreach ($chunks as $heatIndex => $chunk) {
             $heat = CompetitionHeat::create([
                 'competition_event_id' => $event->id,
                 'heat_number'          => $heatIndex + 1,
                 'round_type'           => $firstRound['type'],
-                'used_lanes'           => $usedLanes,
             ]);
 
-            foreach ($chunk->values() as $pos => $entry) {
+            // reverse ordering dalam satu heat menjadi tercepat ke lambat
+            $fixEntry = $chunk->sortBy(function ($e) {
+                if (!$e->seed_time) return PHP_INT_MAX;
+                [$minute, $second] = explode(':', $e->seed_time);
+                return ((int)$minute * 60) + (float)$second;
+            })->values();
+
+            foreach ($fixEntry as $lane => $entry) {
                 CompetitionHeatLane::create([
                     'competition_heat_id'  => $heat->id,
                     'competition_entry_id' => $entry->id,
-                    'lane_number'          => $laneOrder[$pos] ?? ($pos + 1),
-                    'lane_order'           => $pos + 1,
+                    'lane_number'          => $laneOrder[$lane],
+                    'lane_order'           => $lane + 1,
                     'seed_time'            => $entry->seed_time,
                 ]);
             }
         }
 
-        // Simpan konfigurasi round berikutnya ke session/cache
+        // Simpan konfigurasi round berikutnya ke db
         // agar saat "Promosi Atlet" diklik, sistem tahu konfigurasinya
-        cache()->put(
-            "heat_config_{$event->id}",
-            $request->rounds,
-            now()->addHours(24)
-        );
+        $incomingTypes = collect($request->rounds)->pluck('type');
+        EventRoundConfig::where('competition_event_id', $event->id)
+            ->whereNotIn('round_type', $incomingTypes)
+            ->delete();
+
+        foreach ($request->rounds as $orderNumber => $round) {
+            $usedLaneBaseRound = min($round['lanes'], $totalLanes);
+            EventRoundConfig::updateOrCreate(
+                [
+                    'competition_event_id' => $event->id,
+                    'round_type' => $round['type'],
+                ],
+                [
+                    'used_lanes' => $usedLaneBaseRound,
+                    'qualify_count' => $round['lolos'] ?? null,
+                    'order' => $orderNumber+1
+                ]
+            );
+        }
+        // end Simpan konfigurasi round berikutnya ke db
 
         return response()->json([
             'status' => true,

@@ -1150,16 +1150,16 @@
             // Re-init ROUND_DEFS (tidak perlu diinject dari Blade, ini static)
             window.ROUND_DEFS = {
                 final:          [
-                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"{{ App\Enums\RoundTypeEnum::final->background() }}",  color:"{{ App\Enums\RoundTypeEnum::final->color() }}",    lolos:false,}
+                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"{{ App\Enums\RoundTypeEnum::final->background() }}",  color:"{{ App\Enums\RoundTypeEnum::final->color() }}"}
                                 ],
                 pre_final:      [
-                                    { key:"{{ App\Enums\RoundTypeEnum::prelim->value }}",   label:"{{ App\Enums\RoundTypeEnum::prelim->label() }}", bg:"{{ App\Enums\RoundTypeEnum::prelim->background() }}", color:"{{ App\Enums\RoundTypeEnum::prelim->color() }}",   lolos:true  },
-                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"{{ App\Enums\RoundTypeEnum::final->background() }}",  color:"{{ App\Enums\RoundTypeEnum::final->color() }}",    lolos:false }
+                                    { key:"{{ App\Enums\RoundTypeEnum::prelim->value }}",   label:"{{ App\Enums\RoundTypeEnum::prelim->label() }}", bg:"{{ App\Enums\RoundTypeEnum::prelim->background() }}", color:"{{ App\Enums\RoundTypeEnum::prelim->color() }}"},
+                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"{{ App\Enums\RoundTypeEnum::final->background() }}",  color:"{{ App\Enums\RoundTypeEnum::final->color() }}"}
                                 ],
                 pre_semi_final: [
-                                    { key:"{{ App\Enums\RoundTypeEnum::prelim->value }}",   label:"{{ App\Enums\RoundTypeEnum::prelim->label() }}", bg:"{{ App\Enums\RoundTypeEnum::prelim->background() }}", color:"{{ App\Enums\RoundTypeEnum::prelim->color() }}",   lolos:true  },
-                                    { key:"{{ App\Enums\RoundTypeEnum::semi->value }}",     label:"{{ App\Enums\RoundTypeEnum::semi->label() }}",   bg:"{{ App\Enums\RoundTypeEnum::semi->background() }}",   color:"{{ App\Enums\RoundTypeEnum::semi->color() }}",     lolos:true  },
-                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"{{ App\Enums\RoundTypeEnum::final->background() }}",  color:"{{ App\Enums\RoundTypeEnum::final->color() }}",    lolos:false }
+                                    { key:"{{ App\Enums\RoundTypeEnum::prelim->value }}",   label:"{{ App\Enums\RoundTypeEnum::prelim->label() }}", bg:"{{ App\Enums\RoundTypeEnum::prelim->background() }}", color:"{{ App\Enums\RoundTypeEnum::prelim->color() }}"},
+                                    { key:"{{ App\Enums\RoundTypeEnum::semi->value }}",     label:"{{ App\Enums\RoundTypeEnum::semi->label() }}",   bg:"{{ App\Enums\RoundTypeEnum::semi->background() }}",   color:"{{ App\Enums\RoundTypeEnum::semi->color() }}"},
+                                    { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"{{ App\Enums\RoundTypeEnum::final->background() }}",  color:"{{ App\Enums\RoundTypeEnum::final->color() }}"}
                                 ],
             };
 
