@@ -174,7 +174,7 @@
                             </button>
                             <div style="overflow:hidden; flex:1">
                                 <div class="heat-tab-inner d-flex" id="heat-inner-{{ $roundType }}">
-                                    @foreach ($roundHeats as $heat)
+                                    @foreach ($roundHeats->sortBy('heat_number') as $heat)
                                         <button class="btn btn-link btn-sm text-decoration-none px-3 py-2 tab-heat-btn flex-shrink-0"
                                             data-round="{{ $roundType }}"
                                             data-heat="{{ $heat->heat_number }}"
@@ -192,7 +192,7 @@
                         </div>
 
                         {{-- Panel per Heat --}}
-                        @foreach ($roundHeats as $heat)
+                        @foreach ($roundHeats->sortBy('heat_number') as $heat)
                             <div class="heat-panel table-responsive"
                                 data-round="{{ $roundType }}"
                                 data-heat="{{ $heat->heat_number }}"

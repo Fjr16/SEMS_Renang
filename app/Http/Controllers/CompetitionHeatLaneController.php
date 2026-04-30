@@ -188,7 +188,8 @@ class CompetitionHeatLaneController extends Controller
         $event->heats()->delete();
         // end Hapus heats lama jika ada
 
-        $orderedEntry = $entries->sortByDesc(function ($e) {
+        // $orderedEntry = $entries->sortByDesc(function ($e) {
+        $orderedEntry = $entries->sortBy(function ($e) {
             if (!$e->seed_time) return PHP_INT_MAX; // null = paling lambat
 
             [$minute, $second] = explode(':', $e->seed_time);
@@ -209,18 +210,19 @@ class CompetitionHeatLaneController extends Controller
         foreach ($chunks as $heatIndex => $chunk) {
             $heat = CompetitionHeat::create([
                 'competition_event_id' => $event->id,
-                'heat_number'          => $heatIndex + 1,
+                // 'heat_number'          => $heatIndex + 1,
+                'heat_number'          => $chunks->count() - $heatIndex,
                 'round_type'           => $firstRound['type'],
             ]);
 
             // reverse ordering dalam satu heat menjadi tercepat ke lambat
-            $fixEntry = $chunk->sortBy(function ($e) {
-                if (!$e->seed_time) return PHP_INT_MAX;
-                [$minute, $second] = explode(':', $e->seed_time);
-                return ((int)$minute * 60) + (float)$second;
-            })->values();
+            // $fixEntry = $chunk->sortBy(function ($e) {
+            //     if (!$e->seed_time) return PHP_INT_MAX;
+            //     [$minute, $second] = explode(':', $e->seed_time);
+            //     return ((int)$minute * 60) + (float)$second;
+            // })->values();
 
-            foreach ($fixEntry as $lane => $entry) {
+            foreach ($chunk->values() as $lane => $entry) {
                 CompetitionHeatLane::create([
                     'competition_heat_id'  => $heat->id,
                     'competition_entry_id' => $entry->id,
