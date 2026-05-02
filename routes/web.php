@@ -12,6 +12,7 @@ use App\Http\Controllers\CompetitionSessionController;
 use App\Http\Controllers\CompetitionTabEntriesController;
 use App\Http\Controllers\MyTeamController;
 use App\Http\Controllers\OfficialController;
+use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\OtherController;
 use App\Http\Controllers\RolesPermissionsController;
 use App\Http\Controllers\UserController;
@@ -90,6 +91,12 @@ Route::prefix('/master')->group(function(){
         Route::get('/data', [AgeGroupController::class, 'data'])->name('age.group.data');
         Route::post('/store', [AgeGroupController::class, 'store'])->name('age.group.store');
         Route::delete('/destroy/{id}', [AgeGroupController::class, 'destroy'])->name('age.group.destroy');
+    });
+    Route::prefix('/organization')->group(function(){
+        Route::get('/', [OrganizationController::class, 'index'])->name('organizations.index');
+        Route::get('/data', [OrganizationController::class, 'data'])->name('organizations.data');
+        Route::post('/store', [OrganizationController::class, 'store'])->name('organizations.store');
+        Route::delete('/destroy/{id}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
     });
 });
 

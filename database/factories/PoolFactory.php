@@ -24,7 +24,7 @@ class PoolFactory extends Factory
             'course_type' => $this->faker->randomElement(['SCM','LCM','SCY']),
             'length_meter' => $this->faker->randomElement([25,50]),
             'total_lanes' => 8,
-            'depth' => $this->faker->randomDigitNotNull(),
+            'depth' => $this->faker->randomFloat(2,0,20),
             'status' => $this->faker->randomElement(['active', 'inactive']),
         ];
     }

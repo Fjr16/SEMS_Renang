@@ -200,7 +200,7 @@
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="depth">Kedalaman (meter)</label>
-                <input type="number" class="form-control" id="depth" name="depth" min="1" placeholder="2">
+                <input type="number" class="form-control" id="depth" name="depth" step="0.01" min="0" placeholder="0,00">
             </div>
 
             <div class="col-md-4">
@@ -564,5 +564,24 @@
       Toast.fire({ icon:'error', title: err.message || 'Terjadi kesalahan' });
     }
   }
+
+    const depthInput = document.getElementById('depth');
+
+    depthInput.addEventListener('input', function() {
+        const value = parseFloat(this.value);
+
+        if (value < 0) {
+            Toast.fire({ icon:'error', title: 'Kedalaman tidak boleh minus!' });
+        } else if (value > 20) {
+            Toast.fire({ icon:'error', title: 'Kedalaman Max 20 meter.' });
+        }
+    });
+
+    depthInput.addEventListener('beforeinput', (e) => {
+        if (e.data === ',') {
+            e.preventDefault();
+            document.execCommand("insertText", false, ".");
+        }
+    });
 </script>
 @endpush

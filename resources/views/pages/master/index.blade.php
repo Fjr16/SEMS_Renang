@@ -70,6 +70,12 @@
         'route' => route('age.group.index'),
         ],
         [
+        'title' => 'Master Organisasi',
+        'desc'  => 'Kelola data master organisasi / penyelenggara',
+        'icon'  => 'bi-building',
+        'route' => route('organizations.index'),
+        ],
+        [
         'title' => 'Kompetisi',
         'desc'  => 'Daftar & kelola kompetisi',
         'icon'  => 'bi-trophy',

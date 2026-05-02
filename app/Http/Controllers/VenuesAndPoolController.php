@@ -120,7 +120,7 @@ class VenuesAndPoolController extends Controller
             'course_type' => 'required|in:SCM,LCM,SCY',
             'length_meter' => 'required|integer|min:1',
             'total_lanes' => 'required|integer|max:12|min:1',
-            'depth' => 'required|integer|min:1',
+            'depth' => 'required|numeric|min:0',
             'status' => 'in:active,inactive',
             'pool_id' => 'sometimes|nullable|exists:pools,id',
         ]);
@@ -178,7 +178,7 @@ class VenuesAndPoolController extends Controller
                     $item->course_type  = $req->course_type;
                     $item->length_meter = (int) $req->length_meter;
                     $item->total_lanes  = (int) $req->total_lanes;
-                    $item->depth        = (int) $req->depth;
+                    $item->depth        = (float) $req->depth;
                     $item->status       = $req->status ?? 'active';
                     $item->save();
 
