@@ -123,7 +123,7 @@
                 {{-- @include('pages.competition.tabs.heats-result') --}}
                 {{-- Tab Ronde --}}
                 <div class="d-flex border-bottom" style="background:#fff">
-                    @foreach ($heatsByRound as $roundType => $heats)
+                    {{-- @foreach ($heatsByRound as $roundType => $heats)
                         <button class="btn btn-link btn-sm text-decoration-none fw-semibold px-3 py-2 tab-round-btn"
                             data-round="{{ $roundType }}"
                             style="font-size:13px; border-bottom:2px solid transparent; border-radius:0; color:#6c757d"
@@ -132,6 +132,17 @@
                             <span class="badge rounded-pill ms-1"
                                 style="font-size:10px; background:#E6F1FB; color:#0C447C">
                                 {{ $heats->count() }} seri
+                            </span>
+                        </button>
+                    @endforeach --}}
+                    @foreach ($roundConfig as $round_type => $round)
+                        <button class="btn btn-link btn-sm text-decoration-none fw-semibold px-3 py-2 tab-round-btn"
+                            data-round="{{ $round_type }}"
+                            style="font-size:13px; border-bottom:2px solid transparent; border-radius:0; color:#6c757d"
+                            onclick="switchRoundTab('{{ $round_type }}', this)">
+                            {{ App\Enums\RoundTypeEnum::tryFrom($round_type)->label() }}
+                            <span class="badge rounded-pill ms-1" style="font-size: 10px; background: #E6F1FB; color:#0C447C;">
+                                {{ $heatsByRound->has($round_type) ? $heatsByRound[$round_type]->count() : '0' }} seri
                             </span>
                         </button>
                     @endforeach
@@ -148,9 +159,9 @@
                             style="background:#f8f9fa; border-bottom:1px solid #dee2e6; font-size:12px">
                             <span class="text-muted">
                                 {{ $roundHeats->sum(fn($h) => $h->heatLanes->count()) }} entri / atlet ·
-                                {{-- {{ $roundHeats->first()?->used_lanes ?? $totalLanes }} lane digunakan · --}}
-                                {{ $totalLanes }} lane digunakan ·
-                                {{ $roundHeats->count() }} seri
+                                {{ $roundConfig->has($roundType) ? $roundConfig[$roundType]->used_lanes : '-' }} lintasan digunakan ·
+                                {{ $roundHeats->count() }} seri ·
+                                Jumlah lolos : {{ $roundConfig->has($roundType) ? $roundConfig[$roundType]->qualify_count : '-' }} entri / atlet
                             </span>
                             <div class="ms-auto d-flex gap-2">
                                 @if (!$loop->first)

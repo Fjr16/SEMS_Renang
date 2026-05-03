@@ -153,7 +153,6 @@
     <script>
         const EVENTS_PARTIAL_URL = "{{ route('competition.tab.events.partial', $competition) }}";
         const ENTRIES_PARTIAL_URL = "{{ route('competition.tab.entries.partial', $competition) }}";
-        // const HEATS_PARTIAL_URL = "{{ route('competition.tab.heats.partial', $competition) }}";
         const HEATS_PARTIAL_URL = "{{ route('competition.heats.partial', $competition) }}";
 
         document.addEventListener('shown.bs.tab', async function(ev) {

@@ -27,6 +27,13 @@ class CompetitionHeatLaneController extends Controller
 
         // Group heats by round_type
         $heatsByRound = $event->heats->groupBy('round_type');
+        $roundConfig = EventRoundConfig::select('competition_event_id', 'round_type', 'used_lanes', 'qualify_count')
+        ->where('competition_event_id', $event->id)
+        ->orderBy('order')
+        ->get()
+        ->keyBy('round_type');
+
+        // dd($roundConfig);
 
         return view('pages.competition.tabs.heats', compact(
             'competition',
@@ -34,7 +41,8 @@ class CompetitionHeatLaneController extends Controller
             'selectEvents',
             'totalLanes',
             'totalEntries',
-            'heatsByRound'
+            'heatsByRound',
+            'roundConfig'
         ));
     }
     public function generateHeat(Competition $competition){
