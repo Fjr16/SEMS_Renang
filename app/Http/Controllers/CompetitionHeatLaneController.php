@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CompetitionTeamEntryStatus;
+use App\Enums\CompetitionTeamStatus;
 use App\Enums\RoundTypeEnum;
 use App\Models\Competition;
 use App\Models\CompetitionEvent;
@@ -23,7 +24,12 @@ class CompetitionHeatLaneController extends Controller
 
         $selectEvents = $competition->events;
         $totalLanes = $event->competitionSession->pool->total_lanes;
-        $totalEntries = $event->entries->where('status', CompetitionTeamEntryStatus::Active->value)->count();
+        $totalEntries = $event->entries()
+                        ->where('status', CompetitionTeamEntryStatus::Active->value)
+                        ->whereHas('competitionTeam', function($row){
+                            return $row->where('status', CompetitionTeamStatus::Active->value);
+                        })
+                        ->count();
 
         // Group heats by round_type
         $heatsByRound = $event->heats->groupBy('round_type');
@@ -45,123 +51,123 @@ class CompetitionHeatLaneController extends Controller
             'roundConfig'
         ));
     }
-    public function generateHeat(Competition $competition){
-        $events = $competition->events;
-        $roundType = 'PRELIM';
+    // public function generateHeat(Competition $competition){
+    //     $events = $competition->events;
+    //     $roundType = 'PRELIM';
 
-        $result = [];
-        foreach ($events as $index => $event) {
-           $result[$index]['competition_event_id'] = $event->id;
-           $result[$index]['heats'] = $this->generateHeatByEvent($event);
-        }
+    //     $result = [];
+    //     foreach ($events as $index => $event) {
+    //        $result[$index]['competition_event_id'] = $event->id;
+    //        $result[$index]['heats'] = $this->generateHeatByEvent($event);
+    //     }
 
-        if(empty($result)){
-            return response()->json([
-                'status' => false,
-                'message' => 'Tidak ditemukan data entry yang aktif'
-            ]);
-        }
+    //     if(empty($result)){
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Tidak ditemukan data entry yang aktif'
+    //         ]);
+    //     }
 
-        foreach ($result as $res) {
-            if(!$res['heats']) continue;
-            foreach ($res['heats'] as $heat) {
-                $heatId = CompetitionHeat::create([
-                    'competition_event_id' => $res['competition_event_id'],
-                    'heat_number' => $heat['heat_number'],
-                    'round_type' => $roundType
-                ])->id;
-                foreach($heat['lanes'] as $index => $lane){
-                    CompetitionHeatLane::create([
-                        'competition_heat_id' => $heatId,
-                        'competition_entry_id' => $lane['entry_id'],
-                        'lane_number' => $lane['lane_number'],
-                        'lane_order' => $index+1,
-                    ]);
-                }
-            }
-        }
-        return response()->json([
-            'status' => true,
-            'message' => 'Heat dan lane berhasil dibuat'
-        ]);
-    }
-    public function generateHeatByEvent(CompetitionEvent $event){
-        $totalLanes = $event->competitionSession->pool->total_lanes;
+    //     foreach ($result as $res) {
+    //         if(!$res['heats']) continue;
+    //         foreach ($res['heats'] as $heat) {
+    //             $heatId = CompetitionHeat::create([
+    //                 'competition_event_id' => $res['competition_event_id'],
+    //                 'heat_number' => $heat['heat_number'],
+    //                 'round_type' => $roundType
+    //             ])->id;
+    //             foreach($heat['lanes'] as $index => $lane){
+    //                 CompetitionHeatLane::create([
+    //                     'competition_heat_id' => $heatId,
+    //                     'competition_entry_id' => $lane['entry_id'],
+    //                     'lane_number' => $lane['lane_number'],
+    //                     'lane_order' => $index+1,
+    //                 ]);
+    //             }
+    //         }
+    //     }
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Heat dan lane berhasil dibuat'
+    //     ]);
+    // }
+    // public function generateHeatByEvent(CompetitionEvent $event){
+    //     $totalLanes = $event->competitionSession->pool->total_lanes;
 
-        $entries = $event->entries()
-                ->where('status', CompetitionTeamEntryStatus::Active->value)
-                ->get();
-        if ($entries->isEmpty()) return;
+    //     $entries = $event->entries()
+    //             ->where('status', CompetitionTeamEntryStatus::Active->value)
+    //             ->get();
+    //     if ($entries->isEmpty()) return;
 
-        $orderedEntry = $entries->sortByDesc(function ($e) {
-            if (!$e->seed_time) return PHP_INT_MAX; // null = paling lambat
+    //     $orderedEntry = $entries->sortByDesc(function ($e) {
+    //         if (!$e->seed_time) return PHP_INT_MAX; // null = paling lambat
 
-            [$minute, $second] = explode(':', $e->seed_time);
-            return ((int) $minute * 60) + (float) $second;
-        })->values();
+    //         [$minute, $second] = explode(':', $e->seed_time);
+    //         return ((int) $minute * 60) + (float) $second;
+    //     })->values();
 
-        $totalEntry = $orderedEntry->count();
-        $sisa = $totalEntry % $totalLanes;
+    //     $totalEntry = $orderedEntry->count();
+    //     $sisa = $totalEntry % $totalLanes;
 
-        if($totalEntry <= $totalLanes){
-            $assignEntryToHeat = collect([$orderedEntry]);
-        }else if ($sisa > 0 && $sisa <= (int) floor($totalLanes / 2)) {
-            // Jika sisa ≤ setengah lane, redistribusi 2 heat pertama
-            $twoHeatTotal  = $sisa + $totalLanes; // gabung 2 heat pertama
-            $firstCount    = (int) floor($twoHeatTotal / 2);
-            $secondCount   = (int) ceil($twoHeatTotal / 2);
+    //     if($totalEntry <= $totalLanes){
+    //         $assignEntryToHeat = collect([$orderedEntry]);
+    //     }else if ($sisa > 0 && $sisa <= (int) floor($totalLanes / 2)) {
+    //         // Jika sisa ≤ setengah lane, redistribusi 2 heat pertama
+    //         $twoHeatTotal  = $sisa + $totalLanes; // gabung 2 heat pertama
+    //         $firstCount    = (int) floor($twoHeatTotal / 2);
+    //         $secondCount   = (int) ceil($twoHeatTotal / 2);
 
-            $firstHeat     = $orderedEntry->slice(0, $firstCount)->values();
-            $secondHeat    = $orderedEntry->slice($firstCount, $secondCount)->values();
-            $restOfHeats   = $orderedEntry->slice($firstCount + $secondCount)->chunk($totalLanes);
+    //         $firstHeat     = $orderedEntry->slice(0, $firstCount)->values();
+    //         $secondHeat    = $orderedEntry->slice($firstCount, $secondCount)->values();
+    //         $restOfHeats   = $orderedEntry->slice($firstCount + $secondCount)->chunk($totalLanes);
 
-            $assignEntryToHeat = collect([$firstHeat, $secondHeat])->merge($restOfHeats);
-        } else {
-            // Sisa cukup banyak, heat pertama pakai sisa
-            $firstHeat         = $orderedEntry->slice(0, $sisa ?: $totalLanes)->values();
-            $restOfHeats       = $orderedEntry->slice($sisa ?: $totalLanes)->chunk($totalLanes);
-            $assignEntryToHeat = collect([$firstHeat])->merge($restOfHeats);
-        }
+    //         $assignEntryToHeat = collect([$firstHeat, $secondHeat])->merge($restOfHeats);
+    //     } else {
+    //         // Sisa cukup banyak, heat pertama pakai sisa
+    //         $firstHeat         = $orderedEntry->slice(0, $sisa ?: $totalLanes)->values();
+    //         $restOfHeats       = $orderedEntry->slice($sisa ?: $totalLanes)->chunk($totalLanes);
+    //         $assignEntryToHeat = collect([$firstHeat])->merge($restOfHeats);
+    //     }
 
-        $lanes = $this->generateSnakeLanes($totalLanes);
+    //     $lanes = $this->generateSnakeLanes($totalLanes);
 
 
-        $arrHeats = [];
-        foreach($assignEntryToHeat as $heatIndex => $entry){
-            $arrHeats[$heatIndex]['heat_number'] = $heatIndex + 1;
-            $entry = $entry->sortBy(function ($e) {
-                if (!$e->seed_time) return PHP_INT_MAX;
-                [$minute, $second] = explode(':', $e->seed_time);
-                return ((int)$minute * 60) + (float)$second;
-            })->values();
+    //     $arrHeats = [];
+    //     foreach($assignEntryToHeat as $heatIndex => $entry){
+    //         $arrHeats[$heatIndex]['heat_number'] = $heatIndex + 1;
+    //         $entry = $entry->sortBy(function ($e) {
+    //             if (!$e->seed_time) return PHP_INT_MAX;
+    //             [$minute, $second] = explode(':', $e->seed_time);
+    //             return ((int)$minute * 60) + (float)$second;
+    //         })->values();
 
-            foreach ($entry->values() as $laneIndex => $item) {
-                $lane = $lanes[$laneIndex];
-                $arrHeats[$heatIndex]['lanes'][$laneIndex]['lane_number'] = $lane;
-                $arrHeats[$heatIndex]['lanes'][$laneIndex]['entry_id'] = $item->id;
-                $arrHeats[$heatIndex]['lanes'][$laneIndex]['seed_time'] = $item->seed_time;
-            }
-        }
-        return $arrHeats;
-    }
+    //         foreach ($entry->values() as $laneIndex => $item) {
+    //             $lane = $lanes[$laneIndex];
+    //             $arrHeats[$heatIndex]['lanes'][$laneIndex]['lane_number'] = $lane;
+    //             $arrHeats[$heatIndex]['lanes'][$laneIndex]['entry_id'] = $item->id;
+    //             $arrHeats[$heatIndex]['lanes'][$laneIndex]['seed_time'] = $item->seed_time;
+    //         }
+    //     }
+    //     return $arrHeats;
+    // }
 
-    private function generateSnakeLanes(int $totalLanes): array{
-        $lanes = [];
-        $mid   = (int) floor(($totalLanes + 1) / 2); // 8→4, 6→3...
-        if ($totalLanes % 2 === 0) {
-            $mid = $totalLanes / 2; // 8→4, 6→3
-        }
-        $left = $mid;
-        $right = $mid + 1;
+    // private function generateSnakeLanes(int $totalLanes): array{
+    //     $lanes = [];
+    //     $mid   = (int) floor(($totalLanes + 1) / 2); // 8→4, 6→3...
+    //     if ($totalLanes % 2 === 0) {
+    //         $mid = $totalLanes / 2; // 8→4, 6→3
+    //     }
+    //     $left = $mid;
+    //     $right = $mid + 1;
 
-        $lanes[] = $mid;
+    //     $lanes[] = $mid;
 
-        while (count($lanes) < $totalLanes) {
-            if ($right <= $totalLanes) { $lanes[] = $right++; }
-            if ($left > 1)             { $lanes[] = --$left;  }
-        }
-        return $lanes;
-    }
+    //     while (count($lanes) < $totalLanes) {
+    //         if ($right <= $totalLanes) { $lanes[] = $right++; }
+    //         if ($left > 1)             { $lanes[] = --$left;  }
+    //     }
+    //     return $lanes;
+    // }
 
     public function generate(Competition $competition, Request $request)
     {
@@ -179,7 +185,7 @@ class CompetitionHeatLaneController extends Controller
         // Ambil semua entry aktif, sort by seed_time (NT paling belakang)
         $entries = $event->entries()
             ->where('status', CompetitionTeamEntryStatus::Active->value)
-            ->whereHas('competitionTeam', fn($q) => $q->where('status', 'active'))
+            ->whereHas('competitionTeam', fn($q) => $q->where('status', CompetitionTeamStatus::Active->value))
             ->get();
 
         if ($entries->isEmpty()) {
@@ -215,20 +221,36 @@ class CompetitionHeatLaneController extends Controller
         // Distribute atlet — terkencang di heat terakhir
         $chunks = $orderedEntry->chunk($usedLanes)->values();
 
+        $lastHeatChunk = $chunks->last();
+        $secondLastIndex = $chunks->count() - 2;
+        $threshold = (int) ceil($usedLanes / 2);
+
+        if($lastHeatChunk->count() < $threshold && $chunks->count() > 2){
+            $secondLastChunk = $chunks->get($secondLastIndex);
+
+            if($secondLastChunk){
+                $combined = $secondLastChunk->merge($lastHeatChunk);
+                $half = (int) ceil($combined->count() / 2);
+
+                $newSecondLast = $combined->slice(0,$half)->values();
+                $newLast = $combined->slice($half)->values();
+
+                $lastIndex = $chunks->count()-1;
+
+                $chunks = $chunks->map(function($chunk, $index) use ($newSecondLast, $newLast, $secondLastIndex, $lastIndex){
+                    if($index === $secondLastIndex) return $newSecondLast;
+                    if($index === $lastIndex) return $newLast;
+                    return $chunk;
+                })->values();
+            }
+        }
+
         foreach ($chunks as $heatIndex => $chunk) {
             $heat = CompetitionHeat::create([
                 'competition_event_id' => $event->id,
-                // 'heat_number'          => $heatIndex + 1,
                 'heat_number'          => $chunks->count() - $heatIndex,
                 'round_type'           => $firstRound['type'],
             ]);
-
-            // reverse ordering dalam satu heat menjadi tercepat ke lambat
-            // $fixEntry = $chunk->sortBy(function ($e) {
-            //     if (!$e->seed_time) return PHP_INT_MAX;
-            //     [$minute, $second] = explode(':', $e->seed_time);
-            //     return ((int)$minute * 60) + (float)$second;
-            // })->values();
 
             foreach ($chunk->values() as $lane => $entry) {
                 CompetitionHeatLane::create([
