@@ -223,14 +223,16 @@ class CompetitionHeatLaneController extends Controller
 
         $lastHeatChunk = $chunks->last();
         $secondLastIndex = $chunks->count() - 2;
-        $threshold = (int) ceil($usedLanes / 2);
+        // $threshold = (int) ceil($usedLanes / 2);
+        $threshold = 3;
 
-        if($lastHeatChunk->count() < $threshold && $chunks->count() > 2){
+        if($lastHeatChunk->count() < $threshold && $chunks->count() > 1){
             $secondLastChunk = $chunks->get($secondLastIndex);
 
             if($secondLastChunk){
                 $combined = $secondLastChunk->merge($lastHeatChunk);
-                $half = (int) ceil($combined->count() / 2);
+                // $half = (int) ceil($combined->count() / 2);
+                $half = (int) ($combined->count() - 3);
 
                 $newSecondLast = $combined->slice(0,$half)->values();
                 $newLast = $combined->slice($half)->values();

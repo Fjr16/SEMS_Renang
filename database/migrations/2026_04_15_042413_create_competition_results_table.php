@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('competition_results', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('competition_heat_lane_id')->nullable(false);
+            $table->foreignId('competition_heat_lane_id')
+            ->unique()
+            ->nullable(false)
+            ->constrained();
             $table->string('reaction_time',20)->nullable(true);
             $table->string('swim_time',20)->nullable(true);
             $table->string('status',20)->nullable(false);
