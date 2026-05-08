@@ -150,6 +150,7 @@ Route::prefix('/competition/{competition}')->group(function(){
     Route::post('/heats/generate', [CompetitionHeatLaneController::class, 'generate'])->name('competition.heats.generate');
     Route::delete('/heats/generate/by/round',  [CompetitionHeatLaneController::class, 'generateByRound'])->name('competition.heats.generateByRound');
     Route::post('/heats/reset/by/event', [CompetitionHeatLaneController::class, 'resetByEvent'])->name('competition.heats.resetByEvent');
+    Route::post('/heats/save/result', [CompetitionHeatLaneController::class, 'saveResult'])->name('competition.heats.saveResult');
 });
 
 Route::prefix('/guest')->group(function(){

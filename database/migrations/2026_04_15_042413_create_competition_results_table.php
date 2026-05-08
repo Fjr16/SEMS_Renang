@@ -17,7 +17,6 @@ return new class extends Migration
             ->unique()
             ->nullable(false)
             ->constrained();
-            $table->string('reaction_time',20)->nullable(true);
             $table->string('swim_time',20)->nullable(true);
             $table->string('status',20)->nullable(false);
             $table->unsignedInteger('rank_in_heat')->nullable(false);

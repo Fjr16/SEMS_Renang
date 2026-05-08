@@ -8,6 +8,7 @@
         resetUrl: "{{ route('competition.heats.resetByEvent', $competition) }}",
         generateByRound: "{{ route('competition.heats.generateByRound', $competition) }}",
         reloadUrl:   "{{ route('competition.heats.partial', $competition) }}",
+        saveResultUrl:   "{{ route('competition.heats.saveResult', $competition) }}",
     };
 </script>
 
@@ -199,11 +200,11 @@
                                 <table class="table table-hover mb-0" style="font-size:13px">
                                     <thead>
                                         <tr class="text-center">
-                                            <th>Peringkat</th>
+                                            {{-- <th>Peringkat</th> --}}
                                             <th>Lintasan</th>
                                             <th>Atlet</th>
                                             <th>Tim / Klub</th>
-                                            <th>Waktu Tercepat</th>
+                                            <th>Waktu Entri</th>
                                             <th>Hasil</th>
                                             <th>Status</th>
                                         </tr>
@@ -221,7 +222,7 @@
                                             };
                                         @endphp
                                             <tr class="text-center">
-                                                <td>{{ $lane->lane_order ?? '-' }}</td>
+                                                {{-- <td>{{ $lane->lane_order ?? '-' }}</td> --}}
                                                 <td><strong>{{ $lane->lane_number }}</strong></td>
                                                 <td>{{ $lane->entry?->athlete?->name ?? '-' }}</td>
                                                 <td class="text-muted">{{ $lane->entry?->athlete?->club?->club_name ?? '-' }}</td>
@@ -324,18 +325,16 @@
                     <col style="width:36px">  {{-- No Lane --}}
                     <col style="width:120px"> {{-- Atlet --}}
                     <col style="width:64px">  {{-- Entry Time --}}
-                    <col style="width:60px">  {{-- Reaksi --}}
                     <col style="width:66px">  {{-- Status --}}
-                    <col style="width:74px">  {{-- Waktu Finish --}}
-                    <col style="width:34px">  {{-- Rank --}}
+                    <col style="width:76px">  {{-- Waktu Finish --}}
+                    <col style="width:38px">  {{-- Rank --}}
                     <col>                     {{-- Rekor --}}
                 </colgroup>
                 <thead>
                     <tr style="background:#f8f9fa; border-bottom:1px solid #dee2e6">
                         <th style="padding:7px 8px; font-size:10px; font-weight:600; color:#6c757d; text-transform:uppercase; letter-spacing:.04em">Lane</th>
                         <th style="padding:7px 8px; font-size:10px; font-weight:600; color:#6c757d; text-transform:uppercase; letter-spacing:.04em">Atlet</th>
-                        <th style="padding:7px 8px; font-size:10px; font-weight:600; color:#6c757d; text-transform:uppercase; letter-spacing:.04em">Entry</th>
-                        <th style="padding:7px 8px; font-size:10px; font-weight:600; color:#6c757d; text-transform:uppercase; letter-spacing:.04em">Reaksi</th>
+                        <th style="padding:7px 8px; font-size:10px; font-weight:600; color:#6c757d; text-transform:uppercase; letter-spacing:.04em">Entri</th>
                         <th style="padding:7px 8px; font-size:10px; font-weight:600; color:#6c757d; text-transform:uppercase; letter-spacing:.04em">Status</th>
                         <th style="padding:7px 8px; font-size:10px; font-weight:600; color:#6c757d; text-transform:uppercase; letter-spacing:.04em">Finish</th>
                         <th style="padding:7px 8px; font-size:10px; font-weight:600; color:#6c757d; text-transform:uppercase; letter-spacing:.04em; text-align:center">Rank</th>
@@ -385,7 +384,6 @@
                 'club'        => $lane->entry?->athlete?->club?->club_name ?? null,
                 'entry_time'  => $lane?->entry?->seed_time ?? null,
                 'result' => $lane->result ? [
-                    'reaction_time' => $lane->result->reaction_time,
                     'swim_time'     => $lane->result->swim_time,
                     'status'        => $lane->result->status,
                     'rank_heat'     => $lane->result->rank_heat,
@@ -395,7 +393,6 @@
         ])->values()->toArray()
     )->toArray();
 @endphp
-
 
 {{-- ============================================================
      SCRIPT: Drawer Logic
@@ -565,17 +562,6 @@
                 ${lane.entry_time ?? 'NT'}
             </td>
             <td style="padding:6px 8px">
-                <input type="text" ${isDis}
-                    value="${r.reaction_time ?? ''}"
-                    placeholder="0.00"
-                    maxlength="5"
-                    onchange="updateField(${heatIdx},${li},'reaction_time',this.value)"
-                    style="width:100%;font-size:11px;padding:3px 5px;
-                        border:0.5px solid #dee2e6;border-radius:4px;
-                        background:${isDis ? '#f8f9fa' : '#fff'};
-                        font-family:monospace;color:#212529;opacity:${isDis ? '.4' : '1'}">
-            </td>
-            <td style="padding:6px 8px">
                 <select onchange="updateStatus(${heatIdx},${li},this)"
                     style="width:100%;font-size:11px;padding:3px 4px;
                         border:0.5px solid #dee2e6;border-radius:4px;${selectStyle}">
@@ -614,7 +600,6 @@
         lane.result.status = sel.value;
         if (sel.value === 'dns') {
             lane.result.swim_time     = '';
-            lane.result.reaction_time = '';
         }
         renderDrawerHeat(heatIdx);
     };
@@ -678,7 +663,6 @@
             heat_id: heat.id,
             lanes:   heat.lanes.map(l => ({
                 lane_id:       l.lane_id,
-                reaction_time: l.result?.reaction_time ?? null,
                 swim_time:     l.result?.swim_time     ?? null,
                 status:        l.result?.status        ?? 'ok',
                 rank_heat:     l.result?.rank_heat     ?? null,
@@ -689,6 +673,32 @@
 
         // TODO: kirim ke server via fetch/axios
         // fetch(HEAT_CONFIG.saveResultUrl, { method:'POST', ... })
+        fetch(HEAT_CONFIG.saveResultUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+            body: JSON.stringify(payload),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status){
+                Toast.fire({
+                    icon:'success',
+                    title:data.message || 'Sukses'
+                });
+                reloadHeatTab(eventId);
+            }else{
+                Toast.fire({
+                    icon:'error',
+                    title:error.message || 'Gagal'
+                });
+            }
+        })
+        .catch(() => {
+            Toast.fire({
+                icon:'error',
+                title:'Gagal generate seri. Silakan coba lagi.'
+            });
+        });
 
         const note = document.getElementById('drawerFooterNote');
         note.textContent = 'Hasil disimpan!';

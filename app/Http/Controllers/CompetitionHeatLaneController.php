@@ -11,6 +11,7 @@ use App\Models\CompetitionHeat;
 use App\Models\CompetitionHeatLane;
 use App\Models\EventRoundConfig;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Enum;
 
 class CompetitionHeatLaneController extends Controller
@@ -360,5 +361,20 @@ class CompetitionHeatLaneController extends Controller
                 'message' => substr($th->getMessage(),0,150)
             ]);
         }
+    }
+
+    public function saveResult(Request $req, Competition $comptetition){
+        $validators = Validator::make($req->all(), [
+            'heat_id' => 'required',
+            'lanes.*' => 'required|array',
+            'lanes.lane_id' => 'required|exists:competition_heat_lanes,id',
+            // 'reaction_time' => 'nullable',// Waktu yang diukur dari bunyi start (pistol/beep) hingga atlet meninggalkan balok start (opsional)
+            'finish_time' => 'nullable',
+            'status' => 'required',
+            'rank_heat' => 'required',
+            'record_types' => 'required',
+        ]);
+
+        return $req->all();
     }
 }
