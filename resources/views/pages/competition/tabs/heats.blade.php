@@ -9,6 +9,7 @@
         generateByRound: "{{ route('competition.heats.generateByRound', $competition) }}",
         reloadUrl:   "{{ route('competition.heats.partial', $competition) }}",
         saveResultUrl:   "{{ route('competition.heats.saveResult', $competition) }}",
+        promoteAtletUrl:   "{{ route('competition.heats.promoteAthletes', $competition) }}",
     };
 </script>
 
@@ -25,13 +26,13 @@
                 'athlete'     => $lane->entry?->athlete?->name ?? null,
                 'club'        => $lane->entry?->athlete?->club?->club_name ?? null,
                 'entry_time'  => $lane?->entry?->seed_time ?? null,
-                'result' => $lane->result ? [
-                    'competition_result_id' => $lane->result->id,
-                    'swim_time'     => $lane->result->swim_time,
-                    'status'        => $lane->result->status,
-                    'rank_heat'     => $lane->result->rank_heat,
-                    'record_types'  => $lane->result->record_types ?? [],
-                ] : null,
+                // 'result' => $lane->result ? [
+                // 'competition_result_id' => $lane->result->id,
+                'swim_time'     => $lane->swim_time,
+                'status'        => $lane->status,
+                'rank_heat'     => $lane->rank_heat,
+                'record_types'  => explode(',', ($lane->record_type ?? '')),
+                // ] : null,
             ])->values()->toArray(),
         ])->values()->toArray()
     )->toArray();
@@ -248,13 +249,14 @@
                                     <tbody>
                                         @forelse ($heat->heatLanes as $lane)
                                         @php
-                                            $result = $lane->result ?? null;
-                                            $status = $result?->status ?? null;
+                                            // $result = $lane->result ?? null;
+                                            $status = $lane->status ?? null;
                                             $statusBadge = match($status) {
-                                                $resultStatuses['dns']['val'] => '<span class="badge" style="background:#F1EFE8;color:#5F5E5A;font-size:10px">"'.$resultStatuses['dns']->label.'"</span>',
-                                                $resultStatuses['dnf']['val'] => '<span class="badge" style="background:#FAEEDA;color:#854F0B;font-size:10px">"'.$resultStatuses['dnf']->label.'"</span>',
-                                                $resultStatuses['dq']['val']  => '<span class="badge" style="background:#FCEBEB;color:#A32D2D;font-size:10px">"'.$resultStatuses['dq']->label.'"</span>',
-                                                default => '',
+                                                $resultStatuses['dns']['val'] => '<span class="badge" style="background:#F1EFE8;color:#5F5E5A;font-size:10px">'.$resultStatuses['dns']['label'].'</span>',
+                                                $resultStatuses['dnf']['val'] => '<span class="badge" style="background:#FAEEDA;color:#854F0B;font-size:10px">'.$resultStatuses['dnf']['label'].'</span>',
+                                                $resultStatuses['dq']['val']  => '<span class="badge" style="background:#FCEBEB;color:#A32D2D;font-size:10px">'.$resultStatuses['dq']['label'].'</span>',
+                                                $resultStatuses['valid']['val']  => '<span class="badge" style="background:#FCEBEB;color:#15803D;font-size:10px">'.$resultStatuses['valid']['label'].'</span>',
+                                                default => '-',
                                             };
                                         @endphp
                                             <tr class="text-center">
@@ -269,10 +271,10 @@
                                                     @if($status === $resultStatuses['dns']['val'] || $status === $resultStatuses['dnf']['val'] || $status === $resultStatuses['dq']['val'])
                                                         {!! $statusBadge !!}
                                                     @else
-                                                        {{ $result?->swim_time ?? '—' }}
+                                                        {{ $lane->swim_time ?? '—' }}
                                                     @endif
                                                 </td>
-                                                <td>{!! $status && $status === $resultStatuses['valid']['val'] ? '' : $statusBadge !!}</td>
+                                                <td>{!! $statusBadge !!}</td>
                                             </tr>
                                         @empty
                                             <tr>
@@ -504,7 +506,7 @@
             `${roundLabel} · ${document.getElementById('heat_competition_event_id')?.selectedOptions[0]?.text ?? ''}`;
 
         // Stat bar
-        const filled = heat.lanes.filter(l => l.result?.swim_time || l.result?.status).length;
+        const filled = heat.lanes.filter(l => l.swim_time || l.status).length;
         document.getElementById('drawerStatBar').innerHTML = `
             <span>Lintasan terisi: <strong style="color:#212529">${heat.lanes.length}</strong></span>
             <span>Hasil diinput: <strong style="color:#212529">${filled}</strong> / ${heat.lanes.length}</span>
@@ -525,9 +527,9 @@
 
     /* ── Build Baris Lane ──────────────────────────────────── */
     function buildLaneRow(lane, li, heatIdx) {
-        const r      = lane.result ?? {};
+        const r      = lane ?? {};
         const status = r.status ?? RESULT_STATUSES['valid'].val;
-        const isDis  = (status === RESULT_STATUSES['dns'].val || status === RESULT_STATUSES['dnf'].val) ? 'disabled' : '';
+        const isDis  = status !== RESULT_STATUSES['valid'].val ? 'disabled' : '';
 
         const statusOpts = Object.entries(RESULT_STATUSES).map(([value, data]) =>
             `<option value="${value}" ${status === value ? 'selected' : ''}>${data.label}</option>`
@@ -535,8 +537,6 @@
 
         const selectStyle = RESULT_STATUSES[status]?.style ?? RESULT_STATUSES['valid'].style;
 
-        // const recOpts = ['PB','MR','Reg','Nas'];
-        // const recTags = recOpts.map(tag => {
         const recTags = Object.entries(RECORD_TYPES).map(([val, label]) => {
             const active = (r.record_types ?? []).includes(val);
             return `<button type="button"
@@ -602,39 +602,35 @@
     /* ── Field Update ──────────────────────────────────────── */
     window.updateField = function(heatIdx, laneIdx, field, value) {
         const lane = _heatsInRound[heatIdx].lanes[laneIdx];
-        if (!lane.result) lane.result = {};
-        lane.result[field] = value;
+        lane[field] = value;
         updateStatBar(heatIdx);
     };
 
     window.updateStatus = function(heatIdx, laneIdx, sel) {
         const lane = _heatsInRound[heatIdx].lanes[laneIdx];
-        if (!lane.result) lane.result = {};
-        lane.result.status = sel.value;
-        if (sel.value === RESULT_STATUSES['dns'].val) {
-            lane.result.swim_time     = '';
+        lane.status = sel.value;
+        if (sel.value !== RESULT_STATUSES['valid'].val) {
+            lane.swim_time     = '';
         }
         renderDrawerHeat(heatIdx);
     };
 
     window.updateRank = function(heatIdx, laneIdx, value) {
         const lane = _heatsInRound[heatIdx].lanes[laneIdx];
-        if (!lane.result) lane.result = {};
-        lane.result.rank_heat = parseInt(value) || null;
+        lane.rank_heat = parseInt(value) || null;
     };
 
     window.toggleRecordTag = function(heatIdx, laneIdx, tag, btn) {
         const lane = _heatsInRound[heatIdx].lanes[laneIdx];
-        if (!lane.result) lane.result = {};
-        if (!lane.result.record_types) lane.result.record_types = [];
-        const idx = lane.result.record_types.indexOf(tag);
+        if (!lane.record_types) lane.record_types = [];
+        const idx = lane.record_types.indexOf(tag);
         if (idx === -1) {
-            lane.result.record_types.push(tag);
+            lane.record_types.push(tag);
             btn.style.background   = '#FAEEDA';
             btn.style.color        = '#854F0B';
             btn.style.borderColor  = '#EF9F27';
         } else {
-            lane.result.record_types.splice(idx, 1);
+            lane.record_types.splice(idx, 1);
             btn.style.background   = 'transparent';
             btn.style.color        = '#6c757d';
             btn.style.borderColor  = '#dee2e6';
@@ -644,14 +640,14 @@
     /* ── Hitung Rank Otomatis ──────────────────────────────── */
     function calcRanks(lanes) {
         const valid = lanes.filter(l =>
-            l.result?.status !== RESULT_STATUSES['dns'].val &&
-            l.result?.status !== RESULT_STATUSES['dnf'].val  &&
-            l.result?.status !== RESULT_STATUSES['dq'].val  &&
-            l.result?.swim_time
+            l.status !== RESULT_STATUSES['dns'].val &&
+            l.status !== RESULT_STATUSES['dnf'].val  &&
+            l.status !== RESULT_STATUSES['dq'].val  &&
+            l.swim_time
         );
-        valid.sort((a, b) => a.result.swim_time.localeCompare(b.result.swim_time));
-        lanes.forEach(l => { if (l.result) l.result.rank_heat = null; });
-        valid.forEach((l, i) => { l.result.rank_heat = i + 1; });
+        valid.sort((a, b) => a.swim_time.localeCompare(b.swim_time));
+        lanes.forEach(l => { if (!l.swim_time && !l.status) l.rank_heat = null; });
+        valid.forEach((l, i) => { l.rank_heat = i + 1; });
     }
 
     window.recalcAndRender = function(heatIdx) {
@@ -662,7 +658,7 @@
     /* ── Stat Bar Update ───────────────────────────────────── */
     function updateStatBar(heatIdx) {
         const heat   = _heatsInRound[heatIdx];
-        const filled = heat.lanes.filter(l => l.result?.swim_time || l.result?.status).length;
+        const filled = heat.lanes.filter(l => l.swim_time || l.status).length;
         document.getElementById('drawerStatBar').innerHTML = `
             <span>Lintasan terisi: <strong style="color:#212529">${heat.lanes.length}</strong></span>
             <span>Hasil diinput: <strong style="color:#212529">${filled}</strong> / ${heat.lanes.length}</span>
@@ -674,17 +670,12 @@
     window.saveHeatResult = function() {
         const heat    = _heatsInRound[_activeHeatIdx];
         const payload = heat.lanes.map(l => ({
-                competition_result_id: l.result?.competition_result_id ?? null,
                 lane_id:       l.lane_id,
-                swim_time:     l.result?.swim_time     ?? null,
-                status:        l.result?.status        ?? RESULT_STATUSES['valid'].val,
-                rank_heat:     l.result?.rank_heat     ?? null,
-                record_types:  l.result?.record_types  ?? [],
+                swim_time:     l.swim_time     ?? null,
+                status:        l.status        ?? RESULT_STATUSES['valid'].val,
+                rank_heat:     l.rank_heat     ?? null,
+                record_types:  l.record_types  ?? [],
             }));
-        // console.log('Payload siap dikirim:', payload);
-
-        // TODO: kirim ke server via fetch/axios
-        // fetch(HEAT_CONFIG.saveResultUrl, { method:'POST', ... })
         fetch(HEAT_CONFIG.saveResultUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
@@ -709,6 +700,41 @@
                 Toast.fire({
                     icon:'error',
                     title:error.message || 'Gagal'
+                });
+            }
+        })
+        .catch(() => {
+            Toast.fire({
+                icon:'error',
+                title:'Gagal generate seri. Silakan coba lagi.'
+            });
+        });
+    };
+
+    // promote athletes
+    window.promoteAthletes = function(round) {
+        const eventId = document.getElementById('heat_competition_event_id')?.selectedOptions[0]?.value ?? '';
+        const payload = {
+            competition_event_id: eventId,
+            round_type: round
+        }
+
+        fetch(HEAT_CONFIG.promoteAtletUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+            body: JSON.stringify(payload),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status){
+                Toast.fire({
+                    icon:'success',
+                    title:data.message || 'Sukses'
+                });
+            }else{
+                Toast.fire({
+                    icon:'error',
+                    title:data.message || 'Gagal'
                 });
             }
         })

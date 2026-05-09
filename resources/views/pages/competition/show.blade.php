@@ -1036,67 +1036,8 @@
         }
     </script>
 
-    {{-- scripts tab heats lanes --}}
-    {{-- <script>
-        function fetchPartialHeatsTab(){
-            const tab = document.getElementById('heat_lanes');
-            const eventId = document.getElementById('heat_competition_event_id')?.value ?? '';
-
-            const url = new URL(HEATS_PARTIAL_URL);
-            if (eventId)  url.searchParams.set('event_id', eventId);
-
-            tab.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-
-            fetch(url)
-                .then(r => r.text())
-                .then(html => {
-                    tab.innerHTML = html;
-                    initHeatTabs();
-                })
-                .catch(err => {
-                    console.error('Fetch error:', err.message);
-                    tab.innerHTML = '<div class="py-4 text-danger text-center">Gagal memuat konten.</div>';
-                });
-        }
-        function initHeatTabs() {
-            const buttons = document.querySelectorAll('.tab-heat-btn');
-            const panels  = document.querySelectorAll('.heat-panel');
-
-            function activateHeat(heatNumber) {
-                panels.forEach(p => {
-                    p.style.display = p.dataset.heat == heatNumber ? 'block' : 'none';
-                });
-                buttons.forEach(b => {
-                    const active = b.dataset.heat == heatNumber;
-                    b.style.borderBottom = active ? '2px solid #2563EB' : '2px solid transparent';
-                    b.style.color        = active ? '#2563EB' : '#6c757d';
-                    b.style.fontWeight   = active ? '600' : '400';
-                });
-            }
-
-            buttons.forEach(btn => {
-                btn.addEventListener('click', () => activateHeat(btn.dataset.heat));
-            });
-
-            // Aktifkan heat pertama otomatis
-            if (buttons.length > 0) {
-                activateHeat(buttons[0].dataset.heat);
-            }
-
-            // initiate select 2 event
-            $('#heat_competition_event_id').select2({
-                width:'100%',
-                placeholder:'Pilih Acara',
-                allowClear:false,
-                theme: "classic",
-            }).on('change', function(){
-                fetchPartialHeatsTab();
-            });
-        }
-    </script> --}}
+    {{-- scripts tab heat --}}
     <script>
-        // Selalu baca dari window.HEAT_CONFIG, bukan dari variabel lokal
-        // karena nilai ini berubah setiap kali partial di-reload
         // ── Config helper ─────────────────────────────────────────────
         function getConfig() {
             return window.HEAT_CONFIG ?? {};
@@ -1138,15 +1079,7 @@
                 });
         }
         function initHeatTabs() {
-            // ── Konstanta dari Blade ──────────────────────────────────────
-            // POOL_LANES, TOTAL_ATLET, EVENT_ID, GENERATE_URL, RELOAD_URL, CSRF
-            // diinject dari Blade via <script> tag
-
             window.selectedRoundType = null;
-
-            // ── Round Option ──────────────────────────────────────────────
-
-            // Re-init ROUND_DEFS (tidak perlu diinject dari Blade, ini static)
             window.ROUND_DEFS = {
                 final:          [
                                     { key:"{{ App\Enums\RoundTypeEnum::final->value }}",    label:"{{ App\Enums\RoundTypeEnum::final->label() }}",  bg:"{{ App\Enums\RoundTypeEnum::final->background() }}",  color:"{{ App\Enums\RoundTypeEnum::final->color() }}"}

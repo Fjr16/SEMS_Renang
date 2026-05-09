@@ -17,6 +17,10 @@ return new class extends Migration
             $table->foreignId('competition_entry_id')->nullable(false);
             $table->unsignedInteger('lane_number')->nullable(false);
             $table->unsignedInteger('lane_order')->nullable(false);
+            $table->string('swim_time',20)->nullable(true);
+            $table->string('status',20)->nullable(true);
+            $table->unsignedInteger('rank_in_heat')->nullable(true);
+            $table->string('record_type',20)->nullable(true);
             $table->timestamps();
         });
     }

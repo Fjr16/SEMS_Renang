@@ -151,6 +151,7 @@ Route::prefix('/competition/{competition}')->group(function(){
     Route::delete('/heats/generate/by/round',  [CompetitionHeatLaneController::class, 'generateByRound'])->name('competition.heats.generateByRound');
     Route::post('/heats/reset/by/event', [CompetitionHeatLaneController::class, 'resetByEvent'])->name('competition.heats.resetByEvent');
     Route::post('/heats/save/result', [CompetitionHeatLaneController::class, 'saveResult'])->name('competition.heats.saveResult');
+    Route::post('/heats/promote/atlet', [CompetitionHeatLaneController::class, 'promoteAthletes'])->name('competition.heats.promoteAthletes');
 });
 
 Route::prefix('/guest')->group(function(){

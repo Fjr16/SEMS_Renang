@@ -11,6 +11,10 @@ class CompetitionHeatLane extends Model
         'competition_entry_id',
         'lane_number',
         'lane_order',
+        'swim_time',
+        'status',
+        'rank_in_heat',
+        'record_type',
     ];
 
     public function heat(){

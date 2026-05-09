@@ -369,7 +369,6 @@ class CompetitionHeatLaneController extends Controller
 
     public function saveResult(Request $req, Competition $comptetition){
         $validators = Validator::make($req->all(), [
-            '*.competition_result_id' => 'nullable|exists:competition_results,id',
             '*.lane_id' => 'required|exists:competition_heat_lanes,id',
             '*.swim_time' => ['nullable', 'regex:/^\d{2}:\d{2}\.\d{2}$/'],
             '*.status' => ['required', new Enum(CompetitionResultStatus::class)],
@@ -388,14 +387,11 @@ class CompetitionHeatLaneController extends Controller
         try {
             DB::beginTransaction();
             foreach ($req->all() as $key => $row) {
-                $item = $row['competition_result_id'] ? CompetitionResult::find($row['competition_result_id']) : new CompetitionResult;
-                $item->competition_heat_lane_id = $row['lane_id'];
+                $item = CompetitionHeatLane::find($row['lane_id']);
                 $item->swim_time = $row['swim_time'] ?? null;
                 $item->status = $row['status'];
                 $item->rank_in_heat = $row['rank_heat'] ?? null;
-                // $item->rank_overral =
-                // $item->points =
-                $item->record_type = !empty($row['record_types']) ? implode(',' , $row['record_types']) : null;
+                $item->record_type = !empty($row['record_types']) ? implode(',' , array_filter($row['record_types'])) : null;
                 $item->save();
             }
 
@@ -412,5 +408,83 @@ class CompetitionHeatLaneController extends Controller
             ]);
         }
 
+    }
+    public function promoteAthletes(Request $req, Competition $comptetition){
+        $validators = Validator::make($req->all(), [
+            'competition_event_id' => 'required|exists:competition_events,id',
+            'round_type' => ['required', new Enum(RoundTypeEnum::class)],
+        ]);
+
+        if($validators->fails()){
+            return response()->json([
+                'status' => false,
+                'message' => $validators->errors()->first()
+            ]);
+        }
+
+        try {
+            $roundType = $req->round_type;
+            $event = CompetitionEvent::with(['configs','heats.heatLanes'])
+                    ->findOrFail($req->competition_event_id);
+            $roundDest = $event->configs->where('round_type', $roundType)->first();
+            $roundBefore = $event->configs->where('order', (int) $roundDest->order - 1)->first();
+            $rbType = $roundBefore->round_type;
+            $rbLolos = $roundBefore->qualify_count;
+            $rbHeats = $event->heats()->where('round_type', $rbType)->get();
+
+            if(!$this->checkResults($req->competition_event_id, $rbType)){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Terjadi kesalahan, terdeteksi hasil ronde sebelumnya belum lengkap'
+                ]);
+            }
+
+            $rdUsedLanes = $roundDest->used_lanes;
+            $rdLolos = $roundDest->qualify_count;
+
+            DB::beginTransaction();
+            foreach ($req->all() as $key => $row) {
+                $item = $row['competition_result_id'] ? CompetitionResult::find($row['competition_result_id']) : new CompetitionResult;
+                $item->competition_heat_lane_id = $row['lane_id'];
+                $item->swim_time = $row['swim_time'] ?? null;
+                $item->status = $row['status'];
+                $item->rank_in_heat = $row['rank_heat'] ?? null;
+                // $item->rank_overral =
+                // $item->points =
+                $item->record_type = !empty($row['record_types']) ? implode(',' , array_filter($row['record_types'])) : null;
+                $item->save();
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => true,
+                'message' => 'Berhasil input hasil'
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => substr($th->getMessage(), 0, 150)
+            ]);
+        }
+
+    }
+
+    private function checkResults($event_id, $round){
+        $isValid = CompetitionHeat::where('competition_event_id', $event_id)
+        ->where('round_type', $round)
+        ->whereHas('heatLanes', function($q){
+            $q->where(function($qq) {
+                $qq->where('status', 'valid')
+                ->whereNull('swim_time');
+            })
+            ->orWhere(function($qqq) {
+                $qqq->whereNotIn('status', ['dq', 'dnf', 'dns', 'valid'])
+                    ->orWhereNull('status');
+            });
+        })
+        ->count();
+
+        return $isValid === 0 ? true : false;
     }
 }

@@ -45,6 +45,9 @@ class CompetitionEvent extends Model
     public function heats(){
         return $this->hasMany(CompetitionHeat::class);
     }
+    public function configs(){
+        return $this->hasMany(EventRoundConfig::class);
+    }
     public function getLabel(){
         return 'Event ' . $this->event_number . ' - '
             . $this->distance . ' M '
