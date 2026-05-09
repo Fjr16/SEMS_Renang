@@ -11,8 +11,8 @@ class CompetitionResult extends Model
         'swim_time',
         'status',
         'rank_in_heat',
-        'rank_overral',
-        'points',
+        // 'rank_overral',
+        // 'points',
         'record_type'
     ];
 

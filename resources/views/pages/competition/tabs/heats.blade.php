@@ -12,6 +12,42 @@
     };
 </script>
 
+@php
+    $heatsData = $heatsByRound->map(fn($heats) =>
+        $heats->sortBy('heat_number')->map(fn($heat) => [
+            'id'     => $heat->id,
+            'number' => $heat->heat_number,
+            // 'status' => $heat->result_status ?? 'pending',
+            'lanes'  => $heat->heatLanes->map(fn($lane) => [
+                'lane_id'     => $lane->id,
+                'lane_number' => $lane->lane_number,
+                'lane_order'  => $lane->lane_order,
+                'athlete'     => $lane->entry?->athlete?->name ?? null,
+                'club'        => $lane->entry?->athlete?->club?->club_name ?? null,
+                'entry_time'  => $lane?->entry?->seed_time ?? null,
+                'result' => $lane->result ? [
+                    'competition_result_id' => $lane->result->id,
+                    'swim_time'     => $lane->result->swim_time,
+                    'status'        => $lane->result->status,
+                    'rank_heat'     => $lane->result->rank_heat,
+                    'record_types'  => $lane->result->record_types ?? [],
+                ] : null,
+            ])->values()->toArray(),
+        ])->values()->toArray()
+    )->toArray();
+
+    $resultStatuses = collect(App\Enums\CompetitionResultStatus::cases())
+    ->mapWithKeys(fn($case) => [
+        $case->value => [
+            'val' => $case->value,
+            'label' => $case->shortLabel(),
+            'style' => $case->styles(),
+        ]
+    ]);
+    $recordTypes = collect(App\Enums\RecordTypeEnum::cases())
+    ->mapWithKeys(fn($case) => [$case->value => $case->shortLabel()]);
+@endphp
+
 <div id="heatMainContent">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
         <div>
@@ -215,9 +251,9 @@
                                             $result = $lane->result ?? null;
                                             $status = $result?->status ?? null;
                                             $statusBadge = match($status) {
-                                                'dns' => '<span class="badge" style="background:#F1EFE8;color:#5F5E5A;font-size:10px">DNS</span>',
-                                                'dnf' => '<span class="badge" style="background:#FAEEDA;color:#854F0B;font-size:10px">DNF</span>',
-                                                'dq'  => '<span class="badge" style="background:#FCEBEB;color:#A32D2D;font-size:10px">DQ</span>',
+                                                $resultStatuses['dns']['val'] => '<span class="badge" style="background:#F1EFE8;color:#5F5E5A;font-size:10px">"'.$resultStatuses['dns']->label.'"</span>',
+                                                $resultStatuses['dnf']['val'] => '<span class="badge" style="background:#FAEEDA;color:#854F0B;font-size:10px">"'.$resultStatuses['dnf']->label.'"</span>',
+                                                $resultStatuses['dq']['val']  => '<span class="badge" style="background:#FCEBEB;color:#A32D2D;font-size:10px">"'.$resultStatuses['dq']->label.'"</span>',
                                                 default => '',
                                             };
                                         @endphp
@@ -230,13 +266,13 @@
                                                     {{ $lane->entry->seed_time ?? 'NT' }}
                                                 </td>
                                                 <td style="font-family:monospace;font-size:12px">
-                                                    @if($status === 'dns' || $status === 'dnf' || $status === 'dq')
+                                                    @if($status === $resultStatuses['dns']['val'] || $status === $resultStatuses['dnf']['val'] || $status === $resultStatuses['dq']['val'])
                                                         {!! $statusBadge !!}
                                                     @else
                                                         {{ $result?->swim_time ?? '—' }}
                                                     @endif
                                                 </td>
-                                                <td>{!! $status && $status === 'ok' ? '' : $statusBadge !!}</td>
+                                                <td>{!! $status && $status === $resultStatuses['valid']['val'] ? '' : $statusBadge !!}</td>
                                             </tr>
                                         @empty
                                             <tr>
@@ -370,30 +406,6 @@
     </div>
 </div>
 
-@php
-    $heatsData = $heatsByRound->map(fn($heats) =>
-        $heats->sortBy('heat_number')->map(fn($heat) => [
-            'id'     => $heat->id,
-            'number' => $heat->heat_number,
-            // 'status' => $heat->result_status ?? 'pending',
-            'lanes'  => $heat->heatLanes->map(fn($lane) => [
-                'lane_id'     => $lane->id,
-                'lane_number' => $lane->lane_number,
-                'lane_order'  => $lane->lane_order,
-                'athlete'     => $lane->entry?->athlete?->name ?? null,
-                'club'        => $lane->entry?->athlete?->club?->club_name ?? null,
-                'entry_time'  => $lane?->entry?->seed_time ?? null,
-                'result' => $lane->result ? [
-                    'swim_time'     => $lane->result->swim_time,
-                    'status'        => $lane->result->status,
-                    'rank_heat'     => $lane->result->rank_heat,
-                    'record_types'  => $lane->result->record_types ?? [],
-                ] : null,
-            ])->values()->toArray(),
-        ])->values()->toArray()
-    )->toArray();
-@endphp
-
 {{-- ============================================================
      SCRIPT: Drawer Logic
      ============================================================ --}}
@@ -408,6 +420,8 @@
 
     /* ── Data dari Blade ───────────────────────────────────── */
     const HEATS_DATA = @json($heatsData);
+    const RESULT_STATUSES = @json($resultStatuses);
+    const RECORD_TYPES = @json($recordTypes);
 
     /* ── Buka Drawer ───────────────────────────────────────── */
     window.openResultDrawer = function(roundType) {
@@ -512,32 +526,30 @@
     /* ── Build Baris Lane ──────────────────────────────────── */
     function buildLaneRow(lane, li, heatIdx) {
         const r      = lane.result ?? {};
-        const status = r.status ?? 'ok';
-        const isDis  = (status === 'dns') ? 'disabled' : '';
+        const status = r.status ?? RESULT_STATUSES['valid'].val;
+        const isDis  = (status === RESULT_STATUSES['dns'].val || status === RESULT_STATUSES['dnf'].val) ? 'disabled' : '';
 
-        const statusOpts = ['ok','dns','dnf','dq'].map(s =>
-            `<option value="${s}" ${status === s ? 'selected' : ''}>${s.toUpperCase()}</option>`
+        const statusOpts = Object.entries(RESULT_STATUSES).map(([value, data]) =>
+            `<option value="${value}" ${status === value ? 'selected' : ''}>${data.label}</option>`
         ).join('');
 
-        const selectStyle = status === 'dns' ? 'border-color:#888;color:#5F5E5A;background:#F1EFE8'
-            : status === 'dq'  ? 'border-color:#A32D2D;color:#A32D2D;background:#FCEBEB'
-            : status === 'dnf' ? 'border-color:#854F0B;color:#854F0B;background:#FAEEDA'
-            : '';
+        const selectStyle = RESULT_STATUSES[status]?.style ?? RESULT_STATUSES['valid'].style;
 
-        const recOpts = ['PB','MR','Reg','Nas'];
-        const recTags = recOpts.map(tag => {
-            const active = (r.record_types ?? []).includes(tag);
+        // const recOpts = ['PB','MR','Reg','Nas'];
+        // const recTags = recOpts.map(tag => {
+        const recTags = Object.entries(RECORD_TYPES).map(([val, label]) => {
+            const active = (r.record_types ?? []).includes(val);
             return `<button type="button"
-                onclick="toggleRecordTag(${heatIdx},${li},'${tag}',this)"
+                onclick="toggleRecordTag(${heatIdx},${li},'${val}',this)"
                 style="
                     font-size:10px; padding:1px 5px; border-radius:8px; cursor:pointer;
                     border:0.5px solid ${active ? '#EF9F27' : '#dee2e6'};
                     background:${active ? '#FAEEDA' : 'transparent'};
                     color:${active ? '#854F0B' : '#6c757d'};
-                ">${tag}</button>`;
+                ">${label}</button>`;
         }).join('');
 
-        const rankDisplay = (status !== 'ok')
+        const rankDisplay = (!r.swim_time || status === RESULT_STATUSES['dns'].val || status === RESULT_STATUSES['dq'].val)
             ? `<span style="color:#adb5bd;font-size:11px">—</span>`
             : (r.rank_heat
                 ? `<input type="number" min="1"
@@ -570,6 +582,7 @@
             </td>
             <td style="padding:6px 8px">
                 <input type="text" ${isDis}
+                    class="swim_time_input"
                     value="${r.swim_time ?? ''}"
                     placeholder="00:00.00"
                     maxlength="9"
@@ -598,7 +611,7 @@
         const lane = _heatsInRound[heatIdx].lanes[laneIdx];
         if (!lane.result) lane.result = {};
         lane.result.status = sel.value;
-        if (sel.value === 'dns') {
+        if (sel.value === RESULT_STATUSES['dns'].val) {
             lane.result.swim_time     = '';
         }
         renderDrawerHeat(heatIdx);
@@ -631,12 +644,13 @@
     /* ── Hitung Rank Otomatis ──────────────────────────────── */
     function calcRanks(lanes) {
         const valid = lanes.filter(l =>
-            l.result?.status !== 'dns' &&
-            l.result?.status !== 'dq'  &&
+            l.result?.status !== RESULT_STATUSES['dns'].val &&
+            l.result?.status !== RESULT_STATUSES['dnf'].val  &&
+            l.result?.status !== RESULT_STATUSES['dq'].val  &&
             l.result?.swim_time
         );
         valid.sort((a, b) => a.result.swim_time.localeCompare(b.result.swim_time));
-        lanes.forEach(l => { if (l.result && l.result.status === 'ok') l.result.rank_heat = null; });
+        lanes.forEach(l => { if (l.result) l.result.rank_heat = null; });
         valid.forEach((l, i) => { l.result.rank_heat = i + 1; });
     }
 
@@ -659,17 +673,15 @@
     /* ── Save (stub — isi action nanti) ────────────────────── */
     window.saveHeatResult = function() {
         const heat    = _heatsInRound[_activeHeatIdx];
-        const payload = {
-            heat_id: heat.id,
-            lanes:   heat.lanes.map(l => ({
+        const payload = heat.lanes.map(l => ({
+                competition_result_id: l.result?.competition_result_id ?? null,
                 lane_id:       l.lane_id,
                 swim_time:     l.result?.swim_time     ?? null,
-                status:        l.result?.status        ?? 'ok',
+                status:        l.result?.status        ?? RESULT_STATUSES['valid'].val,
                 rank_heat:     l.result?.rank_heat     ?? null,
                 record_types:  l.result?.record_types  ?? [],
-            })),
-        };
-        console.log('Payload siap dikirim:', payload);
+            }));
+        // console.log('Payload siap dikirim:', payload);
 
         // TODO: kirim ke server via fetch/axios
         // fetch(HEAT_CONFIG.saveResultUrl, { method:'POST', ... })
@@ -685,7 +697,14 @@
                     icon:'success',
                     title:data.message || 'Sukses'
                 });
-                reloadHeatTab(eventId);
+                // reloadHeatTab(eventId);
+                const note = document.getElementById('drawerFooterNote');
+                note.textContent = 'Hasil disimpan!';
+                note.style.color = '#0F6E56';
+                setTimeout(() => {
+                    note.textContent = 'Rank dihitung otomatis dari waktu finish. Bisa di-override manual.';
+                    note.style.color = '';
+                }, 2500);
             }else{
                 Toast.fire({
                     icon:'error',
@@ -699,15 +718,23 @@
                 title:'Gagal generate seri. Silakan coba lagi.'
             });
         });
-
-        const note = document.getElementById('drawerFooterNote');
-        note.textContent = 'Hasil disimpan!';
-        note.style.color = '#0F6E56';
-        setTimeout(() => {
-            note.textContent = 'Rank dihitung otomatis dari waktu finish. Bisa di-override manual.';
-            note.style.color = '';
-        }, 2500);
     };
+
+    $(document).on('input', '.swim_time_input', function(){
+        let digits = this.value.replace(/\D/g, '');
+        digits = digits.slice(0, 6);
+
+        let formatted = '';
+        if (digits.length <= 2) {
+            formatted = digits;
+        } else if (digits.length <= 4) {
+            formatted = digits.slice(0, 2) + ':' + digits.slice(2);
+        } else {
+            formatted = digits.slice(0, 2) + ':' + digits.slice(2, 4) + '.' + digits.slice(4);
+        }
+
+        this.value = formatted;
+    });
 
 })();
 </script>

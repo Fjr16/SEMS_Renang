@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CompetitionResultStatus;
 use App\Enums\CompetitionTeamEntryStatus;
 use App\Enums\CompetitionTeamStatus;
+use App\Enums\RecordTypeEnum;
 use App\Enums\RoundTypeEnum;
 use App\Models\Competition;
 use App\Models\CompetitionEvent;
 use App\Models\CompetitionHeat;
 use App\Models\CompetitionHeatLane;
+use App\Models\CompetitionResult;
 use App\Models\EventRoundConfig;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Enum;
 
@@ -365,16 +369,48 @@ class CompetitionHeatLaneController extends Controller
 
     public function saveResult(Request $req, Competition $comptetition){
         $validators = Validator::make($req->all(), [
-            'heat_id' => 'required',
-            'lanes.*' => 'required|array',
-            'lanes.lane_id' => 'required|exists:competition_heat_lanes,id',
-            // 'reaction_time' => 'nullable',// Waktu yang diukur dari bunyi start (pistol/beep) hingga atlet meninggalkan balok start (opsional)
-            'finish_time' => 'nullable',
-            'status' => 'required',
-            'rank_heat' => 'required',
-            'record_types' => 'required',
+            '*.competition_result_id' => 'nullable|exists:competition_results,id',
+            '*.lane_id' => 'required|exists:competition_heat_lanes,id',
+            '*.swim_time' => ['nullable', 'regex:/^\d{2}:\d{2}\.\d{2}$/'],
+            '*.status' => ['required', new Enum(CompetitionResultStatus::class)],
+            '*.rank_heat' => 'nullable',
+            '*.record_types' => 'nullable|array',
+            '*.record_types.*' => ['nullable', new Enum(RecordTypeEnum::class)]
         ]);
 
-        return $req->all();
+        if($validators->fails()){
+            return response()->json([
+                'status' => false,
+                'message' => $validators->errors()->first()
+            ]);
+        }
+
+        try {
+            DB::beginTransaction();
+            foreach ($req->all() as $key => $row) {
+                $item = $row['competition_result_id'] ? CompetitionResult::find($row['competition_result_id']) : new CompetitionResult;
+                $item->competition_heat_lane_id = $row['lane_id'];
+                $item->swim_time = $row['swim_time'] ?? null;
+                $item->status = $row['status'];
+                $item->rank_in_heat = $row['rank_heat'] ?? null;
+                // $item->rank_overral =
+                // $item->points =
+                $item->record_type = !empty($row['record_types']) ? implode(',' , $row['record_types']) : null;
+                $item->save();
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => true,
+                'message' => 'Berhasil input hasil'
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => substr($th->getMessage(), 0, 150)
+            ]);
+        }
+
     }
 }

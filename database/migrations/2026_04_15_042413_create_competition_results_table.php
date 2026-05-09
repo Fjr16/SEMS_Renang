@@ -19,10 +19,10 @@ return new class extends Migration
             ->constrained();
             $table->string('swim_time',20)->nullable(true);
             $table->string('status',20)->nullable(false);
-            $table->unsignedInteger('rank_in_heat')->nullable(false);
-            $table->unsignedInteger('rank_overral')->nullable(false);
-            $table->decimal('points',10,2)->nullable(false);
-            $table->string('record_type',20)->nullable(false);
+            $table->unsignedInteger('rank_in_heat')->nullable(true);
+            // $table->unsignedInteger('rank_overral')->nullable(true);
+            // $table->decimal('points',10,2)->nullable(false);
+            $table->string('record_type',20)->nullable(true);
             $table->timestamps();
         });
     }
