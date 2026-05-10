@@ -18,7 +18,6 @@
         $heats->sortBy('heat_number')->map(fn($heat) => [
             'id'     => $heat->id,
             'number' => $heat->heat_number,
-            // 'status' => $heat->result_status ?? 'pending',
             'lanes'  => $heat->heatLanes->map(fn($lane) => [
                 'lane_id'     => $lane->id,
                 'lane_number' => $lane->lane_number,
@@ -26,13 +25,10 @@
                 'athlete'     => $lane->entry?->athlete?->name ?? null,
                 'club'        => $lane->entry?->athlete?->club?->club_name ?? null,
                 'entry_time'  => $lane?->entry?->seed_time ?? null,
-                // 'result' => $lane->result ? [
-                // 'competition_result_id' => $lane->result->id,
                 'swim_time'     => $lane->swim_time,
                 'status'        => $lane->status,
-                'rank_heat'     => $lane->rank_heat,
+                'rank_heat'     => $lane->rank_in_heat,
                 'record_types'  => explode(',', ($lane->record_type ?? '')),
-                // ] : null,
             ])->values()->toArray(),
         ])->values()->toArray()
     )->toArray();
@@ -50,6 +46,13 @@
 @endphp
 
 <div id="heatMainContent">
+
+    <script id="heatDataScript">
+        var HEATS_DATA      = (@json($heatsData));
+        var RESULT_STATUSES = (@json($resultStatuses));
+        var RECORD_TYPES    = (@json($recordTypes));
+    </script>
+
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
         <div>
             <h5 class="fw-bold mb-1">Manajemen Seri Perlombaan</h5>
@@ -421,9 +424,9 @@
     let _drawerOffset  = 0;
 
     /* ── Data dari Blade ───────────────────────────────────── */
-    const HEATS_DATA = @json($heatsData);
-    const RESULT_STATUSES = @json($resultStatuses);
-    const RECORD_TYPES = @json($recordTypes);
+    // const HEATS_DATA = @json($heatsData);
+    // const RESULT_STATUSES = @json($resultStatuses);
+    // const RECORD_TYPES = @json($recordTypes);
 
     /* ── Buka Drawer ───────────────────────────────────────── */
     window.openResultDrawer = function(roundType) {
@@ -549,14 +552,24 @@
                 ">${label}</button>`;
         }).join('');
 
-        const rankDisplay = (!r.swim_time || status === RESULT_STATUSES['dns'].val || status === RESULT_STATUSES['dq'].val)
-            ? `<span style="color:#adb5bd;font-size:11px">—</span>`
-            : (r.rank_heat
-                ? `<input type="number" min="1"
-                    value="${r.rank_heat}"
-                    onchange="updateRank(${heatIdx},${li},this.value)"
-                    style="width:32px;text-align:center;border:0.5px solid #dee2e6;border-radius:4px;padding:2px;font-size:12px;background:#fff">`
-                : `<span style="color:#adb5bd;font-size:11px">—</span>`);
+        // const rankDisplay = (!r.swim_time || status === RESULT_STATUSES['dns'].val || status === RESULT_STATUSES['dq'].val)
+        //     ? `<span style="color:#adb5bd;font-size:11px">—</span>`
+        //     : (r.rank_heat
+        //         ? `<input type="number" min="1"
+        //             value="${r.rank_heat}"
+        //             onchange="updateRank(${heatIdx},${li},this.value)"
+        //             style="width:32px;text-align:center;border:0.5px solid #dee2e6;border-radius:4px;padding:2px;font-size:12px;background:#fff">`
+        //         : `<span style="color:#adb5bd;font-size:11px">—</span>`);
+        const rankDisplay = (!r.swim_time || status === RESULT_STATUSES['dns'].val || status === RESULT_STATUSES['dq'].val || status === RESULT_STATUSES['dnf'].val)
+            ? `<span style="color:#adb5bd; font-size:11px">—</span>`
+            : (r.rank_heat ? `<span style="
+                        display:inline-flex; align-items:center; justify-content:center;
+                        width:24px; height:24px; border-radius:50%;
+                        background:#E6F1FB; color:#0C447C;
+                        font-size:11px; font-weight:600">
+                        ${r.rank_heat}
+                    </span>`
+                : `<span style="color:#adb5bd; font-size:11px">—</span>`);
 
         const athleteDisplay = lane.athlete
             ? `<div style="font-size:12px;font-weight:500;color:#212529">${lane.athlete}</div>
@@ -615,10 +628,10 @@
         renderDrawerHeat(heatIdx);
     };
 
-    window.updateRank = function(heatIdx, laneIdx, value) {
-        const lane = _heatsInRound[heatIdx].lanes[laneIdx];
-        lane.rank_heat = parseInt(value) || null;
-    };
+    // window.updateRank = function(heatIdx, laneIdx, value) {
+    //     const lane = _heatsInRound[heatIdx].lanes[laneIdx];
+    //     lane.rank_heat = parseInt(value) || null;
+    // };
 
     window.toggleRecordTag = function(heatIdx, laneIdx, tag, btn) {
         const lane = _heatsInRound[heatIdx].lanes[laneIdx];
@@ -637,17 +650,40 @@
         }
     };
 
+    function timeToMs(timeStr) {
+        if (!timeStr) return Infinity;
+        const parts = timeStr.split(':');
+        if (parts.length === 2) {
+            const minutes = parseInt(parts[0]);
+            const [secs, ms] = parts[1].split('.');
+            return (minutes * 60 * 100) + (parseInt(secs) * 100) + parseInt(ms ?? 0);
+        } else {
+            const [secs, ms] = parts[0].split('.');
+            return (parseInt(secs) * 100) + parseInt(ms ?? 0);
+        }
+    }
+
     /* ── Hitung Rank Otomatis ──────────────────────────────── */
     function calcRanks(lanes) {
+        lanes.forEach(l => l.rank_heat = null);
+
         const valid = lanes.filter(l =>
-            l.status !== RESULT_STATUSES['dns'].val &&
-            l.status !== RESULT_STATUSES['dnf'].val  &&
-            l.status !== RESULT_STATUSES['dq'].val  &&
+            l.status === RESULT_STATUSES['valid'].val &&
             l.swim_time
         );
-        valid.sort((a, b) => a.swim_time.localeCompare(b.swim_time));
-        lanes.forEach(l => { if (!l.swim_time && !l.status) l.rank_heat = null; });
-        valid.forEach((l, i) => { l.rank_heat = i + 1; });
+        valid.sort((a, b) => timeToMs(a.swim_time) - timeToMs(b.swim_time));
+        // valid.sort((a, b) => a.swim_time.localeCompare(b.swim_time));
+        // lanes.forEach(l => { if (!l.swim_time && !l.status) l.rank_heat = null; });
+        // valid.forEach((l, i) => { l.rank_heat = i + 1; });
+        let rank = 1;
+        valid.forEach((l, i) => {
+            if (i > 0 && timeToMs(l.swim_time) === timeToMs(valid[i-1].swim_time)) {
+                l.rank_heat = valid[i-1].rank_heat;
+            } else {
+                l.rank_heat = rank;
+            }
+            rank++;
+        });
     }
 
     window.recalcAndRender = function(heatIdx) {
@@ -668,6 +704,7 @@
 
     /* ── Save (stub — isi action nanti) ────────────────────── */
     window.saveHeatResult = function() {
+        const eventId = document.getElementById('heat_competition_event_id')?.selectedOptions[0]?.value ?? '';
         const heat    = _heatsInRound[_activeHeatIdx];
         const payload = heat.lanes.map(l => ({
                 lane_id:       l.lane_id,
@@ -688,7 +725,6 @@
                     icon:'success',
                     title:data.message || 'Sukses'
                 });
-                // reloadHeatTab(eventId);
                 const note = document.getElementById('drawerFooterNote');
                 note.textContent = 'Hasil disimpan!';
                 note.style.color = '#0F6E56';
@@ -696,6 +732,8 @@
                     note.textContent = 'Rank dihitung otomatis dari waktu finish. Bisa di-override manual.';
                     note.style.color = '';
                 }, 2500);
+                reloadHeatTab(eventId);
+
             }else{
                 Toast.fire({
                     icon:'error',
@@ -727,6 +765,7 @@
         .then(r => r.json())
         .then(data => {
             if (data.status){
+                reloadHeatTab(eventId);
                 Toast.fire({
                     icon:'success',
                     title:data.message || 'Sukses'
@@ -746,6 +785,7 @@
         });
     };
 
+    $(document).off('input', '.swim_time_input');
     $(document).on('input', '.swim_time_input', function(){
         let digits = this.value.replace(/\D/g, '');
         digits = digits.slice(0, 6);

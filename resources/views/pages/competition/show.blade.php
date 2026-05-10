@@ -1128,10 +1128,24 @@
             fetch(url)
                 .then(r => r.text())
                 .then(html => {
-                    const container = document.getElementById('heatMainContent');
-                    container.innerHTML = html;
-                    executeScripts(container);
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const newContent = doc.getElementById('heatMainContent');
+                    const oldContent = document.getElementById('heatMainContent');
+
+                    if (newContent && oldContent) {
+                        oldContent.replaceWith(newContent);
+                    }
+
+                    executeScripts(newContent);
                     initHeatTabs();
+
+                    // Jika drawer masih terbuka, refresh datanya
+                    if (document.getElementById('resultDrawer').style.transform === 'translateX(0px)') {
+                        const activeRound = document.querySelector('.tab-round-btn[style*="2563EB"]')?.dataset.round;
+                        if (activeRound) openResultDrawer(activeRound);
+                    }
                 });
         }
 
@@ -1353,5 +1367,43 @@
                     '<i class="bi bi-grid me-1"></i> Generate Seri';
             });
         }
+
+        // promote athletes
+        // function promoteAthletes (round) {
+        //     console.log('berhasil')
+        //     const eventId = document.getElementById('heat_competition_event_id')?.selectedOptions[0]?.value ?? '';
+        //     const payload = {
+        //         competition_event_id: eventId,
+        //         round_type: round
+        //     }
+
+        //     // fetch(HEAT_CONFIG.promoteAtletUrl, {
+        //     fetch(cfg('promoteAtletUrl'), {
+        //         method: 'POST',
+        //         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+        //         body: JSON.stringify(payload),
+        //     })
+        //     .then(r => r.json())
+        //     .then(data => {
+        //         if (data.status){
+        //             reloadHeatTab(eventId);
+        //             Toast.fire({
+        //                 icon:'success',
+        //                 title:data.message || 'Sukses'
+        //             });
+        //         }else{
+        //             Toast.fire({
+        //                 icon:'error',
+        //                 title:data.message || 'Gagal'
+        //             });
+        //         }
+        //     })
+        //     .catch(() => {
+        //         Toast.fire({
+        //             icon:'error',
+        //             title:'Gagal generate seri. Silakan coba lagi.'
+        //         });
+        //     });
+        // };
     </script>
 @endpush

@@ -443,17 +443,17 @@ class CompetitionHeatLaneController extends Controller
             $rdLolos = $roundDest->qualify_count;
 
             DB::beginTransaction();
-            foreach ($req->all() as $key => $row) {
-                $item = $row['competition_result_id'] ? CompetitionResult::find($row['competition_result_id']) : new CompetitionResult;
-                $item->competition_heat_lane_id = $row['lane_id'];
-                $item->swim_time = $row['swim_time'] ?? null;
-                $item->status = $row['status'];
-                $item->rank_in_heat = $row['rank_heat'] ?? null;
-                // $item->rank_overral =
-                // $item->points =
-                $item->record_type = !empty($row['record_types']) ? implode(',' , array_filter($row['record_types'])) : null;
-                $item->save();
-            }
+            // foreach ($req->all() as $key => $row) {
+            //     $item = $row['competition_result_id'] ? CompetitionResult::find($row['competition_result_id']) : new CompetitionResult;
+            //     $item->competition_heat_lane_id = $row['lane_id'];
+            //     $item->swim_time = $row['swim_time'] ?? null;
+            //     $item->status = $row['status'];
+            //     $item->rank_in_heat = $row['rank_heat'] ?? null;
+            //     // $item->rank_overral =
+            //     // $item->points =
+            //     $item->record_type = !empty($row['record_types']) ? implode(',' , array_filter($row['record_types'])) : null;
+            //     $item->save();
+            // }
 
             DB::commit();
             return response()->json([
