@@ -44,8 +44,6 @@ class CompetitionHeatLaneController extends Controller
         ->get()
         ->keyBy('round_type');
 
-        // dd($roundConfig);
-
         return view('pages.competition.tabs.heats', compact(
             'competition',
             'event',
@@ -56,124 +54,6 @@ class CompetitionHeatLaneController extends Controller
             'roundConfig'
         ));
     }
-    // public function generateHeat(Competition $competition){
-    //     $events = $competition->events;
-    //     $roundType = 'PRELIM';
-
-    //     $result = [];
-    //     foreach ($events as $index => $event) {
-    //        $result[$index]['competition_event_id'] = $event->id;
-    //        $result[$index]['heats'] = $this->generateHeatByEvent($event);
-    //     }
-
-    //     if(empty($result)){
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Tidak ditemukan data entry yang aktif'
-    //         ]);
-    //     }
-
-    //     foreach ($result as $res) {
-    //         if(!$res['heats']) continue;
-    //         foreach ($res['heats'] as $heat) {
-    //             $heatId = CompetitionHeat::create([
-    //                 'competition_event_id' => $res['competition_event_id'],
-    //                 'heat_number' => $heat['heat_number'],
-    //                 'round_type' => $roundType
-    //             ])->id;
-    //             foreach($heat['lanes'] as $index => $lane){
-    //                 CompetitionHeatLane::create([
-    //                     'competition_heat_id' => $heatId,
-    //                     'competition_entry_id' => $lane['entry_id'],
-    //                     'lane_number' => $lane['lane_number'],
-    //                     'lane_order' => $index+1,
-    //                 ]);
-    //             }
-    //         }
-    //     }
-    //     return response()->json([
-    //         'status' => true,
-    //         'message' => 'Heat dan lane berhasil dibuat'
-    //     ]);
-    // }
-    // public function generateHeatByEvent(CompetitionEvent $event){
-    //     $totalLanes = $event->competitionSession->pool->total_lanes;
-
-    //     $entries = $event->entries()
-    //             ->where('status', CompetitionTeamEntryStatus::Active->value)
-    //             ->get();
-    //     if ($entries->isEmpty()) return;
-
-    //     $orderedEntry = $entries->sortByDesc(function ($e) {
-    //         if (!$e->seed_time) return PHP_INT_MAX; // null = paling lambat
-
-    //         [$minute, $second] = explode(':', $e->seed_time);
-    //         return ((int) $minute * 60) + (float) $second;
-    //     })->values();
-
-    //     $totalEntry = $orderedEntry->count();
-    //     $sisa = $totalEntry % $totalLanes;
-
-    //     if($totalEntry <= $totalLanes){
-    //         $assignEntryToHeat = collect([$orderedEntry]);
-    //     }else if ($sisa > 0 && $sisa <= (int) floor($totalLanes / 2)) {
-    //         // Jika sisa ≤ setengah lane, redistribusi 2 heat pertama
-    //         $twoHeatTotal  = $sisa + $totalLanes; // gabung 2 heat pertama
-    //         $firstCount    = (int) floor($twoHeatTotal / 2);
-    //         $secondCount   = (int) ceil($twoHeatTotal / 2);
-
-    //         $firstHeat     = $orderedEntry->slice(0, $firstCount)->values();
-    //         $secondHeat    = $orderedEntry->slice($firstCount, $secondCount)->values();
-    //         $restOfHeats   = $orderedEntry->slice($firstCount + $secondCount)->chunk($totalLanes);
-
-    //         $assignEntryToHeat = collect([$firstHeat, $secondHeat])->merge($restOfHeats);
-    //     } else {
-    //         // Sisa cukup banyak, heat pertama pakai sisa
-    //         $firstHeat         = $orderedEntry->slice(0, $sisa ?: $totalLanes)->values();
-    //         $restOfHeats       = $orderedEntry->slice($sisa ?: $totalLanes)->chunk($totalLanes);
-    //         $assignEntryToHeat = collect([$firstHeat])->merge($restOfHeats);
-    //     }
-
-    //     $lanes = $this->generateSnakeLanes($totalLanes);
-
-
-    //     $arrHeats = [];
-    //     foreach($assignEntryToHeat as $heatIndex => $entry){
-    //         $arrHeats[$heatIndex]['heat_number'] = $heatIndex + 1;
-    //         $entry = $entry->sortBy(function ($e) {
-    //             if (!$e->seed_time) return PHP_INT_MAX;
-    //             [$minute, $second] = explode(':', $e->seed_time);
-    //             return ((int)$minute * 60) + (float)$second;
-    //         })->values();
-
-    //         foreach ($entry->values() as $laneIndex => $item) {
-    //             $lane = $lanes[$laneIndex];
-    //             $arrHeats[$heatIndex]['lanes'][$laneIndex]['lane_number'] = $lane;
-    //             $arrHeats[$heatIndex]['lanes'][$laneIndex]['entry_id'] = $item->id;
-    //             $arrHeats[$heatIndex]['lanes'][$laneIndex]['seed_time'] = $item->seed_time;
-    //         }
-    //     }
-    //     return $arrHeats;
-    // }
-
-    // private function generateSnakeLanes(int $totalLanes): array{
-    //     $lanes = [];
-    //     $mid   = (int) floor(($totalLanes + 1) / 2); // 8→4, 6→3...
-    //     if ($totalLanes % 2 === 0) {
-    //         $mid = $totalLanes / 2; // 8→4, 6→3
-    //     }
-    //     $left = $mid;
-    //     $right = $mid + 1;
-
-    //     $lanes[] = $mid;
-
-    //     while (count($lanes) < $totalLanes) {
-    //         if ($right <= $totalLanes) { $lanes[] = $right++; }
-    //         if ($left > 1)             { $lanes[] = --$left;  }
-    //     }
-    //     return $lanes;
-    // }
-
     public function generate(Competition $competition, Request $request)
     {
         $request->validate([
@@ -196,107 +76,112 @@ class CompetitionHeatLaneController extends Controller
         if ($entries->isEmpty()) {
             return response()->json([
                 'status' => false,
-                'messsage' => 'Data entri atlet tidak ditemukan'
+                'message' => 'Data entri atlet tidak ditemukan'
             ]);
         };
 
-        // Hapus heats lama jika ada
-        foreach ($event->heats as $heat) {
-            $heat->heatLanes()->delete();
-        }
-        $event->heats()->delete();
-        // end Hapus heats lama jika ada
+        try {
+                //code...
+            $orderedEntry = $entries->sortBy(fn ($e) => $this->swimTimeToCs($e->seed_time))->values();
 
-        // $orderedEntry = $entries->sortByDesc(function ($e) {
-        $orderedEntry = $entries->sortBy(function ($e) {
-            if (!$e->seed_time) return PHP_INT_MAX; // null = paling lambat
+            // Generate hanya untuk ronde pertama (penyisihan/final)
+            // Ronde berikutnya diisi via "Promosi Atlet"
+            $firstRound = $request->rounds[0];
+            $usedLanes  = min($firstRound['lanes'], $totalLanes);
 
-            [$minute, $second] = explode(':', $e->seed_time);
-            return ((int) $minute * 60) + (float) $second;
-        })->values();
+            $activeLanes = $this->getActiveLanes($usedLanes, $totalLanes);
+            $laneOrder   = $this->getCircleSeedOrder($activeLanes);
 
-        // Generate hanya untuk ronde pertama (penyisihan/final)
-        // Ronde berikutnya diisi via "Promosi Atlet"
-        $firstRound = $request->rounds[0];
-        $usedLanes  = min($firstRound['lanes'], $totalLanes);
+            // Distribute atlet — terkencang di heat terakhir
+            $chunks = $orderedEntry->chunk($usedLanes)->values();
 
-        $activeLanes = $this->getActiveLanes($usedLanes, $totalLanes);
-        $laneOrder   = $this->getCircleSeedOrder($activeLanes);
+            $lastHeatChunk = $chunks->last();
+            $secondLastIndex = $chunks->count() - 2;
+            // $threshold = (int) ceil($usedLanes / 2);
+            $threshold = 3;
 
-        // Distribute atlet — terkencang di heat terakhir
-        $chunks = $orderedEntry->chunk($usedLanes)->values();
+            if($lastHeatChunk->count() < $threshold && $chunks->count() > 1){
+                $secondLastChunk = $chunks->get($secondLastIndex);
 
-        $lastHeatChunk = $chunks->last();
-        $secondLastIndex = $chunks->count() - 2;
-        // $threshold = (int) ceil($usedLanes / 2);
-        $threshold = 3;
+                if($secondLastChunk){
+                    $combined = $secondLastChunk->merge($lastHeatChunk);
+                    $half = (int) ($combined->count() - 3);
 
-        if($lastHeatChunk->count() < $threshold && $chunks->count() > 1){
-            $secondLastChunk = $chunks->get($secondLastIndex);
+                    $newSecondLast = $combined->slice(0,$half)->values();
+                    $newLast = $combined->slice($half)->values();
 
-            if($secondLastChunk){
-                $combined = $secondLastChunk->merge($lastHeatChunk);
-                // $half = (int) ceil($combined->count() / 2);
-                $half = (int) ($combined->count() - 3);
+                    $lastIndex = $chunks->count()-1;
 
-                $newSecondLast = $combined->slice(0,$half)->values();
-                $newLast = $combined->slice($half)->values();
-
-                $lastIndex = $chunks->count()-1;
-
-                $chunks = $chunks->map(function($chunk, $index) use ($newSecondLast, $newLast, $secondLastIndex, $lastIndex){
-                    if($index === $secondLastIndex) return $newSecondLast;
-                    if($index === $lastIndex) return $newLast;
-                    return $chunk;
-                })->values();
+                    $chunks = $chunks->map(function($chunk, $index) use ($newSecondLast, $newLast, $secondLastIndex, $lastIndex){
+                        if($index === $secondLastIndex) return $newSecondLast;
+                        if($index === $lastIndex) return $newLast;
+                        return $chunk;
+                    })->values();
+                }
             }
-        }
 
-        foreach ($chunks as $heatIndex => $chunk) {
-            $heat = CompetitionHeat::create([
-                'competition_event_id' => $event->id,
-                'heat_number'          => $chunks->count() - $heatIndex,
-                'round_type'           => $firstRound['type'],
-            ]);
-
-            foreach ($chunk->values() as $lane => $entry) {
-                CompetitionHeatLane::create([
-                    'competition_heat_id'  => $heat->id,
-                    'competition_entry_id' => $entry->id,
-                    'lane_number'          => $laneOrder[$lane],
-                    'lane_order'           => $lane + 1,
-                    'seed_time'            => $entry->seed_time,
-                ]);
+            DB::beginTransaction();
+            // Hapus heats lama jika ada
+            foreach ($event->heats as $heat) {
+                $heat->heatLanes()->delete();
             }
-        }
+            $event->heats()->delete();
+            // end Hapus heats lama jika ada
 
-        // Simpan konfigurasi round berikutnya ke db
-        // agar saat "Promosi Atlet" diklik, sistem tahu konfigurasinya
-        $incomingTypes = collect($request->rounds)->pluck('type');
-        EventRoundConfig::where('competition_event_id', $event->id)
-            ->whereNotIn('round_type', $incomingTypes)
-            ->delete();
-
-        foreach ($request->rounds as $orderNumber => $round) {
-            $usedLaneBaseRound = min($round['lanes'], $totalLanes);
-            EventRoundConfig::updateOrCreate(
-                [
+            foreach ($chunks as $heatIndex => $chunk) {
+                $heat = CompetitionHeat::create([
                     'competition_event_id' => $event->id,
-                    'round_type' => $round['type'],
-                ],
-                [
-                    'used_lanes' => $usedLaneBaseRound,
-                    'qualify_count' => $round['lolos'] ?? null,
-                    'order' => $orderNumber+1
-                ]
-            );
-        }
-        // end Simpan konfigurasi round berikutnya ke db
+                    'heat_number'          => $chunks->count() - $heatIndex,
+                    'round_type'           => $firstRound['type'],
+                ]);
 
-        return response()->json([
-            'status' => true,
-            'messsage' => 'Sukses generate seri'
-        ]);
+                foreach ($chunk->values() as $lane => $entry) {
+                    CompetitionHeatLane::create([
+                        'competition_heat_id'  => $heat->id,
+                        'competition_entry_id' => $entry->id,
+                        'lane_number'          => $laneOrder[$lane],
+                        'lane_order'           => $lane + 1,
+                        'seed_time'            => $entry->seed_time,
+                    ]);
+                }
+            }
+
+            // Simpan konfigurasi round berikutnya ke db
+            // agar saat "Promosi Atlet" diklik, sistem tahu konfigurasinya
+            $incomingTypes = collect($request->rounds)->pluck('type');
+            EventRoundConfig::where('competition_event_id', $event->id)
+                ->whereNotIn('round_type', $incomingTypes)
+                ->delete();
+
+            foreach ($request->rounds as $orderNumber => $round) {
+                $usedLaneBaseRound = min($round['lanes'], $totalLanes);
+                EventRoundConfig::updateOrCreate(
+                    [
+                        'competition_event_id' => $event->id,
+                        'round_type' => $round['type'],
+                    ],
+                    [
+                        'used_lanes' => $usedLaneBaseRound,
+                        'qualify_count' => $round['lolos'] ?? null,
+                        'order' => $orderNumber+1
+                    ]
+                );
+            }
+            // end Simpan konfigurasi round berikutnya ke db
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'messsage' => 'Sukses generate seri'
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'messsage' => substr($th->getMessage(),0,150)
+            ]);
+        }
     }
 
     private function getActiveLanes(int $used, int $total): array
@@ -375,6 +260,8 @@ class CompetitionHeatLaneController extends Controller
             '*.rank_heat' => 'nullable',
             '*.record_types' => 'nullable|array',
             '*.record_types.*' => ['nullable', new Enum(RecordTypeEnum::class)]
+        ], [
+            '*.swim_time.regex' => 'Format waktu renang / waktu finish tidak sesuai'
         ]);
 
         if($validators->fails()){
@@ -424,41 +311,131 @@ class CompetitionHeatLaneController extends Controller
 
         try {
             $roundType = $req->round_type;
-            $event = CompetitionEvent::with(['configs','heats.heatLanes'])
+            $event = CompetitionEvent::with(['configs','heats'])
                     ->findOrFail($req->competition_event_id);
-            $roundDest = $event->configs->where('round_type', $roundType)->first();
-            $roundBefore = $event->configs->where('order', (int) $roundDest->order - 1)->first();
+            $totalLanes = $event->competitionSession->pool->total_lanes ?? 8;
+
+            $roundDest = $event->configs
+                        ->where('round_type', $roundType)
+                        ->first();
+
+            if (!$roundDest) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Konfigurasi ronde tujuan tidak ditemukan.',
+                ]);
+            }
+
+            $roundBefore = $event->configs
+                        ->where('order', (int) $roundDest->order - 1)
+                        ->first();
+
+            if (!$roundBefore) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Konfigurasi ronde sebelumnya tidak ditemukan.',
+                ]);
+            }
+
             $rbType = $roundBefore->round_type;
             $rbLolos = $roundBefore->qualify_count;
-            $rbHeats = $event->heats()->where('round_type', $rbType)->get();
 
             if(!$this->checkResults($req->competition_event_id, $rbType)){
                 return response()->json([
                     'status' => false,
-                    'message' => 'Terjadi kesalahan, terdeteksi hasil ronde sebelumnya belum lengkap'
+                    'message' => 'Gagal, karena hasil ronde sebelumnya belum lengkap'
                 ]);
             }
 
-            $rdUsedLanes = $roundDest->used_lanes;
-            $rdLolos = $roundDest->qualify_count;
+            $heatIds = $event->heats
+                        ->where('round_type', $rbType)
+                        ->pluck('id');
+
+            $results = CompetitionHeatLane::whereIn('competition_heat_id', $heatIds)
+            ->where('status', CompetitionResultStatus::valid->value)
+            ->whereNotNull('swim_time')
+            ->get();
+
+            if ($results->isEmpty()) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Tidak ada hasil valid dari ronde sebelumnya.',
+                ]);
+            }
+
+            $ranked = $results
+                        ->sortBy(fn ($e) => $this->swimTimeToCs($e->swim_time))
+                        ->values();
+
+            if ($rbLolos === null) { // Tidak ada kuota → semua atlet valid lolos
+                $qualifiers = $ranked;
+            } else {
+                $cutoffLane = $ranked->get($rbLolos - 1);
+
+                if (!$cutoffLane) { // Jumlah atlet valid < kuota → semua lolos
+                    $qualifiers = $ranked;
+                } else {
+                    $cutoffCs = $this->swimTimeToCs($cutoffLane->swim_time);
+                    // Loloskan semua atlet dengan waktu <= cutoff (tie ikut lolos)
+                    $qualifiers = $ranked
+                                    ->filter(fn($lane) => $this->swimTimeToCs($lane->swim_time) <= $cutoffCs)
+                                    ->values();
+                }
+            }
+
+            if ($qualifiers->isEmpty()) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Tidak ada atlet yang memenuhi syarat untuk dipromosikan.',
+                ]);
+            }
+
+            $usedLanes = min(($roundDest->used_lanes ?? $totalLanes), $totalLanes);
+            $totalHeats  = (int) ceil($qualifiers->count() / $usedLanes);
+            // $rdLolos = $roundDest->qualify_count;
+
+            // ── Distribusi zigzag ke heat (standar FINA) ──────────────────
+            $heats = $this->distributeZigzag($qualifiers->all(), $totalHeats);
+
+            // ── Lane assignment (circle seeding, sama seperti prelim) ─────
+            $activeLanes = $this->getActiveLanes($usedLanes, $totalLanes);
+            $laneOrder   = $this->getCircleSeedOrder($activeLanes);
+
+            // ── Hapus heat lama di ronde tujuan jika ada ──────────────────
+            $existingHeats = $event->heats->where('round_type', $roundType);
+            foreach ($existingHeats as $heat) {
+                $heat->heatLanes()->delete();
+            }
+            $event->heats()->where('round_type', $roundType)->delete();
 
             DB::beginTransaction();
-            // foreach ($req->all() as $key => $row) {
-            //     $item = $row['competition_result_id'] ? CompetitionResult::find($row['competition_result_id']) : new CompetitionResult;
-            //     $item->competition_heat_lane_id = $row['lane_id'];
-            //     $item->swim_time = $row['swim_time'] ?? null;
-            //     $item->status = $row['status'];
-            //     $item->rank_in_heat = $row['rank_heat'] ?? null;
-            //     // $item->rank_overral =
-            //     // $item->points =
-            //     $item->record_type = !empty($row['record_types']) ? implode(',' , array_filter($row['record_types'])) : null;
-            //     $item->save();
-            // }
+            foreach ($heats as $heatNumber => $lanes) {
+                $heat = CompetitionHeat::create([
+                    'competition_event_id' => $event->id,
+                    'heat_number'          => $heatNumber,
+                    'round_type'           => $roundType,
+                ]);
+
+                $lanesSorted = collect($lanes)
+                                ->sortBy(fn($lane) => $this->swimTimeToCs($lane->swim_time))
+                                ->values();
+
+                foreach ($lanesSorted as $laneIdx => $prevLane) {
+                    CompetitionHeatLane::create([
+                        'competition_heat_id'  => $heat->id,
+                        'competition_entry_id' => $prevLane->competition_entry_id,
+                        'lane_number'          => $laneOrder[$laneIdx] ?? ($laneIdx + 1),
+                        'lane_order'           => $laneIdx + 1,
+                        // swim_time ronde sebelumnya jadi seed_time ronde berikutnya
+                        // 'seed_time'            => $prevLane->swim_time,
+                    ]);
+                }
+            }
 
             DB::commit();
             return response()->json([
                 'status' => true,
-                'message' => 'Berhasil input hasil'
+                'message' => 'Berhasil promosi atlet'
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -486,5 +463,45 @@ class CompetitionHeatLaneController extends Controller
         ->count();
 
         return $isValid === 0 ? true : false;
+    }
+
+    private function swimTimeToCs(?string $time): int{
+        // detik ke centi detik
+        if (!$time) return PHP_INT_MAX;
+
+        if (str_contains($time, ':')) {
+            [$min, $rest] = explode(':', $time, 2);
+            [$sec, $cs]   = array_pad(explode('.', $rest, 2), 2, '0');
+        } else {
+            [$sec, $cs]   = array_pad(explode('.', $time, 2), 2, '0');
+            $min          = 0;
+        }
+
+        $cs = substr(str_pad($cs, 2, '0'), 0, 2);
+
+        return ((int)$min * 60 * 100)
+            + ((int)$sec * 100)
+            + (int)$cs;
+    }
+
+    // ============================================================
+    // HELPER: distribusi zigzag atlet ke heat (standar FINA)
+    // Contoh 9 atlet, 3 heat:
+    //   rank 1 → heat 3, rank 2 → heat 2, rank 3 → heat 1
+    //   rank 4 → heat 3, rank 5 → heat 2, rank 6 → heat 1
+    //   rank 7 → heat 3, rank 8 → heat 2, rank 9 → heat 1
+    // ============================================================
+    private function distributeZigzag(array $qualifiers, int $totalHeats): array
+    {
+        $heats = array_fill(1, $totalHeats, []);
+
+        foreach ($qualifiers as $index => $lane) {
+            $posInCycle = $index % $totalHeats;
+            $heatNumber = $totalHeats - $posInCycle;
+
+            $heats[$heatNumber][] = $lane;
+        }
+
+        return $heats;
     }
 }

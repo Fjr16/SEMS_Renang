@@ -139,12 +139,6 @@
     <div class="tab-pane fade" id="entries" role="tabpanel"></div>
     {{-- heats & lanes --}}
     <div class="tab-pane fade" id="heat_lanes" role="tabpanel"></div>
-
-    <!-- Heats -->
-    {{-- <div class="tab-pane fade" id="heats" role="tabpanel" data-url="{{ route('competition.tab.heats', $competition) }}"></div> --}}
-    {{-- <div class="tab-pane fade" id="heats" role="tabpanel">
-      @include('pages.competition.tabs.heats')
-    </div> --}}
   </div>
 </div>
 @endsection
@@ -971,7 +965,6 @@
 
                     const value = $(this).val();
                     const entryId = $(this).data('entry-id');
-                    console.log(value,entryId);
 
                     showSpinner();
                     try {
@@ -1137,6 +1130,12 @@
                     if (newContent && oldContent) {
                         oldContent.replaceWith(newContent);
                     }
+                    const freshMeta = document.getElementById('heatMainContent');
+                    if (freshMeta) {
+                        window.HEAT_CONFIG.poolLanes  = parseInt(freshMeta.dataset.poolLanes);
+                        window.HEAT_CONFIG.totalAtlet = parseInt(freshMeta.dataset.totalAtlet);
+                        window.HEAT_CONFIG.eventId    = parseInt(freshMeta.dataset.eventId);
+                    }
 
                     executeScripts(newContent);
                     initHeatTabs();
@@ -1278,7 +1277,7 @@
         async function resetHeatConfig() {
             const { resetUrl, eventId } = getConfig();
             const confirm = await Swal.fire({
-                text: "Reset konfigurasi seri acara ini ? Data seri dan lintasan yang sudah di-generate akan dihapus.",
+                text: "Reset konfigurasi seri acara ini ? Data seri, lintasan beserta hasil yang sudah di-generate akan dihapus.",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
@@ -1296,7 +1295,6 @@
                             event_id:eventId,
                         })
                     });
-                    console.log(res);
                     if (!res.ok) throw new Error("Terjadi Kesalahan pada server");
                     const result = await res.json();
                     if (!result.status) {
@@ -1342,7 +1340,11 @@
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
                 body: JSON.stringify({ event_id: eventId, rounds }),
             })
-            .then(r => r.json())
+            .then(async r => {
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.message || 'Terjadi kesalahan pada server');
+                return data;
+            })
             .then(data => {
                 if (data.status){
                     Toast.fire({
@@ -1353,57 +1355,23 @@
                 }else{
                     Toast.fire({
                         icon:'error',
-                        title:error.message || 'Gagal'
+                        title:data.message || 'Gagal'
                     });
+
+                    document.getElementById('btnGenerateHeat').disabled = false;
+                    document.getElementById('btnGenerateHeat').innerHTML =
+                        '<i class="bi bi-grid me-1"></i> Generate Seri';
                 }
             })
-            .catch(() => {
+            .catch(error => {
                 Toast.fire({
                     icon:'error',
-                    title:'Gagal generate seri. Silakan coba lagi.'
+                    title:error.message || 'Gagal generate seri. Silakan coba lagi.'
                 });
                 document.getElementById('btnGenerateHeat').disabled = false;
                 document.getElementById('btnGenerateHeat').innerHTML =
                     '<i class="bi bi-grid me-1"></i> Generate Seri';
             });
         }
-
-        // promote athletes
-        // function promoteAthletes (round) {
-        //     console.log('berhasil')
-        //     const eventId = document.getElementById('heat_competition_event_id')?.selectedOptions[0]?.value ?? '';
-        //     const payload = {
-        //         competition_event_id: eventId,
-        //         round_type: round
-        //     }
-
-        //     // fetch(HEAT_CONFIG.promoteAtletUrl, {
-        //     fetch(cfg('promoteAtletUrl'), {
-        //         method: 'POST',
-        //         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
-        //         body: JSON.stringify(payload),
-        //     })
-        //     .then(r => r.json())
-        //     .then(data => {
-        //         if (data.status){
-        //             reloadHeatTab(eventId);
-        //             Toast.fire({
-        //                 icon:'success',
-        //                 title:data.message || 'Sukses'
-        //             });
-        //         }else{
-        //             Toast.fire({
-        //                 icon:'error',
-        //                 title:data.message || 'Gagal'
-        //             });
-        //         }
-        //     })
-        //     .catch(() => {
-        //         Toast.fire({
-        //             icon:'error',
-        //             title:'Gagal generate seri. Silakan coba lagi.'
-        //         });
-        //     });
-        // };
     </script>
 @endpush

@@ -14,6 +14,17 @@
 </script>
 
 @php
+    $resultStatuses = collect(App\Enums\CompetitionResultStatus::cases())
+    ->mapWithKeys(fn($case) => [
+        $case->value => [
+            'val' => $case->value,
+            'label' => $case->shortLabel(),
+            'style' => $case->styles(),
+        ]
+    ]);
+    $recordTypes = collect(App\Enums\RecordTypeEnum::cases())
+    ->mapWithKeys(fn($case) => [$case->value => $case->shortLabel()]);
+
     $heatsData = $heatsByRound->map(fn($heats) =>
         $heats->sortBy('heat_number')->map(fn($heat) => [
             'id'     => $heat->id,
@@ -26,32 +37,26 @@
                 'club'        => $lane->entry?->athlete?->club?->club_name ?? null,
                 'entry_time'  => $lane?->entry?->seed_time ?? null,
                 'swim_time'     => $lane->swim_time,
-                'status'        => $lane->status,
+                'status'        => $lane->status ?? $resultStatuses->keys()->first(),
                 'rank_heat'     => $lane->rank_in_heat,
                 'record_types'  => explode(',', ($lane->record_type ?? '')),
             ])->values()->toArray(),
         ])->values()->toArray()
     )->toArray();
-
-    $resultStatuses = collect(App\Enums\CompetitionResultStatus::cases())
-    ->mapWithKeys(fn($case) => [
-        $case->value => [
-            'val' => $case->value,
-            'label' => $case->shortLabel(),
-            'style' => $case->styles(),
-        ]
-    ]);
-    $recordTypes = collect(App\Enums\RecordTypeEnum::cases())
-    ->mapWithKeys(fn($case) => [$case->value => $case->shortLabel()]);
 @endphp
 
-<div id="heatMainContent">
+<div id="heatMainContent"
+    data-pool-lanes="{{ $totalLanes }}"
+    data-total-atlet="{{ $totalEntries }}"
+    data-event-id="{{ $event->id }}"
+>
 
     <script id="heatDataScript">
         var HEATS_DATA      = (@json($heatsData));
         var RESULT_STATUSES = (@json($resultStatuses));
         var RECORD_TYPES    = (@json($recordTypes));
     </script>
+
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
         <div>
@@ -517,7 +522,7 @@
         `;
 
         // Body tabel
-        calcRanks(heat.lanes);
+        // calcRanks(heat.lanes);
         document.getElementById('drawerTableBody').innerHTML =
             heat.lanes.map((lane, li) => buildLaneRow(lane, li, idx)).join('');
     }
@@ -552,14 +557,6 @@
                 ">${label}</button>`;
         }).join('');
 
-        // const rankDisplay = (!r.swim_time || status === RESULT_STATUSES['dns'].val || status === RESULT_STATUSES['dq'].val)
-        //     ? `<span style="color:#adb5bd;font-size:11px">—</span>`
-        //     : (r.rank_heat
-        //         ? `<input type="number" min="1"
-        //             value="${r.rank_heat}"
-        //             onchange="updateRank(${heatIdx},${li},this.value)"
-        //             style="width:32px;text-align:center;border:0.5px solid #dee2e6;border-radius:4px;padding:2px;font-size:12px;background:#fff">`
-        //         : `<span style="color:#adb5bd;font-size:11px">—</span>`);
         const rankDisplay = (!r.swim_time || status === RESULT_STATUSES['dns'].val || status === RESULT_STATUSES['dq'].val || status === RESULT_STATUSES['dnf'].val)
             ? `<span style="color:#adb5bd; font-size:11px">—</span>`
             : (r.rank_heat ? `<span style="
@@ -599,7 +596,7 @@
                     value="${r.swim_time ?? ''}"
                     placeholder="00:00.00"
                     maxlength="9"
-                    onchange="updateField(${heatIdx},${li},'swim_time',this.value);recalcAndRender(${heatIdx})"
+                    onchange="updateField(${heatIdx},${li},'swim_time',this.value.trim());recalcAndRender(${heatIdx})"
                     style="width:100%;font-size:11px;padding:3px 5px;
                         border:0.5px solid #dee2e6;border-radius:4px;
                         background:${isDis ? '#f8f9fa' : '#fff'};
@@ -668,13 +665,9 @@
         lanes.forEach(l => l.rank_heat = null);
 
         const valid = lanes.filter(l =>
-            l.status === RESULT_STATUSES['valid'].val &&
-            l.swim_time
+            l.status === RESULT_STATUSES['valid'].val && l.swim_time
         );
         valid.sort((a, b) => timeToMs(a.swim_time) - timeToMs(b.swim_time));
-        // valid.sort((a, b) => a.swim_time.localeCompare(b.swim_time));
-        // lanes.forEach(l => { if (!l.swim_time && !l.status) l.rank_heat = null; });
-        // valid.forEach((l, i) => { l.rank_heat = i + 1; });
         let rank = 1;
         valid.forEach((l, i) => {
             if (i > 0 && timeToMs(l.swim_time) === timeToMs(valid[i-1].swim_time)) {
@@ -718,7 +711,11 @@
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
             body: JSON.stringify(payload),
         })
-        .then(r => r.json())
+        .then(async r => {
+            const data = await r.json();
+            if (!r.ok) throw new Error(data.message || 'Terjadi kesalahan pada server');
+            return data;
+        })
         .then(data => {
             if (data.status){
                 Toast.fire({
@@ -737,52 +734,69 @@
             }else{
                 Toast.fire({
                     icon:'error',
-                    title:error.message || 'Gagal'
+                    title:data.message || 'Gagal'
                 });
             }
         })
-        .catch(() => {
+        .catch(error => {
             Toast.fire({
                 icon:'error',
-                title:'Gagal generate seri. Silakan coba lagi.'
+                title:error.message || 'Gagal generate seri. Silakan coba lagi.'
             });
         });
     };
 
     // promote athletes
-    window.promoteAthletes = function(round) {
+    window.promoteAthletes = async function(round) {
         const eventId = document.getElementById('heat_competition_event_id')?.selectedOptions[0]?.value ?? '';
         const payload = {
             competition_event_id: eventId,
             round_type: round
         }
+        const result = await Swal.fire({
+            title: "Yakin generate seri ronde ini sekarang ?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Ya, lanjutkan!",
+            cancelButtonText: "Batal",
+            reverseButtons:true
+        });
 
-        fetch(HEAT_CONFIG.promoteAtletUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
-            body: JSON.stringify(payload),
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.status){
-                reloadHeatTab(eventId);
-                Toast.fire({
-                    icon:'success',
-                    title:data.message || 'Sukses'
-                });
-            }else{
+        if(result.isConfirmed){
+            fetch(HEAT_CONFIG.promoteAtletUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                body: JSON.stringify(payload),
+            })
+            .then(async r => {
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.message || 'Terjadi kesalahan pada server');
+                return data;
+            })
+            .then(data => {
+                if (data.status){
+                    reloadHeatTab(eventId);
+                    Toast.fire({
+                        icon:'success',
+                        title:data.message || 'Sukses'
+                    });
+                }else{
+                    Toast.fire({
+                        icon:'error',
+                        title:data.message || 'Gagal'
+                    });
+                }
+            })
+            .catch(error => {
                 Toast.fire({
                     icon:'error',
-                    title:data.message || 'Gagal'
+                    title:error.message || 'Gagal promosi atet. Silakan coba lagi.'
                 });
-            }
-        })
-        .catch(() => {
-            Toast.fire({
-                icon:'error',
-                title:'Gagal generate seri. Silakan coba lagi.'
             });
-        });
+        }
+
     };
 
     $(document).off('input', '.swim_time_input');
