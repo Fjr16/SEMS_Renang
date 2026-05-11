@@ -89,6 +89,8 @@ class AthleteController extends Controller
             'gender' => ['required', new Enum(Gender::class)],
             'status' => ['nullable', 'in:active,inactive'],
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kota' => 'nullable|string|max:50',
+            'provinsi' => 'nullable|string|max:50',
             'athlete_id' => 'nullable|integer|exists:athletes,id',
         ]);
 
@@ -106,6 +108,8 @@ class AthleteController extends Controller
         $item->gender = $r->gender;
         $item->registration_number = $r->registration_number;
         $item->status = $r->status ? ($r->status === 'active' ? 'active' : 'inactive') : 'inactive';
+        $item->kota = $r->kota;
+        $item->provinsi = $r->provinsi;
         if($r->file('foto')){
             $item->foto = $r->file('foto')->store('club/athlete', 'public');
         }
@@ -176,9 +180,8 @@ class AthleteController extends Controller
         $accessType = 'Guest';
         return view('pages.guest.atlet.index',compact('athletes', 'accessType'));
     }
-    public function showGuest(){
-        return 'berhasil';
-        // $data = Athlete::query()->with('club')->get();
-        // return view('pages.guest.atlet.index',compact('data'));
+    public function showGuest($athlete_id){
+        $data = Athlete::query()->with('club')->find($athlete_id);
+        return view('pages.guest.atlet.show',compact('data'));
     }
 }

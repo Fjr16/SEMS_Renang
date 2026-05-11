@@ -19,6 +19,8 @@ class Athlete extends Model
         'gender',
         'registration_number',
         'status',
+        'kota',
+        'provinsi',
     ];
 
     protected static function booted()

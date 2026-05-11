@@ -52,22 +52,13 @@
         <div class="kvs mt-3">
             <div class="kv"><small>BOD</small>{{ $bodLabel }}</div>
             <div class="kv"><small>Klub</small>{{ $clubCurrent }}</div>
-            {{-- <div class="kv"><small>Kota</small>{{ $a->city_name ?? '-' }}</div> --}}
-            {{-- <div class="kv"><small>Provinsi</small>{{ $a->province_name ?? '-' }}</div> --}}
-        </div>
-
-        <div class="d-flex gap-2 mt-3">
-            <a href="{{ route('guest.atlet.show', $a->id) }}" class="btn btn-outline-secondary w-100">
-            <i class="bi bi-person-vcard me-1"></i>Detail
-            </a>
-            <a href="#" class="btn btn-primary w-100">
-            <i class="bi bi-trophy me-1"></i>Event History
-            </a>
+            {{-- <div class="kv"><small>Kota</small>{{ $a->kota ?? '-' }}</div>
+            <div class="kv"><small>Provinsi</small>{{ $a->provinsi ?? '-' }}</div> --}}
         </div>
 
         <div class="mt-2">
-            <a href="#" class="btn btn-primary w-100">
-            <i class="bi bi-clock me-1"></i>Personal Time
+            <a href="{{ route('guest.atlet.show', $a->id) }}" class="btn btn-primary w-100">
+                <i class="bi bi-person-vcard me-1"></i>Detail
             </a>
         </div>
         </div>

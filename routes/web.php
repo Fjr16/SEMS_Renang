@@ -139,8 +139,6 @@ Route::prefix('/competition/{competition}')->group(function(){
     Route::post('/tab/entries/update-status-entry', [CompetitionTabEntriesController::class, 'updateStatusEntry'])->name('competition.tab.entries.updateStatusEntry');
     Route::delete('/tab/entries/delete-entry/{id}', [CompetitionTabEntriesController::class, 'destroyEntry'])->name('competition.tab.entries.deleteEntry');
 
-    // Route::get('/tab/heats/partial/reload', [CompetitionHeatLaneController::class, 'partialReload'])->name('competition.tab.heats.partial');
-    // Route::get('/tab/heats/partial/reload',    [CompetitionHeatLaneController::class, 'partialReload'])->name('competition.tab.heats.partial');
     // Route::get('/tab/results',  [CompetitionSessionController::class, 'results'])->name('competition.tab.results');
     // Route::get('/tab/points',   [CompetitionSessionController::class, 'points'])->name('competition.tab.points');
     // Route::get('/tab/officials',[CompetitionSessionController::class, 'officials'])->name('competition.tab.officials');
@@ -156,7 +154,7 @@ Route::prefix('/competition/{competition}')->group(function(){
 
 Route::prefix('/guest')->group(function(){
     Route::get('/atlet', [AthleteController::class, 'indexGuest'])->name('guest.atlet.index');
-    Route::get('/atlet/show', [AthleteController::class, 'showGuest'])->name('guest.atlet.show');
+    Route::get('/atlet/show/{athlete_id}', [AthleteController::class, 'showGuest'])->name('guest.atlet.show');
     Route::get('/competition', [CompetitionEntryController::class, 'indexGuest'])->name('guest.competition.index');
     // Route::get('/competition/show', [CompetitionEntryController::class, 'showGuest'])->name('guest.competition.show');
 });

@@ -193,16 +193,16 @@
 
 {{-- =================== REGISTRATION HUB =================== --}}
 <div class="row g-3">
-  <div class="col-12 col-lg-7">
+  <div class="col-12 col-lg-12">
     <div class="soft-card p-3">
       <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
         <div>
           <div class="fw-bold">Pendaftaran Kompetisi / Event</div>
           <div class="text-secondary small">Daftarkan team, atlet, dan official ke kompetisi tertentu.</div>
         </div>
-        <a class="btn btn-primary btn-sm btn-pill" href="{{ route('manager.club.registration') }}">
+        {{-- <a class="btn btn-primary btn-sm btn-pill" href="{{ route('manager.club.registration') }}">
           <i class="bi bi-clipboard-check me-1"></i>Daftar sekarang
-        </a>
+        </a> --}}
       </div>
 
       <div class="row g-2 mt-1">
@@ -238,26 +238,15 @@
         <div class="text-secondary small">
           Pastikan data atlet (DOB, gender, club/team) lengkap sebelum daftar.
         </div>
-        <div class="d-flex gap-2 flex-wrap">
-          {{-- <a class="btn btn-outline-secondary btn-sm btn-pill" href="{{ route('cm.entries.index') ?? '#' }}"> --}}
-          <a class="btn btn-outline-secondary btn-sm btn-pill" href="#">
-            <i class="bi bi-list-check me-1"></i>Riwayat Pendaftaran
-          </a>
-          {{-- <a class="btn btn-outline-secondary btn-sm btn-pill" href="{{ route('cm.entries.export') ?? '#' }}"> --}}
-          <a class="btn btn-outline-secondary btn-sm btn-pill" href="#">
-            <i class="bi bi-printer me-1"></i>Export / Print
-          </a>
-        </div>
       </div>
     </div>
   </div>
 
   {{-- Right column: open competitions + recent entries --}}
-  <div class="col-12 col-lg-5">
+  {{-- <div class="col-12 col-lg-5">
     <div class="soft-card p-3 mb-3">
       <div class="d-flex align-items-center justify-content-between mb-2">
         <div class="fw-bold">Kompetisi Tersedia</div>
-        {{-- <a href="{{ route('cm.competitions.index') ?? '#' }}" class="text-decoration-none small"> --}}
         <a href="#" class="text-decoration-none small">
           Lihat semua <i class="bi bi-arrow-right"></i>
         </a>
@@ -269,7 +258,6 @@
 
       <div class="vstack gap-2">
         @forelse(($openCompetitions ?? []) as $c)
-          {{-- <a href="{{ route('cm.registration', $c->id ?? null) ?? '#' }}" class="text-decoration-none"> --}}
           <a href="#" class="text-decoration-none">
             <div class="perm-item d-flex align-items-center justify-content-between">
               <div>
@@ -324,6 +312,6 @@
         </table>
       </div>
     </div>
-  </div>
+  </div> --}}
 </div>
 @endsection
