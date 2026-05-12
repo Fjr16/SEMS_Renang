@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CompetitionResultStatus;
 use Illuminate\Database\Eloquent\Model;
 
 class CompetitionEntry extends Model
@@ -27,5 +28,8 @@ class CompetitionEntry extends Model
     }
     public function competitionEntryRelayMembers(){
         return $this->hasMany(CompetitionEntryRelayMember::class);
+    }
+    public function heatLanes(){
+        return $this->hasMany(CompetitionHeatLane::class);
     }
 }

@@ -181,7 +181,89 @@ class AthleteController extends Controller
         return view('pages.guest.atlet.index',compact('athletes', 'accessType'));
     }
     public function showGuest($athlete_id){
-        $data = Athlete::query()->with('club')->find($athlete_id);
-        return view('pages.guest.atlet.show',compact('data'));
+        Carbon::setLocale('id');
+        $athlete = Athlete::query()->with('club')->find($athlete_id);
+        $totalEvents = "4";
+        $totalPodium = "3";
+        $totalPR = "4";
+        $eventHistories = collect();
+        $personalTimes = collect();
+
+        return view('pages.guest.atlet.show',compact(
+            'athlete','totalEvents', 'totalPodium','totalPR',
+            'eventHistories', 'personalTimes'
+        ));
     }
+
+
+    // public function getEventHistories(): Collection
+    // {
+    //     // ── 1. INDIVIDUAL ────────────────────────────────────────
+    //     $individual = $this->entries()          // hasMany Entry
+    //         ->with([
+    //             'event',                        // belongsTo Event
+    //             'event.competition',            // Event belongsTo Competition
+    //         ])
+    //         ->get()
+    //         ->map(function ($entry) {
+    //             return [
+    //                 'type'             => 'individual',
+    //                 'event_id'         => $entry->event_id,
+    //                 'event_name'       => $entry->event?->getLabel() ?? '-',
+    //                 'competition_code' => $entry->event?->competition?->competitionSession?->competition?->code ?? '-',
+    //                 'competition_name' => $entry->event?->competition?->competitionSession?->competition?->name ?? '-',
+    //                 'competition_start' => $entry->event?->competition?->competitionSession?->competition?->start_date ?? null,
+    //                 'competition_end' => $entry->event?->competition?->competitionSession?->competition?->end_date ?? null,
+    //                 // 'time'             => $entry->time ?? '-',
+    //                 // 'rank'             => $entry->rank ?? null,
+    //             ];
+    //         });
+
+    //     // ── 2. ESTAFET ───────────────────────────────────────────
+    //     $relay = $this->entryRelayMembers()     // hasMany EntryRelayMember
+    //         ->with([
+    //             'entry',                        // belongsTo Entry
+    //             'entry.event',                  // Entry belongsTo Event
+    //             'entry.event.competition',      // Event belongsTo Competition
+    //         ])
+    //         ->get()
+    //         ->map(function ($member) {
+    //             $entry = $member->entry;
+    //             return [
+    //                 'type'             => 'Estafet',
+    //                 'event_id'         => $entry?->event_id,
+    //                 'event_name'       => $entry?->event?->name ?? '-',
+    //                 'competition_name' => $entry?->event?->competition?->name ?? '-',
+    //                 'competition_date' => $entry?->event?->competition?->date ?? null,
+    //                 'time'             => $entry?->time ?? '-',
+    //                 'rank'             => $entry?->rank ?? null,
+    //             ];
+    //         });
+
+    //     // ── MERGE & urutkan terbaru dulu ─────────────────────────
+    //     return $individual
+    //         ->merge($relay)
+    //         ->sortByDesc('competition_date')
+    //         ->values();
+    // }
+
+    // public function personalTime(){
+    //     $personalTime = $this->heatLanes()
+    //         ->with([
+    //             'heat',
+    //         ])
+    //         ->where('status', CompetitionResultStatus::valid->value)
+    //         ->whereNotNull('swim_time')
+    //         ->get()
+    //         ->map(function($heatLanes){
+    //             return [
+    //                 'lane_number' => $heatLanes->lane_number,
+    //                 'swim_time' => $heatLanes->swim_time,
+    //                 'rank_in_heat' => $heatLanes->rank_in_heat,
+    //                 'record_type' => $heatLanes->record_type,
+    //                 'round_type' => $heatLanes->heat?->round_type
+    //             ];
+    //         });
+    //     return $personalTime->values();
+    // }
 }

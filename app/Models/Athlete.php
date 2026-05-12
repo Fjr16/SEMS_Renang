@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -55,5 +56,11 @@ class Athlete extends Model
 
     public function club() {
         return $this->belongsTo(Club::class);
+    }
+    public function entries(){
+        return $this->hasMany(CompetitionEntry::class);
+    }
+    public function relayEntry(){
+        return $this->hasMany(CompetitionEntryRelayMember::class);
     }
 }
