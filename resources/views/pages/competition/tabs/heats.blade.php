@@ -3,7 +3,7 @@
     window.HEAT_CONFIG = {
         poolLanes:   {{ $totalLanes }},
         totalAtlet:  {{ $totalEntries }},
-        eventId:     {{ $event->id }},
+        eventId:     {{ $event?->id }},
         generateUrl: "{{ route('competition.heats.generate', $competition) }}",
         resetUrl: "{{ route('competition.heats.resetByEvent', $competition) }}",
         generateByRound: "{{ route('competition.heats.generateByRound', $competition) }}",
@@ -25,8 +25,8 @@
     $recordTypes = collect(App\Enums\RecordTypeEnum::cases())
     ->mapWithKeys(fn($case) => [$case->value => $case->shortLabel()]);
 
-    $heatsData = $heatsByRound->map(fn($heats) =>
-        $heats->sortBy('heat_number')->map(fn($heat) => [
+    $heatsData = $heatsByRound?->map(fn($heats) =>
+        $heats?->sortBy('heat_number')->map(fn($heat) => [
             'id'     => $heat->id,
             'number' => $heat->heat_number,
             'lanes'  => $heat->heatLanes->map(fn($lane) => [
@@ -48,7 +48,7 @@
 <div id="heatMainContent"
     data-pool-lanes="{{ $totalLanes }}"
     data-total-atlet="{{ $totalEntries }}"
-    data-event-id="{{ $event->id }}"
+    data-event-id="{{ $event?->id }}"
 >
 
     <script id="heatDataScript">
@@ -75,7 +75,7 @@
                         class="form-control form-control-sm flex-grow-1"
                         style="font-size:13px">
                     @foreach ($selectEvents as $e)
-                        <option value="{{ $e->id }}" {{ $e->id === $event->id ? 'selected' : '' }}>
+                        <option value="{{ $e->id }}" {{ $e->id === $event?->id ? 'selected' : '' }}>
                             {{ $e->getLabel() }}
                         </option>
                     @endforeach
@@ -88,11 +88,11 @@
                  style="background:#E6F1FB; border-bottom:1px solid #B5D4F4; font-size:12px; color:#0C447C">
                 <div>
                     <div style="font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:#185FA5">Total Peserta</div>
-                    <div style="font-size:14px; font-weight:500">{{ $totalEntries }} Entri</div>
+                    <div style="font-size:14px; font-weight:500">{{ $totalEntries ?? '0' }} Entri</div>
                 </div>
                 <div>
                     <div style="font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:#185FA5">Kapasitas Kolam</div>
-                    <div style="font-size:14px; font-weight:500">{{ $totalLanes }} Lintasan</div>
+                    <div style="font-size:14px; font-weight:500">{{ $totalLanes ?? '-' }} Lintasan</div>
                     <div style="font-size:10px; color:#185FA5">dari venue</div>
                 </div>
                 <div>
@@ -107,200 +107,213 @@
                 </div>
             </div>
 
-            @if ($heatsByRound->isEmpty())
-                <div class="px-3 py-3" style="border-bottom:1px solid #dee2e6">
-                    <div class="text-uppercase fw-semibold mb-2"
-                        style="font-size:11px; color:#6c757d; letter-spacing:.05em">
-                        <span class="badge bg-primary rounded-circle me-1" style="font-size:10px">1</span>
-                        Pilih struktur ronde
+            @if($selectEvents->isEmpty())
+            <div class="px-3 py-5 text-center">
+                <i class="bi bi-people" style="font-size:32px;color:#adb5bd"></i>
+                <p class="fw-semibold mt-2 mb-1" style="font-size:14px">Belum ada event yang ditambahkan</p>
+                <p class="text-muted" style="font-size:12px">Tambahkan event / acara ke kompetisi ini terlebih dahulu.</p>
+            </div>
+            @elseif($selectEvents->isNotEmpty() && !$totalEntries)
+            <div class="px-3 py-5 text-center">
+                <i class="bi bi-people" style="font-size:32px;color:#adb5bd"></i>
+                <p class="fw-semibold mt-2 mb-1" style="font-size:14px">Belum ada peserta terdaftar</p>
+                <p class="text-muted" style="font-size:12px">Tambahkan peserta ke event ini terlebih dahulu sebelum membuat seri perlombaan.</p>
+            </div>
+            @else
+                @if ($heatsByRound?->isEmpty())
+                    <div class="px-3 py-3" style="border-bottom:1px solid #dee2e6">
+                        <div class="text-uppercase fw-semibold mb-2"
+                            style="font-size:11px; color:#6c757d; letter-spacing:.05em">
+                            <span class="badge bg-primary rounded-circle me-1" style="font-size:10px">1</span>
+                            Pilih struktur ronde
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap" id="roundOptions">
+                            @foreach([
+                                'final'         => ['label' => 'Final saja',                       'sub' => 'Langsung final, tanpa penyisihan'],
+                                'pre_final'     => ['label' => 'Penyisihan + Final',                'sub' => '2 ronde'],
+                                'pre_semi_final'=> ['label' => 'Penyisihan + Semifinal + Final',    'sub' => '3 ronde'],
+                            ] as $type => $opt)
+                                <div class="round-option p-3 border rounded"
+                                    style="cursor:pointer; min-width:160px; font-size:13px"
+                                    data-type="{{ $type }}"
+                                    onclick="selectRoundOption('{{ $type }}', this)">
+                                    <div class="fw-semibold">{{ $opt['label'] }}</div>
+                                    <div class="text-muted" style="font-size:11px">{{ $opt['sub'] }}</div>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
-                    <div class="d-flex gap-2 flex-wrap" id="roundOptions">
-                        @foreach([
-                            'final'         => ['label' => 'Final saja',                       'sub' => 'Langsung final, tanpa penyisihan'],
-                            'pre_final'     => ['label' => 'Penyisihan + Final',                'sub' => '2 ronde'],
-                            'pre_semi_final'=> ['label' => 'Penyisihan + Semifinal + Final',    'sub' => '3 ronde'],
-                        ] as $type => $opt)
-                            <div class="round-option p-3 border rounded"
-                                style="cursor:pointer; min-width:160px; font-size:13px"
-                                data-type="{{ $type }}"
-                                onclick="selectRoundOption('{{ $type }}', this)">
-                                <div class="fw-semibold">{{ $opt['label'] }}</div>
-                                <div class="text-muted" style="font-size:11px">{{ $opt['sub'] }}</div>
-                            </div>
+
+                    {{-- Step 2: Konfigurasi per ronde --}}
+                    <div class="px-3 py-3" id="roundConfigSection" style="display:none; border-bottom:1px solid #dee2e6">
+                        <div class="text-uppercase fw-semibold mb-2"
+                            style="font-size:11px; color:#6c757d; letter-spacing:.05em">
+                            <span class="badge bg-primary rounded-circle me-1" style="font-size:10px">2</span>
+                            Konfigurasi per ronde
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered align-middle mb-1" style="font-size:12px">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ronde</th>
+                                        <th>Lane digunakan</th>
+                                        <th>Preview lane aktif</th>
+                                        <th>Atlet lolos ke ronde berikutnya</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="roundConfigRows"></tbody>
+                            </table>
+                        </div>
+                        <div class="text-muted" style="font-size:11px">
+                            * Lane aktif dihitung dari tengah pool (circle seeding). Maksimal {{ $totalLanes }} lane.
+                        </div>
+                    </div>
+
+                    {{-- Actions --}}
+                    <div class="d-flex justify-content-end px-3 py-2" style="background:#f8f9fa">
+                        <button class="btn btn-primary btn-sm" id="btnGenerateHeat"
+                                onclick="submitGenerate()" disabled style="font-size:12px">
+                            <i class="bi bi-grid me-1"></i> Generate Seri
+                        </button>
+                    </div>
+                @else
+                    <div class="d-flex border-bottom" style="background:#fff">
+                        @foreach ($roundConfig as $round_type => $round)
+                            <button class="btn btn-link btn-sm text-decoration-none fw-semibold px-3 py-2 tab-round-btn"
+                                data-round="{{ $round_type }}"
+                                style="font-size:13px; border-bottom:2px solid transparent; border-radius:0; color:#6c757d"
+                                onclick="switchRoundTab('{{ $round_type }}', this)">
+                                {{ App\Enums\RoundTypeEnum::tryFrom($round_type)->label() }}
+                                <span class="badge rounded-pill ms-1" style="font-size: 10px; background: #E6F1FB; color:#0C447C;">
+                                    {{ $heatsByRound->has($round_type) ? $heatsByRound[$round_type]->count() : '0' }} seri
+                                </span>
+                            </button>
                         @endforeach
                     </div>
-                </div>
 
-                {{-- Step 2: Konfigurasi per ronde --}}
-                <div class="px-3 py-3" id="roundConfigSection" style="display:none; border-bottom:1px solid #dee2e6">
-                    <div class="text-uppercase fw-semibold mb-2"
-                        style="font-size:11px; color:#6c757d; letter-spacing:.05em">
-                        <span class="badge bg-primary rounded-circle me-1" style="font-size:10px">2</span>
-                        Konfigurasi per ronde
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle mb-1" style="font-size:12px">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Ronde</th>
-                                    <th>Lane digunakan</th>
-                                    <th>Preview lane aktif</th>
-                                    <th>Atlet lolos ke ronde berikutnya</th>
-                                </tr>
-                            </thead>
-                            <tbody id="roundConfigRows"></tbody>
-                        </table>
-                    </div>
-                    <div class="text-muted" style="font-size:11px">
-                        * Lane aktif dihitung dari tengah pool (circle seeding). Maksimal {{ $totalLanes }} lane.
-                    </div>
-                </div>
+                    {{-- Panel per Ronde --}}
+                    @foreach ($roundConfig as $roundType => $round)
+                        @php $isFirst = $loop->first; @endphp
+                        <div class="round-panel" data-round="{{ $roundType }}"
+                            style="display:{{ $isFirst ? 'block' : 'none' }}">
 
-                {{-- Actions --}}
-                <div class="d-flex justify-content-end px-3 py-2" style="background:#f8f9fa">
-                    <button class="btn btn-primary btn-sm" id="btnGenerateHeat"
-                            onclick="submitGenerate()" disabled style="font-size:12px">
-                        <i class="bi bi-grid me-1"></i> Generate Seri
-                    </button>
-                </div>
-            @else
-                <div class="d-flex border-bottom" style="background:#fff">
-                    @foreach ($roundConfig as $round_type => $round)
-                        <button class="btn btn-link btn-sm text-decoration-none fw-semibold px-3 py-2 tab-round-btn"
-                            data-round="{{ $round_type }}"
-                            style="font-size:13px; border-bottom:2px solid transparent; border-radius:0; color:#6c757d"
-                            onclick="switchRoundTab('{{ $round_type }}', this)">
-                            {{ App\Enums\RoundTypeEnum::tryFrom($round_type)->label() }}
-                            <span class="badge rounded-pill ms-1" style="font-size: 10px; background: #E6F1FB; color:#0C447C;">
-                                {{ $heatsByRound->has($round_type) ? $heatsByRound[$round_type]->count() : '0' }} seri
-                            </span>
-                        </button>
-                    @endforeach
-                </div>
-
-                {{-- Panel per Ronde --}}
-                @foreach ($roundConfig as $roundType => $round)
-                    @php $isFirst = $loop->first; @endphp
-                    <div class="round-panel" data-round="{{ $roundType }}"
-                        style="display:{{ $isFirst ? 'block' : 'none' }}">
-
-                        {{-- Toolbar --}}
-                        <div class="d-flex align-items-center gap-2 px-3 py-2 flex-wrap"
-                            style="background:#f8f9fa; border-bottom:1px solid #dee2e6; font-size:12px">
-                            <span class="text-muted">
-                                {{ $heatsByRound->has($roundType) ? $heatsByRound[$roundType]->sum(fn($h) => $h->heatLanes->count()) : '0' }} entri / atlet ·
-                                {{ $round->used_lanes ?? '-' }} lintasan digunakan ·
-                                {{ $heatsByRound->has($roundType) ? $heatsByRound[$roundType]->count() : '0' }} seri ·
-                                Jumlah lolos : {{ $round->qualify_count ?? '-' }} entri / atlet
-                            </span>
-                            <div class="ms-auto d-flex gap-2">
-                                @if (!$loop->first)
-                                    <button class="btn btn-sm btn-outline-success" style="font-size:11px"
-                                        onclick="promoteAthletes('{{ $roundType }}')">
-                                        <i class="bi bi-arrow-repeat me-1"></i> Promosi Atlet
-                                    </button>
-                                @endif
-                                 {{-- Tombol Input Hasil --}}
-                                <button class="btn btn-sm btn-success" style="font-size:11px"
-                                    onclick="openResultDrawer('{{ $roundType }}')">
-                                    <i class="bi bi-pencil-square me-1"></i> Input Hasil
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- Tab Heat --}}
-                        <div class="d-flex align-items-center border-bottom px-2" style="background:#fff; gap:2px">
-                            <button class="nav-btn btn btn-link btn-sm text-muted p-1"
-                                onclick="slideHeatTab('{{ $roundType }}', -1)">
-                                <i class="bi bi-chevron-left" style="font-size:11px"></i>
-                            </button>
-                            <div style="overflow:hidden; flex:1">
-                                <div class="heat-tab-inner d-flex" id="heat-inner-{{ $roundType }}">
-                                    @if ($heatsByRound->has($roundType))
-                                    @foreach ($heatsByRound[$roundType]->sortBy('heat_number') as $heat)
-                                        <button class="btn btn-link btn-sm text-decoration-none px-3 py-2 tab-heat-btn flex-shrink-0"
-                                            data-round="{{ $roundType }}"
-                                            data-heat="{{ $heat->heat_number }}"
-                                            style="font-size:12px; border-bottom:2px solid transparent; border-radius:0; color:#6c757d; white-space:nowrap"
-                                            onclick="switchHeatTab('{{ $roundType }}', {{ $heat->heat_number }}, this)">
-                                            Seri {{ $heat->heat_number }}
+                            {{-- Toolbar --}}
+                            <div class="d-flex align-items-center gap-2 px-3 py-2 flex-wrap"
+                                style="background:#f8f9fa; border-bottom:1px solid #dee2e6; font-size:12px">
+                                <span class="text-muted">
+                                    {{ $heatsByRound->has($roundType) ? $heatsByRound[$roundType]->sum(fn($h) => $h->heatLanes->count()) : '0' }} entri / atlet ·
+                                    {{ $round->used_lanes ?? '-' }} lintasan digunakan ·
+                                    {{ $heatsByRound->has($roundType) ? $heatsByRound[$roundType]->count() : '0' }} seri ·
+                                    Jumlah lolos : {{ $round->qualify_count ?? '-' }} entri / atlet
+                                </span>
+                                <div class="ms-auto d-flex gap-2">
+                                    @if (!$loop->first)
+                                        <button class="btn btn-sm btn-outline-success" style="font-size:11px"
+                                            onclick="promoteAthletes('{{ $roundType }}')">
+                                            <i class="bi bi-arrow-repeat me-1"></i> Promosi Atlet
                                         </button>
-                                    @endforeach
                                     @endif
+                                    {{-- Tombol Input Hasil --}}
+                                    <button class="btn btn-sm btn-success" style="font-size:11px"
+                                        onclick="openResultDrawer('{{ $roundType }}')">
+                                        <i class="bi bi-pencil-square me-1"></i> Input Hasil
+                                    </button>
                                 </div>
                             </div>
-                            <button class="nav-btn btn btn-link btn-sm text-muted p-1"
-                                onclick="slideHeatTab('{{ $roundType }}', 1)">
-                                <i class="bi bi-chevron-right" style="font-size:11px"></i>
-                            </button>
-                        </div>
 
-                        {{-- Panel per Heat --}}
-                        @if ($heatsByRound->has($roundType))
-                        @foreach ($heatsByRound[$roundType]->sortBy('heat_number') as $heat)
-                            <div class="heat-panel table-responsive"
-                                data-round="{{ $roundType }}"
-                                data-heat="{{ $heat->heat_number }}"
-                                style="display:{{ $loop->first ? 'block' : 'none' }}">
-                                <table class="table table-hover mb-0" style="font-size:13px">
-                                    <thead>
-                                        <tr class="text-center">
-                                            {{-- <th>Peringkat</th> --}}
-                                            <th>Lintasan</th>
-                                            <th>Atlet</th>
-                                            <th>Tim / Klub</th>
-                                            <th>Waktu Entri</th>
-                                            <th>Hasil</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($heat->heatLanes as $lane)
-                                        @php
-                                            // $result = $lane->result ?? null;
-                                            $status = $lane->status ?? null;
-                                            $statusBadge = match($status) {
-                                                $resultStatuses['dns']['val'] => '<span class="badge" style="background:#F1EFE8;color:#5F5E5A;font-size:10px">'.$resultStatuses['dns']['label'].'</span>',
-                                                $resultStatuses['dnf']['val'] => '<span class="badge" style="background:#FAEEDA;color:#854F0B;font-size:10px">'.$resultStatuses['dnf']['label'].'</span>',
-                                                $resultStatuses['dq']['val']  => '<span class="badge" style="background:#FCEBEB;color:#A32D2D;font-size:10px">'.$resultStatuses['dq']['label'].'</span>',
-                                                $resultStatuses['valid']['val']  => '<span class="badge" style="background:#FCEBEB;color:#15803D;font-size:10px">'.$resultStatuses['valid']['label'].'</span>',
-                                                default => '-',
-                                            };
-                                        @endphp
-                                            <tr class="text-center">
-                                                {{-- <td>{{ $lane->lane_order ?? '-' }}</td> --}}
-                                                <td><strong>{{ $lane->lane_number }}</strong></td>
-                                                <td>{{ $lane->entry?->athlete?->name ?? '-' }}</td>
-                                                <td class="text-muted">{{ $lane->entry?->athlete?->club?->club_name ?? '-' }}</td>
-                                                <td style="font-family:monospace; font-size:12px">
-                                                    {{ $lane->entry->seed_time ?? 'NT' }}
-                                                </td>
-                                                <td style="font-family:monospace;font-size:12px">
-                                                    @if($status === $resultStatuses['dns']['val'] || $status === $resultStatuses['dnf']['val'] || $status === $resultStatuses['dq']['val'])
-                                                        {!! $statusBadge !!}
-                                                    @else
-                                                        {{ $lane->swim_time ?? '—' }}
-                                                    @endif
-                                                </td>
-                                                <td>{!! $statusBadge !!}</td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="4" class="text-center text-muted py-3">
-                                                    Belum ada atlet di seri ini.
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
+                            {{-- Tab Heat --}}
+                            <div class="d-flex align-items-center border-bottom px-2" style="background:#fff; gap:2px">
+                                <button class="nav-btn btn btn-link btn-sm text-muted p-1"
+                                    onclick="slideHeatTab('{{ $roundType }}', -1)">
+                                    <i class="bi bi-chevron-left" style="font-size:11px"></i>
+                                </button>
+                                <div style="overflow:hidden; flex:1">
+                                    <div class="heat-tab-inner d-flex" id="heat-inner-{{ $roundType }}">
+                                        @if ($heatsByRound->has($roundType))
+                                        @foreach ($heatsByRound[$roundType]->sortBy('heat_number') as $heat)
+                                            <button class="btn btn-link btn-sm text-decoration-none px-3 py-2 tab-heat-btn flex-shrink-0"
+                                                data-round="{{ $roundType }}"
+                                                data-heat="{{ $heat->heat_number }}"
+                                                style="font-size:12px; border-bottom:2px solid transparent; border-radius:0; color:#6c757d; white-space:nowrap"
+                                                onclick="switchHeatTab('{{ $roundType }}', {{ $heat->heat_number }}, this)">
+                                                Seri {{ $heat->heat_number }}
+                                            </button>
+                                        @endforeach
+                                        @endif
+                                    </div>
+                                </div>
+                                <button class="nav-btn btn btn-link btn-sm text-muted p-1"
+                                    onclick="slideHeatTab('{{ $roundType }}', 1)">
+                                    <i class="bi bi-chevron-right" style="font-size:11px"></i>
+                                </button>
                             </div>
-                        @endforeach
-                        @endif
 
-                    </div>
-                @endforeach
+                            {{-- Panel per Heat --}}
+                            @if ($heatsByRound->has($roundType))
+                            @foreach ($heatsByRound[$roundType]->sortBy('heat_number') as $heat)
+                                <div class="heat-panel table-responsive"
+                                    data-round="{{ $roundType }}"
+                                    data-heat="{{ $heat->heat_number }}"
+                                    style="display:{{ $loop->first ? 'block' : 'none' }}">
+                                    <table class="table table-hover mb-0" style="font-size:13px">
+                                        <thead>
+                                            <tr class="text-center">
+                                                {{-- <th>Peringkat</th> --}}
+                                                <th>Lintasan</th>
+                                                <th>Atlet</th>
+                                                <th>Tim / Klub</th>
+                                                <th>Waktu Entri</th>
+                                                <th>Hasil</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($heat->heatLanes as $lane)
+                                            @php
+                                                // $result = $lane->result ?? null;
+                                                $status = $lane->status ?? null;
+                                                $statusBadge = match($status) {
+                                                    $resultStatuses['dns']['val'] => '<span class="badge" style="background:#F1EFE8;color:#5F5E5A;font-size:10px">'.$resultStatuses['dns']['label'].'</span>',
+                                                    $resultStatuses['dnf']['val'] => '<span class="badge" style="background:#FAEEDA;color:#854F0B;font-size:10px">'.$resultStatuses['dnf']['label'].'</span>',
+                                                    $resultStatuses['dq']['val']  => '<span class="badge" style="background:#FCEBEB;color:#A32D2D;font-size:10px">'.$resultStatuses['dq']['label'].'</span>',
+                                                    $resultStatuses['valid']['val']  => '<span class="badge" style="background:#FCEBEB;color:#15803D;font-size:10px">'.$resultStatuses['valid']['label'].'</span>',
+                                                    default => '-',
+                                                };
+                                            @endphp
+                                                <tr class="text-center">
+                                                    {{-- <td>{{ $lane->lane_order ?? '-' }}</td> --}}
+                                                    <td><strong>{{ $lane->lane_number }}</strong></td>
+                                                    <td>{{ $lane->entry?->athlete?->name ?? '-' }}</td>
+                                                    <td class="text-muted">{{ $lane->entry?->athlete?->club?->club_name ?? '-' }}</td>
+                                                    <td style="font-family:monospace; font-size:12px">
+                                                        {{ $lane->entry->seed_time ?? 'NT' }}
+                                                    </td>
+                                                    <td style="font-family:monospace;font-size:12px">
+                                                        @if($status === $resultStatuses['dns']['val'] || $status === $resultStatuses['dnf']['val'] || $status === $resultStatuses['dq']['val'])
+                                                            {!! $statusBadge !!}
+                                                        @else
+                                                            {{ $lane->swim_time ?? '—' }}
+                                                        @endif
+                                                    </td>
+                                                    <td>{!! $statusBadge !!}</td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center text-muted py-3">
+                                                        Belum ada atlet di seri ini.
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @endforeach
+                            @endif
+
+                        </div>
+                    @endforeach
+                @endif
             @endif
-
         </div>
     </div>
 </div>

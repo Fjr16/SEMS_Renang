@@ -25,11 +25,17 @@ class CompetitionHeatLaneController extends Controller
         $event = !$event_id
         ? $competition->events->first()
         : CompetitionEvent::find($event_id);
-        $event->load(['heats.heatLanes.entry.athlete.club']);
 
-        $selectEvents = $competition->events;
-        $totalLanes = $event->competitionSession->pool->total_lanes;
-        $totalEntries = $event->entries()
+        if ($event) {
+            // return response()->json([
+            //     'message' => 'Event tidak ditemukan'
+            // ], 404);
+            $event->load(['heats.heatLanes.entry.athlete.club']);
+        }
+
+        $selectEvents = $competition?->events;
+        $totalLanes = $event?->competitionSession?->pool->total_lanes;
+        $totalEntries = $event?->entries()
                         ->where('status', CompetitionTeamEntryStatus::Active->value)
                         ->whereHas('competitionTeam', function($row){
                             return $row->where('status', CompetitionTeamStatus::Active->value);
@@ -37,9 +43,9 @@ class CompetitionHeatLaneController extends Controller
                         ->count();
 
         // Group heats by round_type
-        $heatsByRound = $event->heats->groupBy('round_type');
+        $heatsByRound = $event?->heats?->groupBy('round_type');
         $roundConfig = EventRoundConfig::select('competition_event_id', 'round_type', 'used_lanes', 'qualify_count')
-        ->where('competition_event_id', $event->id)
+        ->where('competition_event_id', $event?->id)
         ->orderBy('order')
         ->get()
         ->keyBy('round_type');

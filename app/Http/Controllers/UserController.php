@@ -185,16 +185,23 @@ class UserController extends Controller
     }
 
     public function syncUserRoles(Request $req, $id){
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        $roleIds = $req->input('roles', []);
-        $roles = Role::whereIn('id', $roleIds)->get();
+            $roleIds = $req->input('roles', []);
+            $roles = Role::whereIn('id', $roleIds)->get();
 
-        $user->syncRoles($roles);
+            $user->syncRoles($roles);
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Roles berhasil disimpan',
-        ]);
+            return response()->json([
+                'status' => true,
+                'message' => 'Roles berhasil disimpan',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => substr($th->getMessage(),0,150),
+            ]);
+        }
     }
 }

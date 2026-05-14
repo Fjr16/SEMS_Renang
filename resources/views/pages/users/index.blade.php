@@ -294,18 +294,9 @@
                   <i class="bi bi-x-square me-1"></i>Clear
                 </button>
               </div>
-
-              {{-- <div class="input-group" style="max-width: 320px;">
-                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control" id="permSearch" placeholder="Cari permission…">
-              </div> --}}
             </div>
 
             <div class="perm-box" id="permList">
-            </div>
-
-            <div class="text-secondary small mt-2">
-              Tip: gunakan penamaan konsisten, misal <code>users.view</code>, <code>users.create</code>, <code>users.update</code>, <code>users.delete</code>.
             </div>
           </div>
 
