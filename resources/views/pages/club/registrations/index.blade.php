@@ -453,9 +453,10 @@
                     @endif
 
                     @if($st?->value === App\Enums\CompetitionTeamStatus::Active->value)
-                        <a href="#" class="btn btn-outline-success btn-pill btn-sm">
+                        {{-- <a href="#" class="btn btn-outline-success btn-pill btn-sm"> --}}
+                        <button class="btn btn-outline-success btn-pill btn-sm" onclick="exportStartingList({{ $e->id }})">
                             <i class="bi bi-download me-1"></i>Export Start List
-                        </a>
+                        </button>
                         @if(($e->payment_status ?? 'unpaid') !== App\Enums\CompetitionTeamPaymentStatus::Paid->value)
                             <span class="text-secondary small fst-italic align-self-center">
                                 <i class="bi bi-info-circle me-1"></i>
@@ -609,6 +610,43 @@
                 btn.addEventListener('shown.bs.tab', ()=> window.dispatchEvent(new Event('resize')));
             });
         })();
+
+    }
+    async function exportStartingList(competition_team_id){
+        const url = "{{ route('export.starting.list') }}";
+        const res = await fetch(url, {
+            method:"POST",
+            headers: {
+                "Content-Type": "application/json",   // wajib untuk JSON
+                "X-CSRF-TOKEN":  "{{ csrf_token() }}",                // wajib di Laravel
+                "Accept":        "application/json",
+            },
+            body:JSON.stringify({competition_team_id})
+        });
+        if (res.ok) {
+            const disposition = res.headers.get("Content-Disposition");
+            let filename = "starting_list.xlsx";
+            if (disposition && disposition.includes("filename=")) {
+                filename = disposition
+                    .split("filename=")[1]
+                    .replace(/"/g, "")   // hapus tanda kutip
+                    .trim();
+            }
+            const blob        = await res.blob();
+            const downloadUrl = URL.createObjectURL(blob);
+            const a           = document.createElement("a");
+            a.href            = downloadUrl;
+            a.download        = filename;
+            a.click();
+            URL.revokeObjectURL(downloadUrl);
+            return;
+        }
+
+        const result = await res.json();
+        Toast.fire({
+            icon:'error',
+            title:result.message ?? 'gagal export data'
+        });
     }
 </script>
 @endpush

@@ -10,6 +10,7 @@ use App\Http\Controllers\CompetitionEventController;
 use App\Http\Controllers\CompetitionHeatLaneController;
 use App\Http\Controllers\CompetitionSessionController;
 use App\Http\Controllers\CompetitionTabEntriesController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\MyTeamController;
 use App\Http\Controllers\OfficialController;
 use App\Http\Controllers\OrganizationController;
@@ -114,6 +115,13 @@ Route::middleware(['auth'])->group(function(){
         // entries
 
         Route::get('/atlet/{club}', [MyTeamController::class, 'athletes'])->name('manager.club.atlet');
+    });
+
+    Route::prefix('/export')->group(function(){
+        Route::get('/undangan/kejurda', [ExportController::class, 'undanganKejurda'])->name('export.undangan.kejurda');
+        Route::post('/starting/list', [ExportController::class, 'startingList'])->name('export.starting.list');
+        // Route::get('/competition', [CompetitionEntryController::class, 'indexGuest'])->name('guest.competition.index');
+        // Route::get('/competition/show', [CompetitionEntryController::class, 'showGuest'])->name('guest.competition.show');
     });
 });
 

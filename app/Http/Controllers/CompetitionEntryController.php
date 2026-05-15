@@ -187,7 +187,7 @@ class CompetitionEntryController extends Controller
         }
 
         $accessType = 'Guest';
-        return view('pages.club.registrations.index',compact('data', 'compClass', 'data'));
+        return view('pages.club.registrations.index',compact('data', 'compClass', 'accessType'));
     }
 
     public function store(Request $r){
