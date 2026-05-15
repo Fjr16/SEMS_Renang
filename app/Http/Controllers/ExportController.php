@@ -24,6 +24,7 @@ class ExportController extends Controller
         $item = CompetitionTeam::with([
                     'competition.events',
                     'competitionEntries.athlete',
+                    'competitionEntries.competitionEvent',
                     'competitionEntries.competitionEvent.ageGroup'
                 ])
                 ->find($request->competition_team_id);
@@ -56,6 +57,7 @@ class ExportController extends Controller
             'ku'        => $entries->first()->competitionEvent?->ageGroup?->label ?? '-',
             'pa_pi'     => $entries->first()->competitionEvent?->gender === 'male' ? 'PA' : 'PI',
             'event_ids' => $entries->pluck('competition_event_id')->toArray(),
+            'biaya' => $entries->sum(fn($entry) => $entry->competitionEvent?->registration_fee ?? 0)
         ])->toArray();
 
         $nama_club = $item?->team?->club_name ?? '-';

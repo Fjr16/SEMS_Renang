@@ -12,7 +12,6 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 class StartingListExport implements WithEvents, ShouldAutoSize
 {
 
-    // protected $data;
     protected array $peserta;
     protected array $eventGroups;
     protected $clubName;
@@ -162,8 +161,8 @@ class StartingListExport implements WithEvents, ShouldAutoSize
                         ]);
                     }
 
-                    $sheet->setCellValue("{$jmlColLetter}{$row}",   "=COUNTIF({$dataStartLet}{$row}:{$dataEndLet}{$row},\"V\")");
-                    $sheet->setCellValue("{$biayaColLetter}{$row}", "={$jmlColLetter}{$row}*{$biayaPerNomor}");
+                    $sheet->setCellValue("{$jmlColLetter}{$row}", count($p['event_ids']));
+                    $sheet->setCellValue("{$biayaColLetter}{$row}", $p['biaya']);
                     $sheet->getStyle("{$biayaColLetter}{$row}")->getNumberFormat()->setFormatCode('"Rp "#,##0');
 
                     $sheet->getStyle("A{$row}:{$lastColLetter}{$row}")->applyFromArray([
@@ -197,16 +196,6 @@ class StartingListExport implements WithEvents, ShouldAutoSize
                     'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0D47A1']],
                     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => 'FFFFFF']]],
                 ]);
-
-                dd([
-                'totalEvent'    => $totalEvent,
-                'totalCols'     => $totalCols,
-                'lastColLetter' => $lastColLetter,
-                'dataStartLet'  => $dataStartLet,
-                'dataEndLet'    => $dataEndLet,
-                'jmlColLetter'  => $jmlColLetter,
-                'biayaColLetter'=> $biayaColLetter,
-            ]);
 
                 $sheet->freezePane('E7');
                 $sheet->getPageSetup()->setOrientation(
