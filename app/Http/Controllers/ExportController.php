@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EventType;
 use App\Exports\StartingListExport;
+use App\Models\CompetitionEntryRelayMember;
 use App\Models\CompetitionTeam;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -16,16 +18,13 @@ class ExportController extends Controller
     public function startingList(Request $request){
         $request->validate([
             'competition_team_id'  => 'required|exists:competition_teams,id',
-            // 'club_name'  => 'required|string|max:255',
-            // 'event_name' => 'required|string|max:255',
-            // 'year'       => 'required|digits:4',
         ]);
 
         $item = CompetitionTeam::with([
                     'competition.events',
                     'competitionEntries.athlete',
                     'competitionEntries.competitionEvent',
-                    'competitionEntries.competitionEvent.ageGroup'
+                    'competitionEntries.competitionEvent.ageGroup',
                 ])
                 ->find($request->competition_team_id);
 
@@ -36,19 +35,23 @@ class ExportController extends Controller
             ]);
         }
 
-         $eventGroups = $item->competition->events
+        $eventGroups = $item->competition->events
+        ->where('event_type', EventType::individual->value)
         ->groupBy('stroke')
         ->map(fn($events, $gaya) => [
             'name'   => $gaya,
-            'events' => $events->map(fn($e) => [
-                'id'    => $e->id,
-                'label' => $e->distance . ' m',               // contoh: "50M", "100M"
-            ])->values()->toArray(),
+            'events' => $events
+                ->sortBy('distance')
+                ->map(fn($e) => [
+                    'id'    => $e->id,
+                    'label' => $e->distance . ' m',               // contoh: "50M", "100M"
+                ])->values()->toArray(),
         ])
         ->values()
         ->toArray();
 
-         $peserta = $item->competitionEntries
+        $peserta = $item->competitionEntries
+        ->where('is_relay', false)
         ->groupBy('athlete_id')
         ->values()
         ->map(fn($entries, $i) => [
@@ -60,12 +63,50 @@ class ExportController extends Controller
             'biaya' => $entries->sum(fn($entry) => $entry->competitionEvent?->registration_fee ?? 0)
         ])->toArray();
 
+        $eventGroupsRelay = $item->competition->events
+        ->where('event_type', EventType::estafet->value)
+        ->groupBy('stroke')
+        ->map(fn($events, $gaya) => [
+            'name'   => $gaya,
+            'events' => $events
+                ->sortBy('distance')
+                ->map(fn($e) => [
+                    'id'    => $e->id,
+                    'label' => $e->distance . ' m',
+                ])->values()->toArray(),
+        ])
+        ->values()
+        ->toArray();
+
+        // untuk relay tidak perlu group by, karena satu tim hanya dapat mendaftarkan
+        // 1 tim estafet dalam satu event yang sama
+        // jadi tidak akan ada data team_id, dan event_id yang sama pada entries untuk tipe estafet
+        $entryRelay = $item->competitionEntries
+        ->where('is_relay',true)
+        ->values()
+        ->map(fn($entry, $i) => [
+            'no'        => $i + 1,
+            'nama_tim'  => $entry->competitionTeam?->team->club_name ?? '-',
+            'ku'        => $entry->competitionEvent?->ageGroup?->label ?? '-',
+            'pa_pi'     => $entry->competitionEvent?->gender === 'male' ? 'PA' : 'PI',
+            'event_ids' => [$entry->competition_event_id],
+            'biaya' => $entry->competitionEvent?->registration_fee ?? 0,
+            'anggota' => $entry->competitionEntryRelayMembers
+                        ->sortBy('leg_order')
+                        ->map(fn($m) => [
+                            'leg'  => $m->leg_order,
+                            'nama' => $m->athlete?->name ?? '-',
+                        ])->values()->toArray() ?? [],
+        ])->toArray();
+
         $nama_club = $item?->team?->club_name ?? '-';
         $tahun = $item?->competition?->start_date ? Carbon::parse($item?->competition?->start_date)->format('Y') : '-';
 
         $export = new StartingListExport(
             peserta: $peserta,
             eventGroups: $eventGroups,
+            entryRelay: $entryRelay,
+            eventGroupsRelay: $eventGroupsRelay,
             clubName: $nama_club,
             competitionName: $item?->competition?->name ?? '-',
             year: $tahun,
@@ -77,54 +118,5 @@ class ExportController extends Controller
     }
     public function bukuAcara(){
 
-    }
-
-    private function getDummyData(): array
-    {
-        return [
-            [
-                'no' => 1,
-                'nama' => 'Fathur Zenadri',
-                'ku' => 'II',
-                'pa_pi' => 'PA',
-                'gb_ppn75' => '', 'gb_25m' => '',  'gb_50m' => 'V', 'gb_100m' => 'V', 'gb_200m' => '',  'gb_400m' => '',
-                'gk_25m'   => '',  'gk_50m' => 'V', 'gk_100m' => '', 'gk_200m' => '',
-                'gp_50m'   => 'V', 'gp_100m' => '',  'gp_200m' => '',
-                'gd_25m'   => '',  'gd_50m' => 'V', 'gd_100m' => 'V', 'gd_200m' => 'V',
-                'gg_200m'  => 'V',
-            ],
-            [
-                'no' => 2, 'nama' => 'Qusyairi Muammar Gibran', 'ku' => 'II', 'pa_pi' => 'PA',
-                'gb_ppn75' => '', 'gb_25m' => '',  'gb_50m' => 'V', 'gb_100m' => 'V', 'gb_200m' => 'V',  'gb_400m' => 'V',
-                'gk_25m'   => '',  'gk_50m' => 'V', 'gk_100m' => 'V', 'gk_200m' => 'V',
-                'gp_50m'   => 'V', 'gp_100m' => 'V',  'gp_200m' => 'V',
-                'gd_25m'   => '',  'gd_50m' => 'V', 'gd_100m' => 'V', 'gd_200m' => 'V',
-                'gg_200m'  => 'V',
-            ],
-            [
-                'no' => 3, 'nama' => 'Darvesh Evan Putra Huda', 'ku' => 'II', 'pa_pi' => 'PA',
-                'gb_ppn75' => '', 'gb_25m' => '',  'gb_50m' => '', 'gb_100m' => 'V', 'gb_200m' => 'V',  'gb_400m' => 'V',
-                'gk_25m'   => '',  'gk_50m' => '', 'gk_100m' => 'V', 'gk_200m' => 'V',
-                'gp_50m'   => '', 'gp_100m' => '',  'gp_200m' => '',
-                'gd_25m'   => '',  'gd_50m' => '', 'gd_100m' => '', 'gd_200m' => '',
-                'gg_200m'  => '',
-            ],
-            [
-                'no' => 4, 'nama' => 'Dwi Natasha Brades', 'ku' => 'II', 'pa_pi' => 'PI',
-                'gb_ppn75' => '', 'gb_25m' => '',  'gb_50m' => 'V', 'gb_100m' => 'V', 'gb_200m' => 'V',  'gb_400m' => 'V',
-                'gk_25m'   => '',  'gk_50m' => 'V', 'gk_100m' => 'V', 'gk_200m' => 'V',
-                'gp_50m'   => 'V', 'gp_100m' => 'V',  'gp_200m' => 'V',
-                'gd_25m'   => '',  'gd_50m' => 'V', 'gd_100m' => 'V', 'gd_200m' => 'V',
-                'gg_200m'  => 'V',
-            ],
-            [
-                'no' => 5, 'nama' => 'Zahwa Aqilla Fadillah', 'ku' => 'II', 'pa_pi' => 'PI',
-                'gb_ppn75' => '', 'gb_25m' => '',  'gb_50m' => 'V', 'gb_100m' => 'V', 'gb_200m' => 'V',  'gb_400m' => 'V',
-                'gk_25m'   => '',  'gk_50m' => 'V', 'gk_100m' => 'V', 'gk_200m' => 'V',
-                'gp_50m'   => 'V', 'gp_100m' => 'V',  'gp_200m' => 'V',
-                'gd_25m'   => '',  'gd_50m' => 'V', 'gd_100m' => 'V', 'gd_200m' => 'V',
-                'gg_200m'  => 'V',
-            ],
-        ];
     }
 }
