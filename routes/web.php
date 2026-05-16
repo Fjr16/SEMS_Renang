@@ -120,6 +120,7 @@ Route::middleware(['auth'])->group(function(){
     Route::prefix('/export')->group(function(){
         Route::get('/undangan/kejurda', [ExportController::class, 'undanganKejurda'])->name('export.undangan.kejurda');
         Route::post('/starting/list', [ExportController::class, 'startingList'])->name('export.starting.list');
+        Route::get('/buku/acara', [ExportController::class, 'bukuAcara'])->name('export.buku.acara');
         // Route::get('/competition', [CompetitionEntryController::class, 'indexGuest'])->name('guest.competition.index');
         // Route::get('/competition/show', [CompetitionEntryController::class, 'showGuest'])->name('guest.competition.show');
     });

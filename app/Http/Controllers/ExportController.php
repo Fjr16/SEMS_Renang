@@ -117,6 +117,6 @@ class ExportController extends Controller
         return Excel::download($export, $filename);
     }
     public function bukuAcara(){
-
+        return view('pages.export_doc.buku_acara');
     }
 }
