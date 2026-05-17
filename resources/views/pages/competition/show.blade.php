@@ -398,6 +398,12 @@
         const EVENTS_URL_UPDATE  = "{{ route('competition.tab.events.update', [$competition, ':event']) }}".replace(':event', '');
         const EVENTS_URL_DESTROY = "{{ route('competition.tab.events.destroy', [$competition, ':event']) }}".replace(':event', '');
         const ESTAFET_VALUE  = "{{ \App\Enums\EventType::estafet->value }}";
+        const ENUM_GENDER = @json(
+            collect(\App\Enums\Gender::cases())->map(fn($g) => [
+                'value' => $g->value,
+                'label' => $g->label(),
+            ])
+        );
 
         // ── Open create modal ────────────────────────────────────────────────
         function openCreateEvent() {
@@ -460,6 +466,16 @@
 
                 const ev = data.event;
                 const modal = document.getElementById('modalEvent');
+
+                const select = document.getElementById('gender');
+
+                select.innerHTML = ENUM_GENDER.map(g =>
+                    `<option value="${g.value}">${g.label}</option>`
+                ).join('');
+
+                if (ev.event_type === ESTAFET_VALUE) {
+                    select.innerHTML += `<option value="mixed">Campuran</option>`;
+                }
 
                 modal.querySelector('#eventForm').reset();
                 modal.querySelector('#competition_event_id').value   = ev.id;
@@ -585,6 +601,16 @@
                 const maxEl = document.getElementById('max_relay_athletes');
                 maxEl.disabled = this.value !== ESTAFET_VALUE;
                 if (this.value !== ESTAFET_VALUE) maxEl.value = '';
+
+                const select = document.getElementById('gender');
+
+                select.innerHTML = ENUM_GENDER.map(g =>
+                    `<option value="${g.value}">${g.label}</option>`
+                ).join('');
+
+                if (this.value === ESTAFET_VALUE) {
+                    select.innerHTML += `<option value="mixed">Campuran</option>`;
+                }
             });
 
             // ── SUBMIT FORM (Create & Update) ────────────────────────────────────

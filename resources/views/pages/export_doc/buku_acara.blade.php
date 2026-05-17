@@ -2,398 +2,614 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Buku Acara Resmi - Golden Black Padang Open II 2025</title>
+    <title>Buku Acara</title>
     <style>
-        /* Pengaturan Kertas A4 & Margin Standar Dokumen Lomba */
         @page {
-            size: a4 portrait;
-            margin: 12mm 10mm 15mm 10mm;
+            size: A4 portrait;
+            margin-top: 28mm;
+            margin-bottom: 15mm;
+            margin-left: 15mm;
+            margin-right: 15mm;
+        }
+
+        @page :first {
+            margin-top: 0;
+            margin-bottom: 0;
+            margin-left: 0;
+            margin-right: 0;
         }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 8pt;
-            color: #000000;
-            line-height: 1.2;
-            margin: 0;
-            padding: 0;
+            font-family: Arial, sans-serif;
+            font-size: 8.5pt;
+            color: #000;
+            background: #fff;
         }
 
-        .page-break {
-            page-break-before: always;
+        /* ================================================
+           HALAMAN 1: COVER
+        ================================================ */
+        .cover-page {
+            width: 210mm;
+            height: 297mm;
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
         }
 
-        /* ========================================== */
-        /* GENERAL STYLES & HEADER                   */
-        /* ========================================== */
-        .header-table {
+        /* Background kuning bawah */
+        .cover-bg-yellow-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
             width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 12px;
-        }
-        .header-title {
-            text-align: center;
-            font-weight: bold;
-            font-size: 12pt;
-            letter-spacing: 0.5px;
-        }
-        .header-subtitle {
-            text-align: center;
-            font-size: 9pt;
-            font-weight: bold;
-            padding-top: 1px;
-        }
-        .header-meta {
-            text-align: center;
-            font-size: 8pt;
-            color: #222222;
-            border-bottom: 2px solid #000000;
-            padding-bottom: 5px;
+            height: 45%;
+            background-color: #F5C400;
         }
 
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .fw-bold { font-weight: bold; }
+        /* Segitiga hitam pojok kiri bawah */
+        .cover-tri-black-left {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-right: 90px solid transparent;
+            border-bottom: 120px solid #1a1a1a;
+        }
 
-        /* ========================================== */
-        /* FORMAT 1: COVER SESI / SUSUNAN ACARA       */
-        /* ========================================== */
-        .session-title {
-            font-size: 13pt;
+        /* Segitiga hitam pojok kanan atas */
+        .cover-tri-black-right {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-left: 100px solid transparent;
+            border-top: 130px solid #1a1a1a;
+        }
+
+        /* Kotak-kotak dekoratif kanan */
+        .cover-deco-right {
+            position: absolute;
+            right: 20px;
+            bottom: 80px;
+        }
+
+        .cover-deco-right .deco-box {
+            width: 55px;
+            height: 55px;
+            border: 3px solid #F5C400;
+            margin-bottom: 8px;
+            margin-left: 20px;
+        }
+
+        .cover-deco-right .deco-box-gray {
+            width: 45px;
+            height: 45px;
+            background-color: #ccc;
+            margin-bottom: 8px;
+        }
+
+        /* Logo area */
+        .cover-logos {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cover-logos img {
+            height: 55px;
+        }
+
+        /* Teks utama cover */
+        .cover-main-text {
+            position: absolute;
+            top: 100px;
+            left: 30px;
+            right: 160px;
+        }
+
+        .cover-main-text .meet {
+            font-size: 72pt;
+            font-weight: 900;
+            color: #1B2B6B;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        .cover-main-text .program {
+            font-size: 72pt;
+            font-weight: 900;
+            color: #1B2B6B;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        .cover-main-text .ev-name {
+            font-size: 15pt;
             font-weight: bold;
-            text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            color: #1B2B6B;
+            margin-top: 18px;
+            line-height: 1.3;
             text-transform: uppercase;
         }
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 5px;
-        }
-        .summary-table th {
-            background-color: #000000;
-            color: #ffffff;
-            font-weight: bold;
-            text-align: center;
-            padding: 5px;
-            font-size: 8.5pt;
-            border: 1px solid #000000;
-        }
-        .summary-table td {
-            padding: 5px;
-            border: 1px solid #000000;
-            font-size: 8.5pt;
-        }
-        .summary-table tr:nth-child(even) {
-            background-color: #fcfcfc;
+
+        .cover-main-text .ev-detail {
+            font-size: 10pt;
+            color: #1B2B6B;
+            margin-top: 10px;
+            line-height: 1.6;
+            border-left: 4px solid #F5C400;
+            padding-left: 8px;
         }
 
-        /* ========================================== */
-        /* FORMAT 2: MEET PROGRAM (PERSIS GAMBAR)     */
-        /* ========================================== */
-        .columns-container {
+        /* ================================================
+           HALAMAN 2-3: SUSUNAN ACARA
+        ================================================ */
+        .schedule-page {
+            /* padding: 30mm 15mm 20mm 15mm; */
+            page-break-after: always;
+        }
+
+        /* Header halaman 2+ */
+        .page-header {
             display: table;
             width: 100%;
-            table-layout: fixed;
+            margin-bottom: 6px;
         }
-        .column-side {
+
+        .logo-left {
             display: table-cell;
-            width: 50%;
-            vertical-align: top;
-        }
-        .left-side {
-            padding-right: 6px;
-            border-right: 1px dashed #999999;
-        }
-        .right-side {
-            padding-left: 6px;
+            width: 100px;
+            vertical-align: middle;
+            text-align: left;
         }
 
-        .event-block {
-            page-break-inside: avoid;
-            margin-bottom: 12px;
+        .logo-left img {
+            height: 48px;
+            margin-right: 3px;
         }
 
-        /* Header Acara & Seri Sesuai Baris Elemen Dokumen Asli */
-        .event-title-bar {
+        .header-center {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .header-center .ev-name { font-size: 10pt; font-weight: bold; }
+        .header-center .ev-venue { font-size: 8.5pt; margin-top: 1px; }
+        .header-center .ev-date { font-size: 8.5pt; font-weight: bold; margin-top: 1px; }
+        .header-center .ev-section {
+            font-size: 12pt;
             font-weight: bold;
-            font-size: 8pt;
-            padding: 3px 0;
-            border-bottom: 1px solid #000000;
-            margin-bottom: 3px;
-            text-transform: uppercase;
+            margin-top: 5px;
+            letter-spacing: 0.5px;
         }
 
-        /* Tabel Grid Lintasan Atlet (Kotak Penuh) */
-        .lane-table {
+        .logo-right {
+            display: table-cell;
+            width: 100px;
+            vertical-align: middle;
+            text-align: right;
+        }
+
+        .logo-right img {
+            height: 48px;
+            margin-left: 3px;
+        }
+
+        .header-divider {
+            border-top: 1pt solid #000;
+            margin-bottom: 8px;
+        }
+
+        /* Judul hari */
+        .schedule-day-title {
+            font-size: 9pt;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 6px;
+        }
+
+        /* Tabel susunan acara */
+        .schedule-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 4px;
+            font-size: 8pt;
+            margin-bottom: 14px;
         }
-        .lane-table th {
-            border: 1px solid #000000;
-            background-color: #eaeaea;
-            text-align: center;
-            font-size: 7pt;
+
+        .schedule-table .session-header td {
+            background-color: #f0f0f0;
             font-weight: bold;
-            padding: 2px 1px;
-            text-transform: uppercase;
+            font-size: 8.5pt;
+            padding: 3px 6px;
+            border: 0.5pt solid #888;
         }
-        .lane-table td {
-            border: 1px solid #000000;
-            padding: 3px 2px;
-            font-size: 7pt;
+
+        .schedule-table thead tr th {
+            background-color: #fff;
+            font-weight: bold;
+            padding: 3px 6px;
+            border: 0.5pt solid #888;
+            text-align: center;
+            font-size: 8pt;
+        }
+
+        .schedule-table tbody tr td {
+            padding: 2.5px 6px;
+            border: 0.5pt solid #bbb;
+            text-align: center;
             vertical-align: middle;
         }
 
-        /* Kolom Titik-titik untuk Catatan Juri Lintasan */
-        .juri-notes {
-            color: #555555;
-            font-size: 6.5pt;
-            letter-spacing: 1px;
+        .schedule-table tbody tr td.td-nomor {
+            font-weight: bold;
+            text-align: center;
         }
+
+        .schedule-table tbody tr td.td-nama {
+            text-align: center;
+            font-style: italic;
+        }
+
+        .schedule-table tbody tr td.td-ku {
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* ================================================
+           HALAMAN 4+: DETAIL ACARA
+        ================================================ */
+        /* Acara sub-header */
+        .acara-header {
+            display: table;
+            width: 100%;
+            margin-bottom: 2px;
+            margin-top: 8px;
+        }
+
+        .acara-left {
+            display: table-cell;
+            vertical-align: bottom;
+        }
+
+        .acara-right {
+            display: table-cell;
+            vertical-align: bottom;
+            text-align: right;
+        }
+
+        .acara-nomor {
+            font-size: 9pt;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        .acara-tanggal { font-size: 8pt; }
+
+        .acara-nama {
+            font-size: 9pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .acara-status { font-size: 9pt; font-weight: bold; }
+
+        /* Limit row */
+        .limit-row {
+            font-size: 7.5pt;
+            font-style: italic;
+            margin-bottom: 2px;
+            color: #444;
+        }
+
+        /* Detail table */
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7.5pt;
+            margin-bottom: 8px;
+            page-break-inside: avoid;
+        }
+
+        .detail-table thead tr {
+            border-top: 1pt solid #000;
+            border-bottom: 1pt solid #000;
+        }
+
+        .detail-table thead th {
+            padding: 3px 3px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .detail-table thead th.center { text-align: center; }
+        .detail-table thead th.right  { text-align: right; }
+
+        /* Seri header */
+        .detail-table thead tr.seri-header th {
+            background-color: #fff;
+            font-size: 7pt;
+            border-top: none;
+            border-bottom: 0.5pt solid #ccc;
+        }
+
+        .seri-label {
+            display: inline-block;
+            border: 0.5pt solid #000;
+            padding: 1px 5px;
+            font-size: 7pt;
+            font-weight: bold;
+            float: right;
+        }
+
+        .detail-table tbody tr td {
+            padding: 2px 3px;
+            border-bottom: 0.3pt solid #ddd;
+            vertical-align: middle;
+        }
+
+        .detail-table tbody tr.empty-row td {
+            color: #999;
+            text-align: center;
+        }
+
+        /* ID Lomba box */
+        td.id-lomba {
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 7pt;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        td.nama-atlet {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        td.prestasi {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            white-space: nowrap;
+        }
+
+        /* Col widths buku acara */
+        .col-ln      { width: 4%; }
+        .col-id      { width: 7%; }
+        .col-nama    { width: 22%; }
+        .col-ket     { width: 5%; }
+        .col-lahir   { width: 10%; }
+        .col-ku      { width: 9%; }
+        .col-tim     { width: 24%; }
+        .col-prestasi{ width: 9%; }
+        .col-idlomba { width: 10%; }
+
+        /* MOSC label */
+        .mosc {
+            font-size: 5.5pt;
+            color: #888;
+            display: block;
+        }
+
+        /* ================================================
+           PAGE BREAK
+        ================================================ */
+        .page-break { page-break-after: always; }
     </style>
 </head>
 <body>
+    {{-- =============================================
+         HALAMAN 1: COVER
+    ============================================= --}}
+    <div class="cover-page">
 
-    <table class="header-table">
-        <tr>
-            <td class="header-title">SUSUNAN ACARA PERLOMBAAN</td>
-        </tr>
-        <tr>
-            <td class="header-subtitle">GOLDEN BLACK PADANG OPEN SWIMMING CHAMPIONSHIP II 2025</td>
-        </tr>
-        <tr>
-            <td class="header-meta">KOLAM RENANG TERATAI PADANG | 19 - 20 SEPTEMBER 2025</td>
-        </tr>
-    </table>
+        {{-- Background kuning --}}
+        <div class="cover-bg-yellow-bottom"></div>
 
-    <div class="session-title">HARI 1: JUMAT, 19 SEPTEMBER 2025<br><span style="font-size: 10pt; color: #333; font-weight: normal;">SESI I: PAGI</span></div>
+        {{-- Segitiga hitam --}}
+        <div class="cover-tri-black-left"></div>
+        <div class="cover-tri-black-right"></div>
 
-    <table class="summary-table">
-        <thead>
-            <tr>
-                <th width="12%">ACARA PA</th>
-                <th width="56%">NOMOR PERLOMBAAN</th>
-                <th width="20%">KATEGORI UMUR (KU)</th>
-                <th width="12%">ACARA PI</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="text-center fw-bold">101</td>
-                <td>800 M Bebas</td>
-                <td class="text-center">TERBUKA</td>
-                <td class="text-center fw-bold">102</td>
-            </tr>
-            <tr>
-                <td class="text-center fw-bold">103</td>
-                <td>400 M Gaya Ganti Perorangan</td>
-                <td class="text-center">GROUP II</td>
-                <td class="text-center fw-bold">104</td>
-            </tr>
-            <tr>
-                <td class="text-center fw-bold">105</td>
-                <td>200 M Gaya Dada</td>
-                <td class="text-center">GROUP III</td>
-                <td class="text-center fw-bold">106</td>
-            </tr>
-            <tr>
-                <td class="text-center fw-bold">107</td>
-                <td>50 M Gaya Kupu-Kupu</td>
-                <td class="text-center">GROUP IV</td>
-                <td class="text-center fw-bold">108</td>
-            </tr>
-            <tr>
-                <td class="text-center fw-bold">109</td>
-                <td>50 M Gaya Kupu-Kupu</td>
-                <td class="text-center">GROUP V</td>
-                <td class="text-center fw-bold">110</td>
-            </tr>
-        </tbody>
-    </table>
-
-
-    <div class="page-break"></div>
-
-    <table class="header-table">
-        <tr>
-            <td class="header-title">MEET PROGRAM</td>
-        </tr>
-        <tr>
-            <td class="header-subtitle">GOLDEN BLACK PADANG OPEN SWIMMING CHAMPIONSHIP II 2025</td>
-        </tr>
-        <tr>
-            <td class="header-meta">KOLAM RENANG TERATAI PADANG | Jumat, 19 September 2025 (PAGI)</td>
-        </tr>
-    </table>
-
-    <div class="columns-container">
-
-        <div class="column-side left-side">
-
-            <div class="event-block">
-                <div class="event-title-bar">
-                    Acara 101 / Seri 1 / 800 M Bebas / KU 4 PA
-                </div>
-
-                <table class="lane-table">
-                    <thead>
-                        <tr>
-                            <th width="7%">Ln</th>
-                            <th width="13%">ID</th>
-                            <th width="43%">Nama Atlet</th>
-                            <th width="8%">Lhr</th>
-                            <th width="19%">Klub/Tim</th>
-                            <th width="10%">Waktu</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-center fw-bold">3</td>
-                            <td class="text-center">44408</td>
-                            <td><b>AKIFA MARDHATILLAH</b></td>
-                            <td class="text-center">2014</td>
-                            <td>LAWAI FANTASI</td>
-                            <td class="text-center juri-notes">[ . . . . . . ]</td>
-                        </tr>
-                        <tr>
-                            <td class="text-center fw-bold">4</td>
-                            <td class="text-center">44381</td>
-                            <td><b>FATIHATUL HUMAIRA F.</b></td>
-                            <td class="text-center">2014</td>
-                            <td>SEARIA AQUATIC</td>
-                            <td class="text-center fw-bold">16.14</td>
-                        </tr>
-                        <tr>
-                            <td class="text-center fw-bold">5</td>
-                            <td class="text-center">10357</td>
-                            <td><b>FAHIRA LUTHFINA R.</b></td>
-                            <td class="text-center">2014</td>
-                            <td>SIJUNJUNG SC</td>
-                            <td class="text-center fw-bold">17.20</td>
-                        </tr>
-                    </tbody>
-                </table>
+        {{-- Dekorasi kotak kanan --}}
+        <div class="cover-deco-right">
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+                <div class="deco-box-gray" style="width:45px;height:45px;background:#ccc;"></div>
+                <div class="deco-box" style="width:55px;height:55px;border:3px solid #F5C400;"></div>
             </div>
-
-            <div class="event-block">
-                <div class="event-title-bar">
-                    Acara 103 / Seri 1 / 400 M Ganti / KU 2 PA
-                </div>
-
-                <table class="lane-table">
-                    <thead>
-                        <tr>
-                            <th width="7%">Ln</th>
-                            <th width="13%">ID</th>
-                            <th width="43%">Nama Atlet</th>
-                            <th width="8%">Lhr</th>
-                            <th width="19%">Klub/Tim</th>
-                            <th width="10%">Waktu</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-center fw-bold">4</td>
-                            <td class="text-center">22104</td>
-                            <td><b>MUHAMMAD RAFI</b></td>
-                            <td class="text-center">2013</td>
-                            <td>PADANG AQUATIC</td>
-                            <td class="text-center fw-bold">05:45.10</td>
-                        </tr>
-                        <tr>
-                            <td class="text-center fw-bold">5</td>
-                            <td class="text-center">11240</td>
-                            <td><b>FAREL ANDIKA</b></td>
-                            <td class="text-center">2012</td>
-                            <td>GOLDEN BLACK</td>
-                            <td class="text-center juri-notes">[ . . . . . . ]</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div style="display:flex; gap:8px; margin-bottom:8px; margin-left:20px;">
+                <div class="deco-box" style="width:55px;height:55px;border:3px solid #F5C400;"></div>
+                <div class="deco-box-gray" style="width:45px;height:45px;background:#ccc;"></div>
             </div>
-
+            <div style="display:flex; gap:8px;">
+                <div style="width:30px;height:30px;border:3px solid #F5C400;"></div>
+                <div class="deco-box" style="width:55px;height:55px;border:3px solid #F5C400;"></div>
+            </div>
         </div>
 
-        <div class="column-side right-side">
-
-            <div class="event-block">
-                <div class="event-title-bar">
-                    Acara 102 / Seri 1 / 800 M Bebas / KU 4 PI
-                </div>
-
-                <table class="lane-table">
-                    <thead>
-                        <tr>
-                            <th width="7%">Ln</th>
-                            <th width="13%">ID</th>
-                            <th width="43%">Nama Atlet</th>
-                            <th width="8%">Lhr</th>
-                            <th width="19%">Klub/Tim</th>
-                            <th width="10%">Waktu</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-center fw-bold">4</td>
-                            <td class="text-center">33708</td>
-                            <td><b>FAEQHA ZAHYANI RASYA</b></td>
-                            <td class="text-center">2014</td>
-                            <td>BA SHARK AQ</td>
-                            <td class="text-center juri-notes">[ . . . . . . ]</td>
-                        </tr>
-                        <tr>
-                            <td class="text-center fw-bold">5</td>
-                            <td class="text-center">17917</td>
-                            <td><b>DEVANA BALQIS</b></td>
-                            <td class="text-center">2015</td>
-                            <td>HANNA SC SOLOK</td>
-                            <td class="text-center juri-notes">[ . . . . . . ]</td>
-                        </tr>
-                        <tr>
-                            <td class="text-center fw-bold">6</td>
-                            <td class="text-center">44530</td>
-                            <td><b>DUHAIRA KHALWA</b></td>
-                            <td class="text-center">2015</td>
-                            <td>LENGAYANG SC</td>
-                            <td class="text-center juri-notes">[ . . . . . . ]</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="event-block">
-                <div class="event-title-bar">
-                    Acara 104 / Seri 1 / 400 M Ganti / KU 2 PI
-                </div>
-
-                <table class="lane-table">
-                    <thead>
-                        <tr>
-                            <th width="7%">Ln</th>
-                            <th width="13%">ID</th>
-                            <th width="43%">Nama Atlet</th>
-                            <th width="8%">Lhr</th>
-                            <th width="19%">Klub/Tim</th>
-                            <th width="10%">Waktu</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-center fw-bold">3</td>
-                            <td class="text-center">12903</td>
-                            <td><b>NAYLA SALSABILA</b></td>
-                            <td class="text-center">2011</td>
-                            <td>SEMELU SC</td>
-                            <td class="text-center fw-bold">06:12.15</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
+        {{-- Logo --}}
+        <div class="cover-logos">
+            @if(!empty($logoKiri))
+                @foreach($logoKiri as $logo)
+                    <img src="{{ $logo }}" alt="logo">
+                @endforeach
+            @endif
+            @if(!empty($logoKanan))
+                @foreach($logoKanan as $logo)
+                    <img src="{{ $logo }}" alt="logo">
+                @endforeach
+            @endif
         </div>
+
+        {{-- Teks utama --}}
+        <div class="cover-main-text">
+            <div class="meet">MEET</div>
+            <div class="program">PROGRAM</div>
+            <div class="ev-name">{{ $namaEvent }}</div>
+            <div class="ev-detail">
+                {{ $tanggal }}<br>
+                {{ $venue }}
+            </div>
+        </div>
+
+    </div>
+
+
+    {{-- =============================================
+         HALAMAN 2-3: SUSUNAN ACARA (per hari)
+    ============================================= --}}
+    @foreach($jadwalHari as $hari)
+    <div class="schedule-page">
+
+        <div class="schedule-day-title">{{ $loop->iteration }}) {{ $hari['label'] }}</div>
+
+        {{-- Ganti bagian schedule-table --}}
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th style="width:15%;">ACARA PA</th>
+                    <th style="width:46%; text-align:center;">NOMOR</th>
+                    <th style="width:15%;">KU</th>
+                    <th style="width:24%;">ACARA PI</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($hari['sesi'] as $sesi)
+
+                    {{-- Header sesi: PAGI / SIANG --}}
+                    <tr>
+                        <td colspan="4" style="font-weight:bold; background:#f0f0f0; padding:3px 6px;">
+                            {{ $sesi['nama'] }}
+                        </td>
+                    </tr>
+
+                    @foreach($sesi['acara'] as $acara)
+                        @foreach($acara['ku_list'] as $i => $ku)
+                        <tr>
+                            {{-- Kolom PA --}}
+                            <td class="td-nomor">{{ $ku['pa'] }}</td>
+
+                            {{-- Kolom NOMOR: hanya di baris pertama, rowspan sesuai jumlah KU --}}
+                            @if($i === 0)
+                            <td class="td-nama" rowspan="{{ count($acara['ku_list']) }}">
+                                {{ $acara['nomor'] }}
+                            </td>
+                            @endif
+
+                            {{-- Kolom KU & PI --}}
+                            <td class="td-ku">{{ $ku['ku'] }}</td>
+                            <td class="td-nomor">{{ $ku['pi'] }}</td>
+                        </tr>
+                        @endforeach
+                    @endforeach
+
+                @endforeach
+            </tbody>
+        </table>
+
+    </div>
+    @endforeach
+
+
+    {{-- =============================================
+         HALAMAN 4+: DETAIL PER ACARA
+    ============================================= --}}
+    <div>
+        {{-- Loop per acara --}}
+        @foreach($acaraList as $acara)
+        <div class="acara-header">
+            <div class="acara-left">
+                <span class="acara-nomor">Acara {{ $acara['nomor'] }}</span>
+                &nbsp;&nbsp;
+                <span class="acara-tanggal">{{ strtoupper($acara['tanggal'] ?? '') }}</span>
+            </div>
+            <div class="acara-right">
+                <span class="acara-nama">{{ $acara['nama'] }}</span>
+                &nbsp;&nbsp;
+                <span class="acara-status">{{ $acara['status'] ?? 'AKHIR' }}</span>
+            </div>
+        </div>
+
+        <div class="limit-row">
+            Limit Perlombaan &nbsp;&nbsp;&nbsp;
+            {{ $acara['limit'] ?? 'NO LIMIT' }} ({{ $acara['kategori'] ?? '' }})
+        </div>
+
+        {{-- Loop per seri --}}
+        @foreach($acara['seri'] as $seri)
+        <table class="detail-table">
+            <thead>
+                <tr>
+                    <th class="col-ln center">Ln</th>
+                    <th class="col-id center">ID</th>
+                    <th class="col-nama">
+                        Nama Atlet
+                        &nbsp;&nbsp; Ket
+                    </th>
+                    <th class="col-lahir center">Lahir</th>
+                    <th class="col-ku center">KU</th>
+                    <th class="col-tim">Nama Tim</th>
+                    <th class="col-prestasi right">Prestasi</th>
+                    <th class="col-idlomba center">
+                        <span class="seri-label">Seri {{ str_pad($seri['nomor'], 2, '0', STR_PAD_LEFT) }}</span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($seri['atlet'] as $atlet)
+                <tr>
+                    <td class="center">{{ $atlet['ln'] }}</td>
+                    <td class="center" style="font-size:7pt;">{{ $atlet['id'] ?? '' }}</td>
+                    <td>
+                        @if(!empty($atlet['nama']))
+                            <span class="nama-atlet">{{ $atlet['nama'] }}</span>
+                            @if(!empty($atlet['ket']))
+                                <span style="font-size:6pt; color:#777;">{{ $atlet['ket'] }}</span>
+                            @endif
+                        @else
+                            <span style="color:#bbb;">-</span>
+                        @endif
+                    </td>
+                    <td class="center">
+                        @if(!empty($atlet['lahir']))
+                            {{ $atlet['lahir'] }}
+                            @if(!empty($atlet['umur']))
+                                ({{ $atlet['umur'] }})
+                            @endif
+                            @if(!empty($atlet['ket_mosc']))
+                                <span class="mosc">{{ $atlet['ket_mosc'] }}</span>
+                            @endif
+                        @endif
+                    </td>
+                    <td class="center">{{ $atlet['ku'] ?? '' }}</td>
+                    <td>{{ $atlet['tim'] ?? '' }}</td>
+
+                    {{-- Prestasi: bisa di kiri atau kanan kotak ID lomba --}}
+                    @php
+                        $prestasi  = $atlet['prestasi'] ?? '';
+                        $idLomba   = $atlet['id_lomba'] ?? ''; // posisi kotak
+                        // 'kiri' = prestasi ada, id_lomba kosong sebelah kanan
+                        // 'kanan' = id_lomba kosong sebelah kiri
+                    @endphp
+                    @if($atlet['prestasi_pos'] === 'kiri')
+                    <td class="prestasi">{{ $prestasi }}</td>
+                    <td class="id-lomba">[ . . . . . . . . . . ]</td>
+                    @else
+                    <td class="id-lomba">[ . . . . . . . . . . ]</td>
+                    <td class="prestasi">{{ $prestasi }}</td>
+                    @endif
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @endforeach
+
+        @endforeach
 
     </div>
 

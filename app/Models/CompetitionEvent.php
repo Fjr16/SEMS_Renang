@@ -6,6 +6,7 @@ use App\Enums\EventType;
 use App\Enums\Gender;
 use App\Enums\Stroke;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class CompetitionEvent extends Model
 {
@@ -21,17 +22,79 @@ class CompetitionEvent extends Model
         'registration_fee',
     ];
 
-    protected static function booted()
+    private static function generateEventNumber($event, bool $isUpdate = false): string
     {
-        static::creating(function ($event){
-            $total = self::lockForUpdate()
-            ->where('competition_session_id', $event->competition_session_id)
-            ->count();
-            $nextNumber = $total + 1;
+        return DB::transaction(function () use ($event, $isUpdate) {
+            $sessionOrder = $event->competitionSession->session_order;
+            $prefix = (string) $sessionOrder;
 
-            $event->event_number = $event->competitionSession->session_order . str_pad($nextNumber,2,'0',STR_PAD_LEFT);
+            if ($isUpdate) {
+                // Ambil semua nomor yang sudah ada dengan prefix sesi ini
+                $existingNumbers = self::lockForUpdate()
+                    ->where('competition_session_id', $event->competition_session_id)
+                    ->where('id', '!=', $event->id) // exclude diri sendiri
+                    ->pluck('event_number')
+                    ->map(fn($n) => (int) substr($n, strlen($prefix))) // ambil bagian belakang saja
+                    ->sort()
+                    ->values();
+
+                // Cari gap: nomor yang belum terpakai mulai dari 1
+                $nextNumber = 1;
+                foreach ($existingNumbers as $num) {
+                    if ($num == $nextNumber) {
+                        $nextNumber++;
+                    } else {
+                        break; // ada gap, pakai nomor ini
+                    }
+                }
+            } else {
+                // Creating: cukup count + 1
+                $total = self::lockForUpdate()
+                    ->where('competition_session_id', $event->competition_session_id)
+                    ->count();
+                $nextNumber = $total + 1;
+            }
+
+            return $prefix . str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
         });
     }
+
+    protected static function booted()
+    {
+        static::creating(function ($event) {
+            $event->event_number = self::generateEventNumber($event, false);
+        });
+
+        static::updating(function ($event) {
+            if ($event->isDirty('competition_session_id')) {
+                $event->event_number = self::generateEventNumber($event, true);
+            }
+        });
+    }
+    // private static function generateEventNumber($event): string {
+    //     return DB::transaction(function () use ($event) {
+    //         $total = self::lockForUpdate()
+    //             ->where('competition_session_id', $event->competition_session_id)
+    //             ->count();
+
+    //         $nextNumber = $total + 1;
+
+    //         return $event->competitionSession->session_order . str_pad($nextNumber,2,'0',STR_PAD_LEFT);
+    //     });
+    // }
+
+    // protected static function booted()
+    // {
+    //     static::creating(function ($event){
+    //         $event->event_number = self::generateEventNumber($event);
+    //     });
+
+    //     static::updating(function ($event) {
+    //         if ($event->isDirty('competition_session_id')) {
+    //             $event->event_number = self::generateEventNumber($event);
+    //         }
+    //     });
+    // }
 
     public function competitionSession(){
         return $this->belongsTo(CompetitionSession::class);

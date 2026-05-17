@@ -22,6 +22,10 @@ return new class extends Migration
             $table->string('event_type',20)->nullable(false);
             $table->unsignedInteger('max_relay_athletes',false)->nullable(true); // maksimal 4
             $table->decimal('registration_fee',10,2)->nullable(true);
+            $table->unique(
+                ['competition_session_id', 'distance', 'stroke', 'age_group_id', 'gender'],
+                'unique_event_per_sesi'
+            );
             $table->timestamps();
         });
     }

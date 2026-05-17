@@ -205,6 +205,14 @@
                 </div>
 
                 <div class="col-md-4 col-12">
+                    <label class="form-label">Tipe Perlombaan</label>
+                    <select class="form-control" id="event_type" name="event_type" required>
+                        @foreach ($enumEType as $type)
+                            <option value="{{ $type->value }}">{{ $type->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4 col-12">
                     <label class="form-label">Gaya Perlombaan</label>
                     <select class="form-control" id="stroke" name="stroke" required>
                         @foreach ($enumStroke as $stroke)
@@ -234,14 +242,6 @@
                     <select class="form-control" id="age_group_id" name="age_group_id" required>
                         @foreach ($ageGroups as $ku)
                             <option value="{{ $ku->id }}">{{ $ku->label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4 col-12">
-                    <label class="form-label">Tipe Perlombaan</label>
-                    <select class="form-control" id="event_type" name="event_type" required>
-                        @foreach ($enumEType as $type)
-                            <option value="{{ $type->value }}">{{ $type->label() }}</option>
                         @endforeach
                     </select>
                 </div>

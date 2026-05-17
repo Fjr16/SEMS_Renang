@@ -426,19 +426,15 @@
 
                 {{-- Action Buttons --}}
                 <div class="d-flex gap-2 flex-wrap mt-3">
-                    <a href="#" class="btn btn-outline-secondary btn-pill btn-sm">
+                    {{-- <a href="#" class="btn btn-outline-secondary btn-pill btn-sm">
                         <i class="bi bi-eye me-1"></i>Detail
-                    </a>
+                    </a> --}}
 
                     @if($st?->value === App\Enums\CompetitionTeamStatus::Pending->value || $st?->value === App\Enums\CompetitionTeamStatus::Rejected->value)
                         <a href="{{ route('manager.club.registration.create', ['competition' => $e->competition]) }}" class="btn btn-outline-primary btn-pill btn-sm">
                             <i class="bi bi-pencil-square me-1"></i>Edit Entry
                         </a>
-                        {{-- <button class="btn btn-outline-danger btn-pill btn-sm">
-                            <i class="bi bi-x-circle me-1"></i>Batalkan Pendaftaran
-                        </button> --}}
                         @if($st?->value === App\Enums\CompetitionTeamStatus::Rejected->value)
-                            {{-- tombol info --}}
                             <button
                                 class="btn btn-outline-info btn-pill btn-sm"
                                 title="Alasan penolakan"
@@ -453,10 +449,14 @@
                     @endif
 
                     @if($st?->value === App\Enums\CompetitionTeamStatus::Active->value)
-                        {{-- <a href="#" class="btn btn-outline-success btn-pill btn-sm"> --}}
                         <button class="btn btn-outline-success btn-pill btn-sm" onclick="exportStartingList({{ $e->id }})">
-                            <i class="bi bi-download me-1"></i>Export Start List
+                            <i class="bi bi-download me-1"></i>Export Starting List
                         </button>
+                        @if(now()->toDateString() > $e->competition?->registration_end)
+                            <button class="btn btn-outline-primary btn-pill btn-sm" target="_blank" onclick="exportBukuAcara({{ $e->competition?->id }})">
+                                <i class="bi bi-download me-1"></i>Export Buku Acara
+                            </button>
+                        @endif
                         @if(($e->payment_status ?? 'unpaid') !== App\Enums\CompetitionTeamPaymentStatus::Paid->value)
                             <span class="text-secondary small fst-italic align-self-center">
                                 <i class="bi bi-info-circle me-1"></i>
@@ -626,6 +626,48 @@
         if (res.ok) {
             const disposition = res.headers.get("Content-Disposition");
             let filename = "starting_list.xlsx";
+            if (disposition && disposition.includes("filename=")) {
+                filename = disposition
+                    .split("filename=")[1]
+                    .replace(/"/g, "")   // hapus tanda kutip
+                    .trim();
+            }
+            const blob        = await res.blob();
+            const downloadUrl = URL.createObjectURL(blob);
+            const a           = document.createElement("a");
+            a.href            = downloadUrl;
+            a.download        = filename;
+            a.click();
+            URL.revokeObjectURL(downloadUrl);
+            return;
+        }
+
+        const result = await res.json();
+        Toast.fire({
+            icon:'error',
+            title:result.message ?? 'gagal export data'
+        });
+    }
+    async function exportBukuAcara(competition_id){
+        if(!competition_id){
+            Toast.fire({
+                icon:'error',
+                title:'Kompetisi tidak ditemukan'
+            });
+        }
+        const url = "{{ route('export.buku.acara') }}";
+        const res = await fetch(url, {
+            method:"POST",
+            headers: {
+                "Content-Type": "application/json",   // wajib untuk JSON
+                "X-CSRF-TOKEN":  "{{ csrf_token() }}",                // wajib di Laravel
+                "Accept":        "application/json",
+            },
+            body:JSON.stringify({competition_id})
+        });
+        if (res.ok) {
+            const disposition = res.headers.get("Content-Disposition");
+            let filename = "buku_acara.pdf";
             if (disposition && disposition.includes("filename=")) {
                 filename = disposition
                     .split("filename=")[1]

@@ -38,6 +38,20 @@ class CompetitionEventController extends Controller
             'registration_fee'       => 'required|numeric|min:0',
         ]);
 
+        $exists = CompetitionEvent::where('competition_session_id', $request->competition_session_id)
+            ->where('distance', $request->distance)
+            ->where('stroke', $request->stroke)
+            ->where('age_group_id', $request->age_group_id)
+            ->where('gender', $request->gender)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success'    => false,
+                'message'    => 'Event dengan kombinasi sesi, jarak, gaya, kelompok umur, dan jenis kelamin ini sudah ada.'
+            ]);
+        }
+
         $event = $competition->events()->create($validated);
         $event->load('ageGroup');
 
@@ -87,6 +101,20 @@ class CompetitionEventController extends Controller
         ], [
             'max_relay_athletes.required' => 'Maks. jumlah atlet wajib diisi untuk tipe estafet'
         ]);
+
+        $exists = CompetitionEvent::where('competition_session_id', $request->competition_session_id)
+            ->where('distance', $request->distance)
+            ->where('stroke', $request->stroke)
+            ->where('age_group_id', $request->age_group_id)
+            ->where('gender', $request->gender)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success'    => false,
+                'message'    => 'Event dengan kombinasi sesi, jarak, gaya, kelompok umur, dan jenis kelamin ini sudah ada.'
+            ]);
+        }
 
         if($request->event_type === EventType::individual->value) $validated['max_relay_athletes'] = null;
         $event->update($validated);

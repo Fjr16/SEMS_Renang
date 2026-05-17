@@ -118,11 +118,12 @@ Route::middleware(['auth'])->group(function(){
     });
 
     Route::prefix('/export')->group(function(){
-        Route::get('/undangan/kejurda', [ExportController::class, 'undanganKejurda'])->name('export.undangan.kejurda');
+        // Route::get('/undangan/kejurda', [ExportController::class, 'undanganKejurda'])->name('export.undangan.kejurda');
         Route::post('/starting/list', [ExportController::class, 'startingList'])->name('export.starting.list');
-        Route::get('/buku/acara', [ExportController::class, 'bukuAcara'])->name('export.buku.acara');
-        // Route::get('/competition', [CompetitionEntryController::class, 'indexGuest'])->name('guest.competition.index');
-        // Route::get('/competition/show', [CompetitionEntryController::class, 'showGuest'])->name('guest.competition.show');
+        Route::post('/buku/acara', [ExportController::class, 'bukuAcara'])->name('export.buku.acara');
+        Route::get('/rekap/medali/kontingen', [ExportController::class, 'rekapMedali'])->name('export.rekap.medali');
+        Route::get('/best/club', [ExportController::class, 'bestClub'])->name('export.best.club');
+        Route::get('/best/swimmer', [ExportController::class, 'bestSwimmer'])->name('export.best.swimmer');
     });
 });
 
