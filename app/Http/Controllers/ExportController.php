@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\EventType;
+use App\Enums\Gender;
 use App\Enums\Stroke;
 use App\Exports\StartingListExport;
 use App\Models\Competition;
@@ -123,6 +124,7 @@ class ExportController extends Controller
         $item = Competition::with([
             'venue',
             'sessions',
+            'events',
             'entries',
         ])->find($request->competition_id);
 
@@ -138,6 +140,7 @@ class ExportController extends Controller
         } else {
             $tanggal = $mulaiKompetisi->translatedFormat('d F') . ' – ' . $akhirKompetisi->translatedFormat('d F Y');
         }
+        // jadwal
         if ($mulaiKompetisi->isSameDay($akhirKompetisi)) {
             $jadwalHari = [
                 [
@@ -146,14 +149,24 @@ class ExportController extends Controller
                         return [
                             'nama' => $sesi->name ?? '-',
                             'acara' => $sesi->competitionEvents
-                                ->groupBy(fn($e) => $e->distance .'|'. $e->stroke)
+                                // ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->age_group_id)
+                                ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->event_type)
                                 ->map(function($events){
                                     $first = $events->first();
                                     return [
-                                        'nomor' => $first->distance . ' M ' . Stroke::from($first->stroke)->label(),
-                                        'ku_list' => $events->map(function ($event){
-
-                                        })
+                                        'nomor' => $first->distance . ' M ' . Stroke::tryFrom($first->stroke)->label() ?? '-',
+                                        'tipe_event' => EventType::tryFrom($first->event_type)->label() ?? '-',
+                                        'ku_list' => $events->groupBy('age_group_id')->map(function ($eByKu){
+                                            $noPa = $eByKu->where('gender', Gender::pria->value)->value('event_number');
+                                            $noPi = $eByKu->where('gender', Gender::wanita->value)->value('event_number');
+                                            $noCampuran = $eByKu->where('gender', 'mixed')->value('event_number');
+                                            return [
+                                                'ku' => $eByKu->first()?->ageGroup?->label ?? '-',
+                                                'pa' => $noPa,
+                                                'pi' => $noPi,
+                                                'mix' => $noCampuran
+                                            ];
+                                        })->values()->toArray(),
                                     ];
                             })->values()->toArray(),
                         ];
@@ -161,19 +174,68 @@ class ExportController extends Controller
                 ],
             ];
         } else {
-            $jadwalHari = [];
+            $jadwalHari = [
+                $item->sessions->groupBy('session_date')->map(function($byDate){
+                    $tglSesi = Carbon::parse($byDate->first()->session_date);
+                    return [
+                        'label' => $tglSesi->translatedFormat('l, d F Y'),
+                        'sesi' => $byDate->map(function ($sesi) {
+                            return [
+                                'nama' => $sesi->name ?? '-',
+                                'acara' => $sesi->competitionEvents
+                                    // ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->age_group_id)
+                                    ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->event_type)
+                                    ->map(function($events){
+                                        $first = $events->first();
+                                        return [
+                                            'nomor' => $first->distance . ' M ' . Stroke::tryFrom($first->stroke)->label() ?? '-',
+                                            'tipe_event' => EventType::tryFrom($first->event_type)->label() ?? '-',
+                                            'ku_list' => $events->groupBy('age_group_id')->map(function ($eByKu){
+                                                $noPa = $eByKu->where('gender', Gender::pria->value)->value('event_number');
+                                                $noPi = $eByKu->where('gender', Gender::wanita->value)->value('event_number');
+                                                return [
+                                                    'pa' => $noPa,
+                                                    'ku' => $eByKu->first()?->ageGroup?->label ?? '-',
+                                                    'pi' => $noPi
+                                                ];
+                                            })->values()->toArray(),
+                                        ];
+                                })->values()->toArray(),
+                            ];
+                        })->values()->toArray(),
+                    ];
+                })->toArray(),
+            ];
         }
 
+        // list acara dan entry
+        $acaraList = [
+            $item->events->map(function($e){
+                return [
+                    'nomor' => $e?->event_number,
+                    'nama' => ($e?->distance ?? '-') . ' M ' . Stroke::tryFrom($e->stroke)->label() ?? '-',
+                    'tanggal' => Carbon::parse($e->competitionSession?->session_date)->translatedFormat('l, d F Y') . ' — ' . ($e?->competitionSession?->name ?? '-'),
+                    'status' => count($e->configs) > 1 ? implode(', ', $e->configs?->pluck('round_type')?->toArray()) : $e->configs?->first()?->round_type,
+                    'limit'  => '00:27.50',
+                    'kategori' => 'KU-I / Open',
+                    'seri' => [
+                        // $e->heats->groupBy('round_type')->orderBy('heat_number')->map(function($heatByRound){
+                        //     return [
+                        //         'ronde' => $heatByRound->first()->round_type,
+                        //         ''
+                        //     ]
+                        // })->values()->toArray()
+                    ]
+                ];
+            })->sortBy('event_number')->toArray(),
+        ];
+        return $acaraList;
 
         $data = [
-            // =========================================================
-            // COVER & HEADER INFO
-            // =========================================================
             'namaEvent' => strtoupper($item?->name ?? 'Kompetisi -'),
             'tanggal'   => strtoupper($tanggal),
             'venue'     => ($item?->venue?->name ?? '-') . ', ' . ($item?->venue?->city ?? '-'),
 
-            // Path logo (sesuaikan dengan storage/asset di proyek Anda)
             'logoKiri'  => [
                 public_path('images/logo-dispora.png'),
                 public_path('images/logo-prsi-batam.png'),
@@ -183,137 +245,8 @@ class ExportController extends Controller
                 public_path('images/logo-sponsor-b.png'),
             ],
 
-            'jadwalHari' => [
-                [
-                    'label' => 'Hari Pertama — Jumat, 14 Juni 2025',
-                    'sesi'  => [
-                        [
-                            'nama'  => 'PAGI',
-                            'acara' => [
-                                [
-                                    'nomor' => '400 M Bebas',
-                                    'ku_list' => [
-                                        ['pa' => '201', 'ku' => 'II',      'pi' => '202'],
-                                        ['pa' => '203', 'ku' => 'TERBUKA', 'pi' => '204'],
-                                    ],
-                                ],
-                                [
-                                    'nomor' => '100 M Pungung',
-                                    'ku_list' => [
-                                        ['pa' => '205', 'ku' => 'V',       'pi' => '206'],
-                                        ['pa' => '207', 'ku' => 'IV',      'pi' => '208'],
-                                        ['pa' => '209', 'ku' => 'III',     'pi' => '210'],
-                                        ['pa' => '211', 'ku' => 'II',      'pi' => '212'],
-                                        ['pa' => '213', 'ku' => 'TERBUKA', 'pi' => '214'],
-                                    ],
-                                ],
-                                [
-                                    'nomor' => '200M Kupu-Kupu',
-                                    'ku_list' => [
-                                        ['pa' => '215', 'ku' => 'II',      'pi' => '216'],
-                                        ['pa' => '217', 'ku' => 'TERBUKA', 'pi' => '218'],
-                                    ],
-                                ],
-                                [
-                                    'nomor' => '50M Bebas',
-                                    'ku_list' => [
-                                        ['pa' => '219', 'ku' => 'VI',      'pi' => '220'],
-                                        ['pa' => '221', 'ku' => 'V',       'pi' => '222'],
-                                        ['pa' => '223', 'ku' => 'IV',      'pi' => '224'],
-                                        ['pa' => '225', 'ku' => 'III',     'pi' => '226'],
-                                        ['pa' => '227', 'ku' => 'II',      'pi' => '228'],
-                                        ['pa' => '229', 'ku' => 'TERBUKA', 'pi' => '230'],
-                                    ],
-                                ],
-                            ],
-                        ],
-                        [
-                            'nama'  => 'SIANG',
-                            'acara' => [
-                                [
-                                    'nomor' => '200 M Gaya Ganti',
-                                    'ku_list' => [
-                                        ['pa' => '231', 'ku' => 'III',     'pi' => '232'],
-                                        ['pa' => '233', 'ku' => 'II',      'pi' => '234'],
-                                        ['pa' => '235', 'ku' => 'TERBUKA', 'pi' => '236'],
-                                    ],
-                                ],
-                                // ... dst
-                            ],
-                        ],
-                    ],
-                ],
-                [
-                    'label' => 'Hari Kedua — Sabtu, 14 Juni 2025',
-                    'sesi'  => [
-                        [
-                            'nama'  => 'PAGI',
-                            'acara' => [
-                                [
-                                    'nomor' => '400 M Bebas',
-                                    'ku_list' => [
-                                        ['pa' => '201', 'ku' => 'II',      'pi' => '202'],
-                                        ['pa' => '203', 'ku' => 'TERBUKA', 'pi' => '204'],
-                                    ],
-                                ],
-                                [
-                                    'nomor' => '100 M Pungung',
-                                    'ku_list' => [
-                                        ['pa' => '205', 'ku' => 'V',       'pi' => '206'],
-                                        ['pa' => '207', 'ku' => 'IV',      'pi' => '208'],
-                                        ['pa' => '209', 'ku' => 'III',     'pi' => '210'],
-                                        ['pa' => '211', 'ku' => 'II',      'pi' => '212'],
-                                        ['pa' => '213', 'ku' => 'TERBUKA', 'pi' => '214'],
-                                    ],
-                                ],
-                                [
-                                    'nomor' => '200M Kupu-Kupu',
-                                    'ku_list' => [
-                                        ['pa' => '215', 'ku' => 'II',      'pi' => '216'],
-                                        ['pa' => '217', 'ku' => 'TERBUKA', 'pi' => '218'],
-                                    ],
-                                ],
-                                [
-                                    'nomor' => '50M Bebas',
-                                    'ku_list' => [
-                                        ['pa' => '219', 'ku' => 'VI',      'pi' => '220'],
-                                        ['pa' => '221', 'ku' => 'V',       'pi' => '222'],
-                                        ['pa' => '223', 'ku' => 'IV',      'pi' => '224'],
-                                        ['pa' => '225', 'ku' => 'III',     'pi' => '226'],
-                                        ['pa' => '227', 'ku' => 'II',      'pi' => '228'],
-                                        ['pa' => '229', 'ku' => 'TERBUKA', 'pi' => '230'],
-                                    ],
-                                ],
-                            ],
-                        ],
-                        [
-                            'nama'  => 'SIANG',
-                            'acara' => [
-                                [
-                                    'nomor' => '200 M Gaya Ganti',
-                                    'ku_list' => [
-                                        ['pa' => '231', 'ku' => 'III',     'pi' => '232'],
-                                        ['pa' => '233', 'ku' => 'II',      'pi' => '234'],
-                                        ['pa' => '235', 'ku' => 'TERBUKA', 'pi' => '236'],
-                                    ],
-                                ],
-                                // ... dst
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-
-
-            // =========================================================
-            // HALAMAN 4+: DETAIL PER ACARA
-            // Setiap acara punya beberapa seri, setiap seri punya 8 atlet (sesuai lane)
-            // =========================================================
+            'jadwalHari' => $jadwalHari,
             'acaraList' => [
-
-                // -------------------------------------------------------
-                // ACARA 1 — 50 M GAYA BEBAS PA (KU-I)
-                // -------------------------------------------------------
                 [
                     'nomor'    => '1',
                     'nama'     => '50 M GAYA BEBAS PUTRA',
@@ -446,7 +379,6 @@ class ExportController extends Controller
         $canvas  = $dompdf->getCanvas();
         $fontMetrics = $dompdf->getFontMetrics(); // ← simpan sebagai fontMetrics
 
-        $fontBold   = $fontMetrics->getFont("Arial", "bold");
         $fontNormal = $fontMetrics->getFont("Arial", "normal");
 
         $w = $canvas->get_width();
@@ -485,7 +417,8 @@ class ExportController extends Controller
             $fontNormal, 7, [0, 0, 0]
         );
 
-        return $dompdf->stream('buku-acara.pdf', ['Attachment' => false]);
+        // return $dompdf->stream('buku-acara.pdf', ['Attachment' => false]);
+        return $dompdf->stream('buku-acara.pdf');
     }
 
     public function bukuHasil(){

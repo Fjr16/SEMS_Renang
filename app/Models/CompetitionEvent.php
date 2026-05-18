@@ -71,30 +71,6 @@ class CompetitionEvent extends Model
             }
         });
     }
-    // private static function generateEventNumber($event): string {
-    //     return DB::transaction(function () use ($event) {
-    //         $total = self::lockForUpdate()
-    //             ->where('competition_session_id', $event->competition_session_id)
-    //             ->count();
-
-    //         $nextNumber = $total + 1;
-
-    //         return $event->competitionSession->session_order . str_pad($nextNumber,2,'0',STR_PAD_LEFT);
-    //     });
-    // }
-
-    // protected static function booted()
-    // {
-    //     static::creating(function ($event){
-    //         $event->event_number = self::generateEventNumber($event);
-    //     });
-
-    //     static::updating(function ($event) {
-    //         if ($event->isDirty('competition_session_id')) {
-    //             $event->event_number = self::generateEventNumber($event);
-    //         }
-    //     });
-    // }
 
     public function competitionSession(){
         return $this->belongsTo(CompetitionSession::class);

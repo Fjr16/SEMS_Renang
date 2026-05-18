@@ -229,6 +229,7 @@
             font-size: 8.5pt;
             padding: 3px 6px;
             border: 0.5pt solid #888;
+            text-align: center;
         }
 
         .schedule-table thead tr th {
@@ -236,14 +237,14 @@
             font-weight: bold;
             padding: 3px 6px;
             border: 0.5pt solid #888;
-            text-align: center;
+            /* text-align: center; */
             font-size: 8pt;
         }
 
         .schedule-table tbody tr td {
             padding: 2.5px 6px;
             border: 0.5pt solid #bbb;
-            text-align: center;
+            /* text-align: center; */
             vertical-align: middle;
         }
 
@@ -253,7 +254,7 @@
         }
 
         .schedule-table tbody tr td.td-nama {
-            text-align: center;
+            /* text-align: center; */
             font-style: italic;
         }
 
@@ -472,18 +473,22 @@
         <table class="schedule-table">
             <thead>
                 <tr>
-                    <th style="width:15%;">ACARA PA</th>
-                    <th style="width:46%; text-align:center;">NOMOR</th>
-                    <th style="width:15%;">KU</th>
-                    <th style="width:24%;">ACARA PI</th>
+                    {{-- <th style="width:15%;">ACARA PA</th> --}}
+                    <th rowspan="2" style="width:45%; text-align:center;">NOMOR</th>
+                    <th rowspan="2" style="width:15%;">KU</th>
+                    <th colspan="3" style="width:40%;">ACARA</th>
+                    <tr>
+                        <th>PA</th>
+                        <th>PI</th>
+                        <th>MIX</th>
+                    </tr>
                 </tr>
             </thead>
             <tbody>
                 @foreach($hari['sesi'] as $sesi)
 
-                    {{-- Header sesi: PAGI / SIANG --}}
-                    <tr>
-                        <td colspan="4" style="font-weight:bold; background:#f0f0f0; padding:3px 6px;">
+                    <tr class="session-header">
+                        <td colspan="5">
                             {{ $sesi['nama'] }}
                         </td>
                     </tr>
@@ -491,19 +496,16 @@
                     @foreach($sesi['acara'] as $acara)
                         @foreach($acara['ku_list'] as $i => $ku)
                         <tr>
-                            {{-- Kolom PA --}}
-                            <td class="td-nomor">{{ $ku['pa'] }}</td>
-
-                            {{-- Kolom NOMOR: hanya di baris pertama, rowspan sesuai jumlah KU --}}
                             @if($i === 0)
                             <td class="td-nama" rowspan="{{ count($acara['ku_list']) }}">
                                 {{ $acara['nomor'] }}
                             </td>
                             @endif
 
-                            {{-- Kolom KU & PI --}}
                             <td class="td-ku">{{ $ku['ku'] }}</td>
-                            <td class="td-nomor">{{ $ku['pi'] }}</td>
+                            <td class="td-nomor">{{ $ku['pa'] ?? '-' }}</td>
+                            <td class="td-nomor">{{ $ku['pi'] ?? '-' }}</td>
+                            <td class="td-nomor">{{ $ku['mix'] ?? '-' }}</td>
                         </tr>
                         @endforeach
                     @endforeach

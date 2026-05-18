@@ -452,7 +452,7 @@
                         <button class="btn btn-outline-success btn-pill btn-sm" onclick="exportStartingList({{ $e->id }})">
                             <i class="bi bi-download me-1"></i>Export Starting List
                         </button>
-                        @if(now()->toDateString() > $e->competition?->registration_end)
+                        @if(now()->toDateString() > $e->competition?->registration_end || $e->competition?->status != App\Enums\CompetitionStatus::register->value)
                             <button class="btn btn-outline-primary btn-pill btn-sm" target="_blank" onclick="exportBukuAcara({{ $e->competition?->id }})">
                                 <i class="bi bi-download me-1"></i>Export Buku Acara
                             </button>
@@ -665,24 +665,24 @@
             },
             body:JSON.stringify({competition_id})
         });
-        if (res.ok) {
-            const disposition = res.headers.get("Content-Disposition");
-            let filename = "buku_acara.pdf";
-            if (disposition && disposition.includes("filename=")) {
-                filename = disposition
-                    .split("filename=")[1]
-                    .replace(/"/g, "")   // hapus tanda kutip
-                    .trim();
-            }
-            const blob        = await res.blob();
-            const downloadUrl = URL.createObjectURL(blob);
-            const a           = document.createElement("a");
-            a.href            = downloadUrl;
-            a.download        = filename;
-            a.click();
-            URL.revokeObjectURL(downloadUrl);
-            return;
-        }
+        // if (res.ok) {
+        //     const disposition = res.headers.get("Content-Disposition");
+        //     let filename = "buku_acara.pdf";
+        //     if (disposition && disposition.includes("filename=")) {
+        //         filename = disposition
+        //             .split("filename=")[1]
+        //             .replace(/"/g, "")   // hapus tanda kutip
+        //             .trim();
+        //     }
+        //     const blob        = await res.blob();
+        //     const downloadUrl = URL.createObjectURL(blob);
+        //     const a           = document.createElement("a");
+        //     a.href            = downloadUrl;
+        //     a.download        = filename;
+        //     a.click();
+        //     URL.revokeObjectURL(downloadUrl);
+        //     return;
+        // }
 
         const result = await res.json();
         Toast.fire({
