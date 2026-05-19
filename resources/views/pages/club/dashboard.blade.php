@@ -107,9 +107,9 @@
 
     <div class="d-flex gap-2 flex-wrap">
       {{-- <a href="{{ route('cm.team.profile') ?? '#' }}" class="btn btn-outline-secondary btn-pill"> --}}
-      <a href="#" class="btn btn-outline-secondary btn-pill">
+      {{-- <a href="#" class="btn btn-outline-secondary btn-pill">
         <i class="bi bi-building me-1"></i>Profil Team
-      </a>
+      </a> --}}
       {{-- <a href="{{ route('cm.registration') ?? '#' }}" class="btn btn-primary btn-pill"> --}}
       <a href="{{ route('manager.club.registration') }}" class="btn btn-primary btn-pill">
         <i class="bi bi-clipboard-check me-1"></i>Daftar Kompetisi
@@ -173,8 +173,7 @@
           </div>
 
           <div class="d-flex gap-2 flex-wrap">
-            {{-- <a href="{{ route('cm.officials.index') ?? '#' }}" class="btn btn-outline-secondary btn-sm btn-pill"> --}}
-            <a href="#" class="btn btn-outline-secondary btn-sm btn-pill">
+            <a href="{{ route('manager.club.official') }}" class="btn btn-outline-secondary btn-sm btn-pill">
               <i class="bi bi-list-ul me-1"></i>Daftar Official
             </a>
           </div>

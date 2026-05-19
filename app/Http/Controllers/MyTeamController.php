@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Gender;
+use App\Enums\License;
+use App\Enums\TeamType;
 use App\Models\Athlete;
 use App\Models\Club;
 use Illuminate\Http\Request;
@@ -55,5 +57,13 @@ class MyTeamController extends Controller
         $accessType = 'Manajer Tim';
         $genders = Gender::cases();
         return view('pages.guest.atlet.index',compact('athletes', 'accessType', 'club', 'genders'));
+    }
+
+    public function officials(){
+        $club = $this->club;
+        $genders = Gender::cases();
+        $licenses = License::cases();
+        $clubCategories = TeamType::cases();
+        return view('pages.club.official-klub', compact('genders', 'clubCategories', 'licenses', 'club'));
     }
 }

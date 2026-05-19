@@ -15,8 +15,12 @@ use Yajra\DataTables\Facades\DataTables;
 
 class OfficialController extends Controller
 {
-    public function data(){
-        $data = Official::query()->with('club');
+    public function data(Request $req){
+        $clubId = $req->input('club_id');
+        $data = Official::query()->with('club')
+        ->when($clubId, function($q) use ($clubId){
+            $q->where('club_id', $clubId);
+        });
 
         return DataTables::of($data)
         ->addColumn('action', function($row){

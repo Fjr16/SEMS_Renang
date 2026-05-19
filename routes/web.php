@@ -20,8 +20,11 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VenuesAndPoolController;
 use Illuminate\Support\Facades\Route;
 
+// Route::get('/', function () {
+//     return view('pages.dashboard');
+// })->name('dashboard');
 Route::get('/', function () {
-    return view('pages.dashboard');
+    return redirect()->route('guest.competition.index');
 })->name('dashboard');
 
 Route::prefix('/master')->group(function(){
@@ -115,6 +118,7 @@ Route::middleware(['auth'])->group(function(){
         // entries
 
         Route::get('/atlet/{club}', [MyTeamController::class, 'athletes'])->name('manager.club.atlet');
+        Route::get('/official', [MyTeamController::class, 'officials'])->name('manager.club.official');
     });
 
     Route::prefix('/export')->group(function(){
