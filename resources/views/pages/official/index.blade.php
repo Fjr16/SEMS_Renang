@@ -74,7 +74,7 @@
       <div class="modal-content">
         <form id="formOfficial" enctype="multipart/form-data">
           <div class="modal-header">
-            <h5 class="modal-title" id="modalTitle">Tambah Atlet</h5>
+            <h5 class="modal-title" id="modalTitle">Tambah Official</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">

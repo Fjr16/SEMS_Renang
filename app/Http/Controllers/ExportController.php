@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\EventType;
+use App\Enums\RoundTypeEnum;
 use App\Enums\Gender;
 use App\Enums\Stroke;
 use App\Exports\StartingListExport;
@@ -132,6 +133,7 @@ class ExportController extends Controller
         $akhirKompetisi = Carbon::parse($item->end_date);
 
         $jadwalHari = [];
+        $acaraList = [];
 
         if ($mulaiKompetisi->isSameDay($akhirKompetisi)) {
             $tanggal = $mulaiKompetisi->translatedFormat('l, d F Y');
@@ -209,27 +211,46 @@ class ExportController extends Controller
         }
 
         // list acara dan entry
-        $acaraList = [
-            $item->events->map(function($e){
-                return [
-                    'nomor' => $e?->event_number,
-                    'nama' => ($e?->distance ?? '-') . ' M ' . Stroke::tryFrom($e->stroke)->label() ?? '-',
-                    'tanggal' => Carbon::parse($e->competitionSession?->session_date)->translatedFormat('l, d F Y') . ' — ' . ($e?->competitionSession?->name ?? '-'),
-                    'status' => count($e->configs) > 1 ? implode(', ', $e->configs?->pluck('round_type')?->toArray()) : $e->configs?->first()?->round_type,
-                    'limit'  => '00:27.50',
-                    'kategori' => 'KU-I / Open',
-                    'seri' => [
-                        // $e->heats->groupBy('round_type')->orderBy('heat_number')->map(function($heatByRound){
-                        //     return [
-                        //         'ronde' => $heatByRound->first()->round_type,
-                        //         ''
-                        //     ]
-                        // })->values()->toArray()
-                    ]
-                ];
-            })->sortBy('event_number')->toArray(),
-        ];
-        return $acaraList;
+        $acaraList = $item->events->sortBy('event_number')->map(function($e){
+            $roundAwal = count($e->configs) > 1 ? $e->configs?->where('order', 1)->first()?->round_type : $e->configs?->first()?->round_type;
+            // $usedLanes = count($e->configs) > 1 ? $e->configs?->where('order', 1)->first()?->used_lanes : $e->configs?->first()?->used_lanes;
+            $totalLanes = $e->competitionSession?->pool?->total_lanes ?? '8';
+            return [
+                'nomor' => $e?->event_number,
+                'nama' => ($e?->distance ?? '-') . ' M ' . Stroke::tryFrom($e->stroke)->label() ?? '-',
+                'tanggal' => Carbon::parse($e->competitionSession?->session_date)->translatedFormat('l, d F Y') . ' — ' . ($e?->competitionSession?->name ?? '-'),
+                'status' => $roundAwal ? RoundTypeEnum::from($roundAwal)->label() : '-',
+                'limit'  => 'NO LIMIT ',
+                'kategori' => $e?->ageGroup?->label ?? '-',
+                'seri' => $e->heats->where('round_type', $roundAwal)->sortBy('heat_number')->map(function($heat) use ($e, $totalLanes){
+                    $existingLanes = $heat->heatLanes->keyBy('lane_number');
+
+                    $atlets = collect(range(1, $totalLanes))->map(function($laneNumber) use ($existingLanes, $e){
+                        $lane = $existingLanes->get($laneNumber);
+                        $tglLahir = $lane?->entry?->athlete?->bod;
+
+                        return [
+                            'ln'        => $laneNumber,
+                            'id'        => $lane?->entry?->athlete?->code ?? '-',
+                            'nama'      => $lane?->entry?->athlete?->name ?? '-',
+                            'ket'       => '',
+                            'lahir'     => $tglLahir ? Carbon::parse($tglLahir)->format('Y') : '-',
+                            'umur'      => $tglLahir ? Carbon::parse($tglLahir)->age : '-',
+                            'ket_mosc'  => '',
+                            'ku'        => $e?->ageGroup?->label ?? '-',
+                            'tim'       => $lane?->entry?->competitionTeam?->team?->club_name ?? '-',
+                            'prestasi'  => $lane?->entry?->seed_time ?? '-',
+                            'id_lomba'  => '',
+                        ];
+                    });
+
+                    return [
+                        'nomor' => $heat?->heat_number ?? '-',
+                        'atlet' => $atlets
+                    ];
+                })->values()->toArray(),
+            ];
+        })->values()->toArray();
 
         $data = [
             'namaEvent' => strtoupper($item?->name ?? 'Kompetisi -'),
@@ -246,129 +267,9 @@ class ExportController extends Controller
             ],
 
             'jadwalHari' => $jadwalHari,
-            'acaraList' => [
-                [
-                    'nomor'    => '1',
-                    'nama'     => '50 M GAYA BEBAS PUTRA',
-                    'tanggal'  => 'SABTU, 14 JUNI 2025 — SESI PAGI',
-                    'status'   => 'FINAL',
-                    'limit'    => '00:27.50',
-                    'kategori' => 'KU-I / Open',
-                    'seri'     => [
-                        [
-                            'nomor' => 1,
-                            'atlet' => [
-                                ['ln' => 1, 'id' => 'BT-001', 'nama' => 'REZA MAHARDIKA',    'ket' => '',    'lahir' => '12/03/2008', 'umur' => '17', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'AQUATIC BATAM CLUB',        'prestasi' => '00:26.81', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 2, 'id' => 'BT-042', 'nama' => 'FADHIL ARRAHMAN',   'ket' => '',    'lahir' => '05/07/2007', 'umur' => '17', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'SPECTRUM SWIMMING CLUB',    'prestasi' => '00:27.03', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 3, 'id' => 'BT-017', 'nama' => 'DIMAS PRATAMA',      'ket' => '',    'lahir' => '20/11/2006', 'umur' => '18', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'BARRACUDA BATAM',           'prestasi' => '00:27.19', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 4, 'id' => 'BP-003', 'nama' => 'ALIF NUGROHO',       'ket' => '',    'lahir' => '08/01/2007', 'umur' => '18', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'BINTAN POSEIDON',           'prestasi' => '00:27.22', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 5, 'id' => 'BT-029', 'nama' => 'RIZKY SAPUTRA',      'ket' => 'DQ', 'lahir' => '14/09/2006', 'umur' => '18', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'NEPTUNE SWIMMING',          'prestasi' => '00:27.45', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 6, 'id' => 'TJ-011', 'nama' => 'HENDRI KUSUMA',      'ket' => '',    'lahir' => '03/06/2008', 'umur' => '17', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'TANJUNGPINANG AQUATIC',     'prestasi' => '00:27.49', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 7, 'id' => 'KR-005', 'nama' => 'BIMA ARYANTA',       'ket' => '',    'lahir' => '25/02/2007', 'umur' => '18', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'KARIMUN SWIM TEAM',         'prestasi' => '00:27.88', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 8, 'id' => 'LN-008', 'nama' => '',                   'ket' => '',    'lahir' => '',           'umur' => '',   'ket_mosc' => '', 'ku' => '',        'tim' => '',                          'prestasi' => '',         'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                            ],
-                        ],
-                        [
-                            'nomor' => 2,
-                            'atlet' => [
-                                ['ln' => 1, 'id' => 'BT-055', 'nama' => 'KEVIN ADRIANSYAH',   'ket' => '',    'lahir' => '18/04/2009', 'umur' => '16', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'AQUATIC BATAM CLUB',        'prestasi' => '00:28.12', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 2, 'id' => 'BT-088', 'nama' => 'GALIH WICAKSONO',    'ket' => '',    'lahir' => '30/10/2009', 'umur' => '15', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'BARRACUDA BATAM',           'prestasi' => '00:28.34', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 3, 'id' => 'SP-014', 'nama' => 'NANDA SETIAWAN',     'ket' => '',    'lahir' => '07/08/2008', 'umur' => '16', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'SPECTRUM SWIMMING CLUB',    'prestasi' => '00:28.56', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 4, 'id' => 'TJ-022', 'nama' => 'ANDI FIRMANSYAH',    'ket' => '',    'lahir' => '22/12/2008', 'umur' => '16', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'TANJUNGPINANG AQUATIC',     'prestasi' => '00:28.71', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 5, 'id' => 'NP-001', 'nama' => 'YOGA PRABOWO',       'ket' => '',    'lahir' => '11/03/2009', 'umur' => '16', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'NEPTUNE SWIMMING',          'prestasi' => '00:28.90', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 6, 'id' => 'BT-099', 'nama' => 'SAHRUL HENDRA',      'ket' => '',    'lahir' => '16/05/2009', 'umur' => '16', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'AQUATIC BATAM CLUB',        'prestasi' => '00:29.10', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 7, 'id' => 'KR-018', 'nama' => 'FARIS MAULANA',      'ket' => '',    'lahir' => '04/07/2009', 'umur' => '15', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'KARIMUN SWIM TEAM',         'prestasi' => '00:29.33', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 8, 'id' => 'BP-019', 'nama' => 'ARDIAN SYAHPUTRA',   'ket' => '',    'lahir' => '09/11/2009', 'umur' => '15', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'BINTAN POSEIDON',           'prestasi' => '00:29.55', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                            ],
-                        ],
-                    ],
-                ],
-
-                // -------------------------------------------------------
-                // ACARA 2 — 50 M GAYA BEBAS PI (KU-I)
-                // -------------------------------------------------------
-                [
-                    'nomor'    => '2',
-                    'nama'     => '50 M GAYA BEBAS PUTRI',
-                    'tanggal'  => 'SABTU, 14 JUNI 2025 — SESI PAGI',
-                    'status'   => 'FINAL',
-                    'limit'    => '00:29.80',
-                    'kategori' => 'KU-I / Open',
-                    'seri'     => [
-                        [
-                            'nomor' => 1,
-                            'atlet' => [
-                                ['ln' => 1, 'id' => 'BT-012', 'nama' => 'SYIFA AULIA RAHMAH',  'ket' => '',    'lahir' => '17/02/2007', 'umur' => '18', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'AQUATIC BATAM CLUB',        'prestasi' => '00:28.90', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 2, 'id' => 'SP-007', 'nama' => 'NADYA PERMATASARI',   'ket' => '',    'lahir' => '03/05/2006', 'umur' => '19', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'SPECTRUM SWIMMING CLUB',    'prestasi' => '00:29.12', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 3, 'id' => 'BT-034', 'nama' => 'ANISA DEWI SUSANTI',  'ket' => '',    'lahir' => '28/08/2007', 'umur' => '17', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'BARRACUDA BATAM',           'prestasi' => '00:29.44', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 4, 'id' => 'TJ-004', 'nama' => 'SARI INDAH LESTARI',  'ket' => '',    'lahir' => '11/01/2007', 'umur' => '18', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'TANJUNGPINANG AQUATIC',     'prestasi' => '00:29.60', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 5, 'id' => 'BT-066', 'nama' => 'MELINDA WULANDARI',   'ket' => 'DQ', 'lahir' => '22/06/2006', 'umur' => '18', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'NEPTUNE SWIMMING',          'prestasi' => '00:29.77', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 6, 'id' => 'BP-025', 'nama' => 'RINA FITRIA',          'ket' => '',    'lahir' => '14/09/2007', 'umur' => '17', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'BINTAN POSEIDON',           'prestasi' => '00:29.80', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 7, 'id' => 'KR-009', 'nama' => 'PUTRI RAHAYU',         'ket' => '',    'lahir' => '06/12/2007', 'umur' => '17', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'KARIMUN SWIM TEAM',         'prestasi' => '00:30.01', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 8, 'id' => 'NP-007', 'nama' => 'DEWI KURNIAWATI',      'ket' => '',    'lahir' => '19/03/2008', 'umur' => '17', 'ket_mosc' => '', 'ku' => 'KU-I',   'tim' => 'NEPTUNE SWIMMING',          'prestasi' => '00:30.22', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                            ],
-                        ],
-                    ],
-                ],
-
-                // -------------------------------------------------------
-                // ACARA 3 — 100 M GAYA PUNGGUNG PA (KU-II)
-                // -------------------------------------------------------
-                [
-                    'nomor'    => '3',
-                    'nama'     => '100 M GAYA PUNGGUNG PUTRA',
-                    'tanggal'  => 'SABTU, 14 JUNI 2025 — SESI PAGI',
-                    'status'   => 'AKHIR',
-                    'limit'    => '01:05.00',
-                    'kategori' => 'KU-II',
-                    'seri'     => [
-                        [
-                            'nomor' => 1,
-                            'atlet' => [
-                                ['ln' => 1, 'id' => 'BT-071', 'nama' => 'WAHYU RAMADHAN',      'ket' => '',    'lahir' => '13/04/2009', 'umur' => '16', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'AQUATIC BATAM CLUB',        'prestasi' => '01:03.44', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 2, 'id' => 'SP-031', 'nama' => 'DANI KURNIAWAN',      'ket' => '',    'lahir' => '27/07/2009', 'umur' => '15', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'SPECTRUM SWIMMING CLUB',    'prestasi' => '01:03.88', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 3, 'id' => 'NP-013', 'nama' => 'BAGAS SAPUTRO',       'ket' => '',    'lahir' => '08/02/2010', 'umur' => '15', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'NEPTUNE SWIMMING',          'prestasi' => '01:04.21', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 4, 'id' => 'BT-082', 'nama' => 'ANDIKA PUTRA',        'ket' => '',    'lahir' => '30/09/2009', 'umur' => '15', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'BARRACUDA BATAM',           'prestasi' => '01:04.55', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 5, 'id' => 'TJ-016', 'nama' => 'HASAN ALBAIHAQI',     'ket' => '',    'lahir' => '16/05/2009', 'umur' => '16', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'TANJUNGPINANG AQUATIC',     'prestasi' => '01:04.90', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 6, 'id' => 'KR-024', 'nama' => 'RIFKI ANDRIYANTO',    'ket' => '',    'lahir' => '21/11/2009', 'umur' => '15', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'KARIMUN SWIM TEAM',         'prestasi' => '01:04.99', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 7, 'id' => 'BP-033', 'nama' => 'ILHAM NURHADI',       'ket' => '',    'lahir' => '02/06/2010', 'umur' => '15', 'ket_mosc' => '', 'ku' => 'KU-II',  'tim' => 'BINTAN POSEIDON',           'prestasi' => '01:05.00', 'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                                ['ln' => 8, 'id' => '',        'nama' => '',                    'ket' => '',    'lahir' => '',           'umur' => '',   'ket_mosc' => '', 'ku' => '',        'tim' => '',                          'prestasi' => '',         'prestasi_pos' => 'kiri',  'id_lomba' => ''],
-                            ],
-                        ],
-                    ],
-                ],
-
-                // -------------------------------------------------------
-                // ACARA 9 — 4×100 M GAYA BEBAS PA (KU-I) — relay
-                // -------------------------------------------------------
-                [
-                    'nomor'    => '9',
-                    'nama'     => '4 × 100 M GAYA BEBAS PUTRA',
-                    'tanggal'  => 'SABTU, 14 JUNI 2025 — SESI PAGI',
-                    'status'   => 'FINAL',
-                    'limit'    => '03:55.00',
-                    'kategori' => 'KU-I / Open — Tim',
-                    'seri'     => [
-                        [
-                            'nomor' => 1,
-                            'atlet' => [
-                                // Untuk relay, 1 baris = 1 tim; nama bisa berisi nama tim relay
-                                ['ln' => 1, 'id' => 'R-BT-A', 'nama' => 'AQUATIC BATAM CLUB — A', 'ket' => '',    'lahir' => '',  'umur' => '', 'ket_mosc' => '(Reza / Fadhil / Dimas / Alif)', 'ku' => 'KU-I', 'tim' => 'AQUATIC BATAM CLUB',     'prestasi' => '03:48.22', 'prestasi_pos' => 'kiri', 'id_lomba' => ''],
-                                ['ln' => 2, 'id' => 'R-SP-A', 'nama' => 'SPECTRUM SWIMMING — A',  'ket' => '',    'lahir' => '',  'umur' => '', 'ket_mosc' => '(Nanda / Kevin / Yoga / Sahrul)',  'ku' => 'KU-I', 'tim' => 'SPECTRUM SWIMMING CLUB', 'prestasi' => '03:51.10', 'prestasi_pos' => 'kiri', 'id_lomba' => ''],
-                                ['ln' => 3, 'id' => 'R-NP-A', 'nama' => 'NEPTUNE SWIMMING — A',   'ket' => '',    'lahir' => '',  'umur' => '', 'ket_mosc' => '(Bagas / Hasan / Faris / Ilham)', 'ku' => 'KU-I', 'tim' => 'NEPTUNE SWIMMING',       'prestasi' => '03:53.88', 'prestasi_pos' => 'kiri', 'id_lomba' => ''],
-                                ['ln' => 4, 'id' => 'R-TJ-A', 'nama' => 'TANJUNGPINANG AQUATIC — A','ket' => '', 'lahir' => '',  'umur' => '', 'ket_mosc' => '(Andi / Hendri / Bima / Ardian)', 'ku' => 'KU-I', 'tim' => 'TANJUNGPINANG AQUATIC',  'prestasi' => '03:54.55', 'prestasi_pos' => 'kiri', 'id_lomba' => ''],
-                                ['ln' => 5, 'id' => 'R-BP-A', 'nama' => 'BINTAN POSEIDON — A',    'ket' => '',    'lahir' => '',  'umur' => '', 'ket_mosc' => '(Yoga / Rina / Rifki / Galih)',  'ku' => 'KU-I', 'tim' => 'BINTAN POSEIDON',        'prestasi' => '03:54.99', 'prestasi_pos' => 'kiri', 'id_lomba' => ''],
-                                ['ln' => 6, 'id' => 'R-KR-A', 'nama' => 'KARIMUN SWIM TEAM — A',  'ket' => '',    'lahir' => '',  'umur' => '', 'ket_mosc' => '',                               'ku' => 'KU-I', 'tim' => 'KARIMUN SWIM TEAM',      'prestasi' => '03:55.00', 'prestasi_pos' => 'kiri', 'id_lomba' => ''],
-                                ['ln' => 7, 'id' => '',        'nama' => '',                        'ket' => '',    'lahir' => '',  'umur' => '', 'ket_mosc' => '',                               'ku' => '',     'tim' => '',                       'prestasi' => '',         'prestasi_pos' => 'kiri', 'id_lomba' => ''],
-                                ['ln' => 8, 'id' => '',        'nama' => '',                        'ket' => '',    'lahir' => '',  'umur' => '', 'ket_mosc' => '',                               'ku' => '',     'tim' => '',                       'prestasi' => '',         'prestasi_pos' => 'kiri', 'id_lomba' => ''],
-                            ],
-                        ],
-                    ],
-                ],
-
-            ], // akhir acaraList
-
-        ]; // akhir $data
+            'acaraList' => $acaraList,
+        ];
+        // return $data;
 
         $pdf = Pdf::loadView('pages.export_doc.buku_acara', $data)
             ->setPaper('a4', 'portrait');

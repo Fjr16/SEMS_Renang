@@ -355,12 +355,6 @@
                                         <label class="form-label" for="registration_number">Nomor Registrasi</label>
                                         <input type="text" name="registration_number" id="registration_number" class="form-control">
                                     </div>
-                                    <div class="mb-3">
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="status" name="status" value="active" checked>
-                                            <label class="form-check-label" for="status">Status Aktif</label>
-                                        </div>
-                                    </div>
                                 </div>
                                 <div class="col-sm-4 col-md-5 col-6">
                                     <div class="mb-2">
@@ -378,6 +372,22 @@
 
                                     <!-- Input File Asli (disembunyikan) -->
                                     <input type="file" name="foto" id="foto" accept="image/*" class="d-none" onchange="previewImg(event)">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="mb-3">
+                                <label class="form-label" for="kota">Kota</label>
+                                <input type="text" name="kota" id="kota" class="form-control" maxlength="50">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="provinsi">Provinsi</label>
+                                <input type="text" name="provinsi" id="provinsi" class="form-control" maxlength="50">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="status" name="status" value="active" checked>
+                                    <label class="form-check-label" for="status">Status Aktif</label>
                                 </div>
                             </div>
                         </div>

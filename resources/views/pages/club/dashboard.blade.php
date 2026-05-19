@@ -155,9 +155,6 @@
             <a href="{{ route('manager.club.atlet', ['club' => $item]) }}" class="btn btn-outline-secondary btn-sm btn-pill">
               <i class="bi bi-list-ul me-1"></i>Daftar Atlet
             </a>
-            <a href="#" class="btn btn-primary btn-sm btn-pill">
-              <i class="bi bi-plus-circle me-1"></i>Tambah
-            </a>
           </div>
         </div>
       </div>
@@ -179,10 +176,6 @@
             {{-- <a href="{{ route('cm.officials.index') ?? '#' }}" class="btn btn-outline-secondary btn-sm btn-pill"> --}}
             <a href="#" class="btn btn-outline-secondary btn-sm btn-pill">
               <i class="bi bi-list-ul me-1"></i>Daftar Official
-            </a>
-            {{-- <a href="{{ route('cm.officials.create') ?? '#' }}" class="btn btn-primary btn-sm btn-pill"> --}}
-            <a href="#" class="btn btn-primary btn-sm btn-pill">
-              <i class="bi bi-plus-circle me-1"></i>Tambah
             </a>
           </div>
         </div>

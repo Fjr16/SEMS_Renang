@@ -346,7 +346,7 @@
             padding: 1px 5px;
             font-size: 7pt;
             font-weight: bold;
-            float: right;
+            /* float: center; */
         }
 
         .detail-table tbody tr td {
@@ -362,10 +362,8 @@
 
         /* ID Lomba box */
         td.id-lomba {
-            text-align: center;
+            text-align: right;
             font-family: 'Courier New', monospace;
-            font-size: 7pt;
-            color: #555;
             white-space: nowrap;
         }
 
@@ -379,17 +377,6 @@
             font-family: 'Courier New', monospace;
             white-space: nowrap;
         }
-
-        /* Col widths buku acara */
-        .col-ln      { width: 4%; }
-        .col-id      { width: 7%; }
-        .col-nama    { width: 22%; }
-        .col-ket     { width: 5%; }
-        .col-lahir   { width: 10%; }
-        .col-ku      { width: 9%; }
-        .col-tim     { width: 24%; }
-        .col-prestasi{ width: 9%; }
-        .col-idlomba { width: 10%; }
 
         /* MOSC label */
         .mosc {
@@ -526,7 +513,7 @@
         @foreach($acaraList as $acara)
         <div class="acara-header">
             <div class="acara-left">
-                <span class="acara-nomor">Acara {{ $acara['nomor'] }}</span>
+                <span class="acara-nomor">Acara {{ $acara['nomor'] ?? '-' }}</span>
                 &nbsp;&nbsp;
                 <span class="acara-tanggal">{{ strtoupper($acara['tanggal'] ?? '') }}</span>
             </div>
@@ -547,19 +534,16 @@
         <table class="detail-table">
             <thead>
                 <tr>
-                    <th class="col-ln center">Ln</th>
-                    <th class="col-id center">ID</th>
-                    <th class="col-nama">
-                        Nama Atlet
-                        &nbsp;&nbsp; Ket
-                    </th>
-                    <th class="col-lahir center">Lahir</th>
-                    <th class="col-ku center">KU</th>
-                    <th class="col-tim">Nama Tim</th>
-                    <th class="col-prestasi right">Prestasi</th>
-                    <th class="col-idlomba center">
-                        <span class="seri-label">Seri {{ str_pad($seri['nomor'], 2, '0', STR_PAD_LEFT) }}</span>
-                    </th>
+                    <th style="width: 3%;">Ln</th>
+                    <th style="width: 7%;">ID</th>
+                    <th style="width: 18%;">Nama Atlet</th>
+                    <th style="width: 5%;">Ket</th>
+                    <th style="width: 10%;">Lahir</th>
+                    <th style="width: 7%;">KU</th>
+                    <th style="width: 20%;">Nama Tim</th>
+                    <th style="width: 8%" class="center">Prestasi</th>
+                    <th style="width: 12%;" class="center">ID Lomba</th>
+                    <th style="width: 10%; text-align: center; vertical-align: middle;"><span class="seri-label">Seri {{ str_pad($seri['nomor'], 2, '0', STR_PAD_LEFT) }}</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -577,6 +561,7 @@
                             <span style="color:#bbb;">-</span>
                         @endif
                     </td>
+                    <td class="center">{{ $atlet['ket'] ?? '-' }}</td>
                     <td class="center">
                         @if(!empty($atlet['lahir']))
                             {{ $atlet['lahir'] }}
@@ -591,20 +576,13 @@
                     <td class="center">{{ $atlet['ku'] ?? '' }}</td>
                     <td>{{ $atlet['tim'] ?? '' }}</td>
 
-                    {{-- Prestasi: bisa di kiri atau kanan kotak ID lomba --}}
                     @php
-                        $prestasi  = $atlet['prestasi'] ?? '';
-                        $idLomba   = $atlet['id_lomba'] ?? ''; // posisi kotak
-                        // 'kiri' = prestasi ada, id_lomba kosong sebelah kanan
-                        // 'kanan' = id_lomba kosong sebelah kiri
+                        $prestasi  = $atlet['prestasi'] ?? '-';
+                        $idLomba   = $atlet['id_lomba'] ?? '-';
                     @endphp
-                    @if($atlet['prestasi_pos'] === 'kiri')
                     <td class="prestasi">{{ $prestasi }}</td>
-                    <td class="id-lomba">[ . . . . . . . . . . ]</td>
-                    @else
-                    <td class="id-lomba">[ . . . . . . . . . . ]</td>
-                    <td class="prestasi">{{ $prestasi }}</td>
-                    @endif
+                    <td class="id-lomba">{{ empty($idLomba) ? '-' : $idLomba }}</td>
+                    <td style="width:10%; text-align: center;"> [ . . . . . . ]</td>
                 </tr>
                 @endforeach
             </tbody>
