@@ -64,13 +64,13 @@
         'route' => route('club.index'),
         ],
         [
-        'title' => 'Master Kelompok Umur',
+        'title' => 'Kelompok Umur',
         'desc'  => 'Kelola data master kelompok umur',
         'icon'  => 'bi-person-vcard',
         'route' => route('age.group.index'),
         ],
         [
-        'title' => 'Master Organisasi',
+        'title' => 'Organisasi',
         'desc'  => 'Kelola data master organisasi / penyelenggara',
         'icon'  => 'bi-building',
         'route' => route('organizations.index'),
@@ -82,7 +82,7 @@
         'route' => route('competition.index'),
         ],
         [
-        'title' => 'Manajemen User & Hak Akses',
+        'title' => 'User & Hak Akses',
         'desc'  => 'Kelola data user dan hak akses sistem',
         'icon'  => 'bi-shield-lock',
         'route' => route('users.index'),

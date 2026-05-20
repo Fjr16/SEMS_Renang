@@ -48,9 +48,6 @@ class DatabaseSeeder extends Seeder
         DB::table('competitions')->truncate();
         Competition::factory(200)->create();
 
-        $this->call([
-            UserRolePermissionSeeder::class,
-        ]);
         $user = \App\Models\User::orderBy('id')->first();
         if ($user) {
             $user->assignRole('super_admin');

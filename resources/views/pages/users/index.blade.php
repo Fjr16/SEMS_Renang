@@ -65,6 +65,14 @@
     }
     .item-check:hover{ background: rgba(13,110,253,.04); }
     .dt-actions .btn{ border-radius: .65rem; }
+    .perm-box {
+        max-height: 55vh;
+        overflow-y: auto;
+        border: 1px solid rgba(0,0,0,.08);
+        border-radius: .9rem;
+        padding: .75rem;
+        background: rgba(0,0,0,.012);
+    }
   </style>
 
   {{-- Header Page --}}
@@ -680,30 +688,106 @@
     }
     function renderPermissions(perms, assignedSet){
         const box = document.getElementById('permList');
-        box.innerHTML = perms.map(p => {
-        const checked = assignedSet.has(p.id) ? 'checked' : '';
-        // return `
-        //     <label class="d-flex align-items-center justify-content-between gap-2 mb-2">
-        //     <div class="d-flex align-items-center gap-2">
-        //         <input class="form-check-input perm-check" type="checkbox" name="permissions[]" value="${p.id}" ${checked}>
-        //         <div>
-        //         <div class="fw-semibold">${escapeHtml(p.name)}</div>
-        //         <div class="text-secondary small">guard: ${escapeHtml(p.guard_name ?? 'web')}</div>
-        //         </div>
-        //     </div>
-        //     <span class="badge text-bg-light border">${p.id}</span>
-        //     </label>
-        // `;
-        return `
-            <label class="d-flex align-items-center mb-2">
-            <div class="d-flex align-items-center gap-2">
-                <input class="form-check-input perm-check" type="checkbox" name="permissions[]" value="${p.id}" ${checked}>
-                <div class="fw-semibold">${escapeHtml(p.name)}</div>
+        const tree = parsePermissions(perms);
+
+        // box.innerHTML = perms.map(p => {
+        box.innerHTML = Object.entries(tree).map(([modul, menus]) => {
+            const allModulIds = Object.values(menus).flat().map(p => p.id);
+            const modulChecked = allModulIds.every(id => assignedSet.has(id));
+
+            return `
+            <div class="mb-3">
+                {{-- Level 1: Modul --}}
+                <div class="d-flex align-items-center gap-2 px-2 py-1 rounded mb-2"
+                    style="background:rgba(13,110,253,.07); border:1px solid rgba(13,110,253,.15)">
+                    <input class="form-check-input modul-check" type="checkbox"
+                        data-modul="${escapeHtml(modul)}"
+                        ${modulChecked ? 'checked' : ''}>
+                    <span class="fw-bold text-primary">${escapeHtml(modul)}</span>
+                </div>
+
+                <div class="ps-3">
+                    ${Object.entries(menus).map(([menu, actions]) => {
+                        const menuIds = actions.map(p => p.id);
+                        const menuChecked = menuIds.every(id => assignedSet.has(id));
+
+                        // Pisahkan: permission induk menu (tanpa aksi) vs aksi
+                        const induk = actions.find(p => !p.aksi);
+                        const aksiList = actions.filter(p => p.aksi);
+
+                        return `
+                        <div class="mb-2 soft-card p-2">
+                            {{-- Level 2: Menu --}}
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <input class="form-check-input menu-check perm-check"
+                                    type="checkbox" name="permissions[]"
+                                    data-menu="${escapeHtml(modul + '.' + menu)}"
+                                    ${induk ? `value="${induk.id}"` : `data-no-value="1"`}
+                                    ${menuChecked ? 'checked' : ''}>
+                                <span class="fw-semibold">${escapeHtml(menu)}</span>
+                            </div>
+
+                            {{-- Level 3: Aksi --}}
+                            ${aksiList.length ? `
+                            <div class="mb-3">
+                                ${aksiList.map(p => `
+                                <label class="item-check d-flex align-items-center gap-2 px-2 py-1"
+                                    style="border-radius:.5rem; min-width:120px">
+                                    <input class="form-check-input perm-check aksi-check"
+                                        type="checkbox" name="permissions[]"
+                                        value="${p.id}"
+                                        data-menu="${escapeHtml(modul + '.' + menu)}"
+                                        ${assignedSet.has(p.id) ? 'checked' : ''}>
+                                    <span class="small">${escapeHtml(p.aksi)}</span>
+                                </label>
+                                `).join('')}
+                            </div>` : ''}
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
             </div>
-            </label>
-        `;
+            `;
         }).join('');
+
+        // Event: klik modul → toggle semua menu & aksi di modul
+        document.querySelectorAll('.modul-check').forEach(cb => {
+            cb.addEventListener('change', () => {
+                const modul = cb.dataset.modul;
+                document.querySelectorAll(`[data-menu^="${modul}."]`).forEach(child => {
+                    child.checked = cb.checked;
+                });
+                document.querySelectorAll(`.aksi-check[data-menu^="${modul}."]`).forEach(child => {
+                    child.checked = cb.checked;
+                });
+            });
+        });
+
+        // Event: klik menu → toggle semua aksi di menu itu
+        document.querySelectorAll('.menu-check').forEach(cb => {
+            cb.addEventListener('change', () => {
+                const menuKey = cb.dataset.menu;
+                document.querySelectorAll(`.aksi-check[data-menu="${menuKey}"]`).forEach(child => {
+                    child.checked = cb.checked;
+                });
+            });
+        });
     }
+
+    function parsePermissions(perms) {
+        const tree = {};
+        perms.forEach(p => {
+            const [moduleMenu, aksi] = p.name.split('-');
+            const [modul, menu] = moduleMenu.split('.');
+
+            if (!tree[modul]) tree[modul] = {};
+            if (!tree[modul][menu]) tree[modul][menu] = [];
+
+            tree[modul][menu].push({ id: p.id, name: p.name, aksi: aksi ?? null });
+        });
+        return tree;
+    }
+
     document.getElementById('btnSelectAll').addEventListener('click', () => {
         document.querySelectorAll('#permList .perm-check').forEach(ch => ch.checked = true);
     });

@@ -25,7 +25,7 @@ class CompetitionController extends Controller
             $routeShow = route('competition.show', $row);
             $edit = '<div class="split-item" data-id="'.$row->id.'" onclick="edit(this)"><i class="bi bi-pencil"></i> Edit</div>';
             $dlt = '<div class="split-item danger" data-id="'.$row->id.'" onclick="destroy(this)"><i class="bi bi-trash"></i> Hapus</div>';
-            $show = '<a href="'.$routeShow.'" class="split-main"><i class="bi bi-eye"></i> Detail</a>';
+            $show = '<a href="'.$routeShow.'" class="split-main"><i class="bi bi-clipboard-data"></i> Kelola</a>';
 
                     return '
                         <div class="split-action">
