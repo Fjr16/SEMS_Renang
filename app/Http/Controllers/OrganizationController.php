@@ -3,14 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Organization;
+use App\Traits\HasApiResponse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 
 class OrganizationController extends Controller
 {
-     public function data(){
+    use HasApiResponse;
+    public function data(){
+        if(!auth()->user()->can('Master Setting.Organisasi-List')){
+            return DataTables::of([])->make(true);
+        };
         Carbon::setLocale('ID');
         $data = Organization::query();
 
@@ -18,10 +24,12 @@ class OrganizationController extends Controller
         ->addColumn('action', function($row){
             $edit = '<button class="btn btn-warning btn-sm" data-id="'.$row->id.'" data-name="'.$row->name.'" onclick="edit(this)"><i class="bi bi-pencil"></i></button>';
             $dlt = '<button class="btn btn-danger btn-sm" onclick="destroy('.$row->id.')"><i class="bi bi-trash"></i></button>';
+            if(!auth()->user()->hasAnyPermission(['Master Setting.Organisasi-Ubah', 'Master Setting.Organisasi-Hapus'])) return '';
             return '<div class="btn-group">
                         '.
-                        $edit .
-                        $dlt
+                        (auth()->user()->can('Master Setting.Organisasi-Ubah') ? $edit : '')
+                        .
+                        (auth()->user()->can('Master Setting.Organisasi-Hapus') ? $dlt : '')
                         .'
                     </div>';
         })
@@ -32,9 +40,13 @@ class OrganizationController extends Controller
         ->make(true);
     }
     public function index(){
+        $this->authorize('Master Setting.Organisasi-List');
         return view('pages.organization.index');
     }
     public function store(Request $r){
+        if(Gate::none(['Master Setting.Organisasi-Tambah','Master Setting.Organisasi-Ubah'])){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         $validators = Validator::make($r->all(), [
             'name' => 'required|string|max:255',
             'organization_id' => 'nullable|exists:organizations,id',
@@ -64,6 +76,9 @@ class OrganizationController extends Controller
         }
     }
     public function destroy($id){
+        if(!auth()->user()->can('Master Setting.Organisasi-Hapus')){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         try {
             $item = Organization::findOrFail($id);
             $item->delete();

@@ -46,7 +46,6 @@ class UserRolePermissionSeeder extends Seeder
             'master_settings' => [
                 'Master Setting.Klub-List',
                 'Master Setting.Klub-Tambah',
-                'Master Setting.Klub-Tambah',
                 'Master Setting.Klub-Ubah',
                 'Master Setting.Klub-Hapus',
 
@@ -81,13 +80,13 @@ class UserRolePermissionSeeder extends Seeder
                 'Master Setting.Organisasi-Ubah',
                 'Master Setting.Organisasi-Hapus',
 
-                'Master Setting.User & Hak Akses-List',
-                'Master Setting.User & Hak Akses-Tambah User',
-                'Master Setting.User & Hak Akses-Ubah User',
-                'Master Setting.User & Hak Akses-Hapus User',
-                'Master Setting.User & Hak Akses-Tambah Role',
-                'Master Setting.User & Hak Akses-Tambah Role User',
-                'Master Setting.User & Hak Akses-Tambah Hak Akses Role',
+                'Master Setting.User Hak Akses-List',
+                'Master Setting.User Hak Akses-Tambah User',
+                'Master Setting.User Hak Akses-Ubah User',
+                'Master Setting.User Hak Akses-Hapus User',
+                'Master Setting.User Hak Akses-Tambah Role',
+                'Master Setting.User Hak Akses-Tambah Role User',
+                'Master Setting.User Hak Akses-Tambah Hak Akses Role',
             ],
         ];
 

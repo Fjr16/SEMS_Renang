@@ -6,8 +6,10 @@ use App\Enums\Gender;
 use App\Enums\License;
 use App\Enums\TeamType;
 use App\Models\Official;
+use App\Traits\HasApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Enum;
@@ -15,7 +17,12 @@ use Yajra\DataTables\Facades\DataTables;
 
 class OfficialController extends Controller
 {
+    use HasApiResponse;
+
     public function data(Request $req){
+        if(!auth()->user()->can('Master Setting.Official-List')){
+            return DataTables::of([])->make(true);
+        };
         $clubId = $req->input('club_id');
         $data = Official::query()->with('club')
         ->when($clubId, function($q) use ($clubId){
@@ -26,10 +33,12 @@ class OfficialController extends Controller
         ->addColumn('action', function($row){
             $edit = '<button class="btn btn-warning btn-sm" onclick="edit('.$row->id.')"><i class="bi bi-pencil"></i></button>';
             $dlt = '<button class="btn btn-danger btn-sm" onclick="destroy('.$row->id.')"><i class="bi bi-trash"></i></button>';
+            if(!auth()->user()->hasAnyPermission(['Master Setting.Official-Ubah', 'Master Setting.Official-Hapus'])) return '';
             return '<div class="btn-group">
                         '.
-                        $edit .
-                        $dlt
+                        (auth()->user()->can('Master Setting.Official-Ubah') ? $edit : '')
+                        .
+                        (auth()->user()->can('Master Setting.Official-Hapus') ? $dlt : '')
                         .'
                     </div>';
         })
@@ -82,12 +91,16 @@ class OfficialController extends Controller
         ->make(true);
     }
     public function index(){
+        $this->authorize('Master Setting.Official-List');
         $genders = Gender::cases();
         $licenses = License::cases();
         $clubCategories = TeamType::cases();
         return view('pages.official.index', compact('genders', 'clubCategories', 'licenses'));
     }
     public function store(Request $r){
+        if(Gate::none(['Master Setting.Official-Tambah','Master Setting.Official-Ubah'])){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         $validators = Validator::make($r->all(), [
             'club_id' => 'required|integer|exists:clubs,id',
             'role' => 'required|string|max:255',
@@ -132,6 +145,9 @@ class OfficialController extends Controller
         }
     }
     public function destroy($id){
+        if(!auth()->user()->can('Master Setting.Official-Hapus')){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         try {
             $item = Official::findOrFail($id);
             $item->delete();

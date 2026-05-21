@@ -44,54 +44,64 @@
         'desc'  => 'Kelola venue dan pool renang',
         'icon'  => 'bi-geo-alt',
         'route' => route('master.venue.pools.index'),
+        'akses' => auth()->user()->can('Master Setting.Lokasi & Kolam-List'),
         ],
         [
         'title' => 'Atlet',
         'desc'  => 'Kelola data atlet terdaftar',
         'icon'  => 'bi-person-badge',
         'route' => route('atlet.index'),
+        'akses' => auth()->user()->can('Master Setting.Atlet-List')
         ],
         [
         'title' => 'Official',
         'desc'  => 'Kelola data official terdaftar',
         'icon'  => 'bi-person-check',
         'route' => route('official.index'),
+        'akses' => auth()->user()->can('Master Setting.Official-List'),
         ],
         [
         'title' => 'Klub',
         'desc'  => 'Kelola data klub & tim',
         'icon'  => 'bi-people',
         'route' => route('club.index'),
+        'akses' => auth()->user()->can('Master Setting.Klub-List'),
         ],
         [
         'title' => 'Kelompok Umur',
         'desc'  => 'Kelola data master kelompok umur',
         'icon'  => 'bi-person-vcard',
         'route' => route('age.group.index'),
+        'akses' => auth()->user()->can('Master Setting.Kelompok Umur-List'),
         ],
         [
         'title' => 'Organisasi',
         'desc'  => 'Kelola data master organisasi / penyelenggara',
         'icon'  => 'bi-building',
         'route' => route('organizations.index'),
+        'akses' => auth()->user()->can('Master Setting.Organisasi-List'),
         ],
         [
         'title' => 'Kompetisi',
         'desc'  => 'Daftar & kelola kompetisi',
         'icon'  => 'bi-trophy',
         'route' => route('competition.index'),
+        'akses' => auth()->user()->can('Master Setting.Kompetisi-List'),
         ],
         [
         'title' => 'User & Hak Akses',
         'desc'  => 'Kelola data user dan hak akses sistem',
         'icon'  => 'bi-shield-lock',
         'route' => route('users.index'),
+        // 'akses' => auth()->user()->can('Master Setting.User & Hak Akses-List'),
+        'akses' => true,
         ],
     ];
     @endphp
 
     <div class="row g-3">
     @foreach($cards as $c)
+        @if(!$c['akses']) @continue @endif
         <div class="col-12 col-md-6 col-xl-4">
         <a href="{{ $c['route'] }}" class="text-decoration-none text-reset">
             <div class="card setting-card h-100 shadow-sm">

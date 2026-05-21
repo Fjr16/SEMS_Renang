@@ -42,11 +42,13 @@
       <h2 class="fw-bold mb-1">Manajemen Atlet</h2>
       <p class="text-muted mb-0">Kelola data atlet yang terdaftar dalam sistem</p>
     </div>
+    @can('Master Setting.Atlet-Tambah')
     <div class="mt-3 mt-md-0">
       <button data-bs-toggle="modal" data-bs-target="#modalAthlete" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Atlet'); $('#athlete_id').val('');">
         <i class="bi bi-plus-circle me-1"></i> Tambah Atlet
       </button>
     </div>
+    @endcan
   </div>
 
   <!-- Card Content -->
@@ -55,7 +57,9 @@
         <table id="atletTable" class="table table-striped align-middle">
             <thead class="table-light">
             <tr>
+                @canany(['Master Setting.Atlet-Ubah', 'Master Setting.Atlet-Hapus'])
                 <th>Aksi</th>
+                @endcanany
                 <th>Foto</th>
                 <th>Atlet</th>
                 <th>No Registrasi</th>
@@ -175,14 +179,12 @@
         table = $('#atletTable').DataTable({
             processing:true,
             serverSide:true,
-            columnDefs: [
-                { targets: 0, className: 'dt-actions',  }, // kolom Aksi
-                { targets: 1, className: 'dt-fotos',  } // kolom foto
-            ],
             ajax:"{{ route('atlet.data') }}",
             columns:[
-                {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
-                {data:'foto', name:'foto', className:'text-center', orderable:false, searchable:false},
+                @canany(['Master Setting.Atlet-Ubah', 'Master Setting.Atlet-Hapus'])
+                {data:'action', name:'action', className:'text-center dt-actions', orderable:false, searchable:false},
+                @endcanany
+                {data:'foto', name:'foto', className:'text-center dt-fotos', orderable:false, searchable:false},
                 {data:'codeName', name:'name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 {data:'registration_number', name:'registration_number', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 {data:'clubDesc', name:'clubDesc', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
@@ -355,11 +357,12 @@
                         method:'DELETE',
                         headers:{
                             'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                            'Accept': 'application/json',
                         }
                     });
-                    if(!res.ok) throw new Error('Terjadi kesalahan pada server');
 
                     const result = await res.json();
+                    if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
                     hideSpinner();
                     if(!result.status) throw new Error(result.message || 'Gagal menghapus data');
@@ -408,12 +411,14 @@
                 method:'POST',
                 headers:{
                     'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                    'Accept': 'application/json',
                 },
                 body:formData
             });
-            if(!res.ok) throw new Error('Terjadi kesalahan pada server');
 
             const result = await res.json();
+
+            if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
             hideSpinner();
             if(!result.status) throw new Error(result.message || 'Gagal menyimpan data');

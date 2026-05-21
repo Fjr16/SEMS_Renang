@@ -7,6 +7,7 @@
     <p class="text-muted mb-0">Kelola venue dan pool dalam satu halaman (klik venue untuk melihat pool)</p>
   </div>
   <div class="mt-3 mt-md-0 d-flex gap-2">
+    @can('Master Setting.Lokasi & Kolam-Tambah')
     <button class="btn btn-outline-primary"
       data-bs-toggle="modal" data-bs-target="#modalVenue"
       onclick="openCreateVenue()">
@@ -18,6 +19,7 @@
       id="btnAddPool" disabled>
       <i class="bi bi-plus-circle me-1"></i> Tambah Pool
     </button>
+    @endcan
   </div>
 </div>
 
@@ -56,6 +58,7 @@
             <div class="fw-bold" id="selectedVenueName">Pilih venue terlebih dahulu</div>
             <div class="text-muted small" id="selectedVenueMeta">—</div>
           </div>
+          @canany(['Master Setting.Lokasi & Kolam-Tambah', 'Master Setting.Lokasi & Kolam-Tambah'])
           <div class="d-flex gap-2">
             <button class="btn btn-outline-secondary btn-sm" id="btnEditVenue" onclick="openEditVenue()" disabled>
               <i class="bi bi-pencil-square me-1"></i> Edit Venue
@@ -64,6 +67,7 @@
               <i class="bi bi-trash me-1"></i> Hapus Venue
             </button>
           </div>
+          @endcanany
         </div>
 
         <hr class="my-3">
@@ -76,13 +80,15 @@
         <table id="poolTable" class="table table-striped w-100">
           <thead>
             <tr>
-              <th class="text-center">Aksi</th>
-              <th>Nama Pool</th>
-              <th class="text-center">Course</th>
-              <th class="text-center">Panjang</th>
-              <th class="text-center">Lanes</th>
-              <th class="text-center">Kedalaman</th>
-              <th class="text-center">Status</th>
+                @canany(['Master Setting.Lokasi & Kolam-Ubah', 'Master Setting.Lokasi & Kolam-Hapus'])
+                <th>Aksi</th>
+                @endcanany
+                <th>Nama Pool</th>
+                <th class="text-center">Course</th>
+                <th class="text-center">Panjang</th>
+                <th class="text-center">Lanes</th>
+                <th class="text-center">Kedalaman</th>
+                <th class="text-center">Status</th>
             </tr>
           </thead>
         </table>
@@ -109,11 +115,6 @@
         <div class="modal-body">
           <input type="hidden" name="venue_id" id="venue_id">
           <div class="row g-3">
-            {{-- <div class="col-md-4">
-              <label class="form-label" for="venue_code">Kode Venue</label>
-              <input type="text" class="form-control" id="venue_code" name="code" placeholder="VNU-001">
-              <div class="text-muted small mt-1">Boleh otomatis/generate juga</div>
-            </div> --}}
             <div class="col-md-12">
               <label class="form-label" for="venue_name">Nama Venue</label>
               <input type="text" class="form-control" id="venue_name" name="name" placeholder="Nama Lokasi">
@@ -286,7 +287,9 @@
         }
       },
       columns: [
+        @canany(['Master Setting.Lokasi & Kolam-Ubah', 'Master Setting.Lokasi & Kolam-Hapus'])
         { data: 'action', name: 'action', className:'text-center', orderable:false, searchable:false },
+        @endcanany
         { data: 'name', name: 'name' },
         { data: 'course_type', name: 'course_type', className:'text-center' },
         { data: 'length_meter', name: 'length_meter', className:'text-center' },
@@ -313,13 +316,16 @@
 
       try {
         const res = await fetch("{{ route('master.venue.store') }}", {
-          method: 'POST',
-          headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
-          body: formData
+            method: 'POST',
+            headers:{
+                'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                'Accept': 'application/json',
+            },
+            body: formData
         });
 
-        if(!res.ok) throw new Error("Terjadi kesalahan pada server");
         const result = await res.json();
+        if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
         hideSpinner();
 
@@ -358,13 +364,16 @@
 
       try {
         const res = await fetch("{{ route('master.venue.pool.store') }}", {
-          method: 'POST',
-          headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
-          body: formData
+            method: 'POST',
+            headers:{
+                'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                'Accept': 'application/json',
+            },
+            body: formData
         });
 
-        if(!res.ok) throw new Error("Terjadi kesalahan pada server");
         const result = await res.json();
+        if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
         hideSpinner();
 
@@ -514,18 +523,21 @@
       const url = "{{ route('master.venue.destroy', ':id') }}".replace(':id', selectedVenue.id);
       const res = await fetch(url, {
         method:'DELETE',
-        headers:{ 'X-CSRF-TOKEN': "{{ csrf_token() }}" }
+        headers:{
+            'X-CSRF-TOKEN':"{{ csrf_token() }}",
+            'Accept': 'application/json',
+        }
       });
-      if(!res.ok) throw new Error("Terjadi Kesalahan Server");
-      const result = await res.json();
+        const result = await res.json();
+        if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
-      if(result.status){
-        Toast.fire({ icon:'success', title: result.message || 'Venue terhapus' });
-        resetSelectedVenue(true);
-        venueTable.ajax.reload(null, false);
-      } else {
-        Toast.fire({ icon:'error', title: result.message || 'Gagal hapus venue' });
-      }
+        if(result.status){
+            Toast.fire({ icon:'success', title: result.message || 'Venue terhapus' });
+            resetSelectedVenue(true);
+            venueTable.ajax.reload(null, false);
+        } else {
+            Toast.fire({ icon:'error', title: result.message || 'Gagal hapus venue' });
+        }
     }catch(err){
       Toast.fire({ icon:'error', title: err.message || 'Terjadi kesalahan' });
     }
@@ -548,18 +560,21 @@
 
       const res = await fetch(url, {
         method:'DELETE',
-        headers:{ 'X-CSRF-TOKEN': "{{ csrf_token() }}" }
+        headers:{
+            'X-CSRF-TOKEN':"{{ csrf_token() }}",
+            'Accept': 'application/json',
+        }
       });
-      if(!res.ok) throw new Error("Terjadi Kesalahan Server");
-      const result = await res.json();
+        const result = await res.json();
+        if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
-      poolTable.ajax.reload(null, false);
+        poolTable.ajax.reload(null, false);
 
-      if(result.status){
-        Toast.fire({ icon:'success', title: result.message || 'Pool terhapus' });
-      } else {
-        Toast.fire({ icon:'error', title: result.message || 'Gagal hapus pool' });
-      }
+        if(result.status){
+            Toast.fire({ icon:'success', title: result.message || 'Pool terhapus' });
+        } else {
+            Toast.fire({ icon:'error', title: result.message || 'Gagal hapus pool' });
+        }
     }catch(err){
       Toast.fire({ icon:'error', title: err.message || 'Terjadi kesalahan' });
     }

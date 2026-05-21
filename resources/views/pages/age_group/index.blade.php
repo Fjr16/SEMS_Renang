@@ -7,11 +7,13 @@
       <h2 class="fw-bold mb-1">Master Kelompok Umur</h2>
       <p class="text-muted mb-0">Kelola master data kelompok umur yang akan digunakan dalam acara / event</p>
     </div>
+    @can('Master Setting.Kelompok Umur-Tambah')
     <div class="mt-3 mt-md-0">
       <button data-bs-toggle="modal" data-bs-target="#modalKelompokUmur" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Kelompok Umur'); $('#age_group_id').val('');">
         <i class="bi bi-plus-circle me-1"></i> Tambah KU
       </button>
     </div>
+    @endcan
   </div>
 
   <!-- Card Content -->
@@ -20,7 +22,9 @@
         <table id="ageGroupTable" class="table table-striped align-middle">
             <thead class="table-light">
             <tr>
+                @canany(['Master Setting.Kelompok Umur-Ubah', 'Master Setting.Kelompok Umur-Hapus'])
                 <th>Aksi</th>
+                @endcanany
                 <th>Label</th>
                 <th>Umur Minimal</th>
                 <th>Umur Maksimal</th>
@@ -79,7 +83,9 @@
             ],
             ajax:"{{ route('age.group.data') }}",
             columns:[
+                @canany(['Master Setting.Kelompok Umur-Ubah', 'Master Setting.Kelompok Umur-Hapus'])
                 {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
+                @endcanany
                 {data:'label', name:'label', className:'text-center', orderable:true, searchable:true},
                 {data:'min_age', name:'min_age', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 {data:'max_age', name:'max_age', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
@@ -115,11 +121,12 @@
                         method:'DELETE',
                         headers:{
                             'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                            'Accept': 'application/json',
                         }
                     });
-                    if(!res.ok) throw new Error('Terjadi kesalahan pada server');
 
                     const result = await res.json();
+                    if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
                     hideSpinner();
                     if(!result.status) throw new Error(result.message || 'Gagal menghapus data');
@@ -155,12 +162,13 @@
                 method:'POST',
                 headers:{
                     'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                    'Accept': 'application/json',
                 },
                 body:formData
             });
-            if(!res.ok) throw new Error('Terjadi kesalahan pada server');
 
             const result = await res.json();
+            if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
             hideSpinner();
             if(!result.status) throw new Error(result.message || 'Gagal menyimpan data');

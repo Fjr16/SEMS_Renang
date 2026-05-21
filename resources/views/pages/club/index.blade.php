@@ -6,18 +6,22 @@
             <h2 class="fw-bold mb-1">Manajemen Klub</h2>
             <p class="text-muted mb-0">Kelola data Klub yang terdaftar dalam sistem</p>
         </div>
+        @can('Master Setting.Klub-Tambah')
         <div class="mt-3 mt-md-0">
             <button data-bs-toggle="modal" data-bs-target="#modalClub" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Klub'); $('#club_id').val(''); document.getElementById('form-submit').reset();">
                 <i class="bi bi-plus-circle me-1"></i> Tambah Klub
             </button>
         </div>
+        @endcan
     </div>
     <div class="card shadow-sm border-0">
         <div class="card-body">
             <table id="clubTable" class="table table-striped align-middle">
                 <thead>
                     <tr>
+                        @canany(['Master Setting.Klub-Ubah', 'Master Setting.Klub-Hapus'])
                         <th>Aksi</th>
+                        @endcanany
                         <th>Logo</th>
                         <th>Kategori</th>
                         <th>Kode</th>
@@ -109,7 +113,9 @@
                     {target:1, className:'dt-fotos'}
                 ],
                 columns:[
+                    @canany(['Master Setting.Klub-Ubah', 'Master Setting.Klub-Hapus'])
                     {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
+                    @endcanany
                     {data:'club_logo', name:'club_logo',defaultContent:'-', className:'text-center', orderable:false, searchable:false},
                     {data:'tipe_klub', name:'team_type',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                     {data:'club_code', name:'club_code',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
@@ -120,36 +126,6 @@
                     {data:'lead_phone', name:'lead_phone',defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 ],
                 order: [[2, 'desc']],
-
-                // initComplete: function(settings, json) {
-                //     // dipanggil SEKALI setelah table pertama kali selesai inisialisasi
-                //     // cocok untuk: pasang event di search, pindahin filter, dll
-                //     let api = this.api();
-                //     // contoh: custom search
-                //     $('#custom-search').on('keyup', function () {
-                //         api.search(this.value).draw();
-                //     });
-                // },
-
-                // drawCallback: function(settings) {
-                //     // dipanggil SETIAP kali table redraw
-                //     // cocok untuk: re-init tooltip, hitung summary, toggle tombol, dll
-                //     let api = this.api();
-
-                //     // contoh: hitung total kolom halaman ini
-                //     let total = api.column(3, {page:'current'}).data().reduce(function(a,b){
-                //         return (parseFloat(a)||0) + (parseFloat(b)||0);
-                //     }, 0);
-
-                //     $('#totalPage').text(total);
-                // },
-
-                // rowCallback: function(row, data, index) {
-                //     // jalan setiap row dibentuk
-                //     if (data.status === 'cancelled') {
-                //         $(row).addClass('table-danger');
-                //     }
-                // }
             });
         });
 
@@ -163,16 +139,17 @@
                 const res = await fetch("{{ route('club.store') }}", {
                     method:'POST',
                     headers: {
-                        'X-CSRF-TOKEN' : "{{ csrf_token() }}"
+                        'X-CSRF-TOKEN' : "{{ csrf_token() }}",
+                        'Accept' : 'application/json'
                     },
                     body:formData,
                 });
 
-                if(!res.ok) {
-                    throw new Error("Terjadi kesalahan pada server");
-                }
 
                 const result = await res.json();
+                if(!res.ok) {
+                    throw new Error(result.message || "Terjadi kesalahan pada server");
+                }
 
                 hideSpinner();
                 if (result.status) {
@@ -237,12 +214,13 @@
                     method:'DELETE',
                     headers: {
                         'X-CSRF-TOKEN' : '{{ csrf_token() }}',
+                        'Accept': 'application/json',
                     }
                 });
-                if (!res.ok) {
-                    throw new Error("Terjadi Kesalahan Server");
-                }
                 const result = await res.json();
+                if (!res.ok) {
+                    throw new Error(result.message || "Terjadi Kesalahan Server");
+                }
                 table.ajax.reload();
                 if (result.status) {
                     Toast.fire({

@@ -5,18 +5,26 @@ namespace App\Http\Controllers;
 use App\Helpers\CodeGenerator;
 use App\Models\Pool;
 use App\Models\Venue;
+use App\Traits\HasApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\DataTables;
 
 class VenuesAndPoolController extends Controller
 {
+    use HasApiResponse;
+
     public function index()
     {
+        $this->authorize('Master Setting.Lokasi & Kolam-List');
         return view('pages.venue_pool.index');
     }
     public function venueData(){
+        if(!auth()->user()->can('Master Setting.Lokasi & Kolam-List')){
+            return DataTables::of([])->make(true);
+        };
         $venues = Venue::query()
         ->orderBy('created_at','desc');
 
@@ -24,6 +32,9 @@ class VenuesAndPoolController extends Controller
         ->make(true);
     }
     public function poolData(){
+        if(!auth()->user()->can('Master Setting.Lokasi & Kolam-List')){
+            return DataTables::of([])->make(true);
+        };
         $venue_id = request()->get('venue_id');
         if(!$venue_id){
             return DataTables::of(collect([]))->make(true);
@@ -36,7 +47,12 @@ class VenuesAndPoolController extends Controller
         ->addColumn('action',function($row){
             $edit = '<button class="btn btn-sm btn-primary btn-edit-pool" onclick="editPool(this)"><i class="bi bi-pencil-square"></i></button>';
             $delete = '<button class="btn btn-sm btn-danger btn-delete-pool" data-id="'.$row->id.'" onclick="destroyPool(this)"><i class="bi bi-trash"></i></button>';
-            return $edit.' '.$delete;
+
+            if(!auth()->user()->hasAnyPermission(['Master Setting.Lokasi & Kolam-Ubah', 'Master Setting.Lokasi & Kolam-Hapus'])) return '';
+
+            return (auth()->user()->can('Master Setting.Lokasi & Kolam-Ubah') ? $edit : '')
+            . ' ' .
+            (auth()->user()->can('Master Setting.Lokasi & Kolam-Hapus') ? $delete : '');
         })
         ->addColumn('badge_status', function($row){
             $badgeClass = $row->status === 'active' ? 'bg-success' : 'bg-secondary';
@@ -46,6 +62,9 @@ class VenuesAndPoolController extends Controller
         ->make(true);
     }
     public function storeVenue(Request $req){
+        if(Gate::none(['Master Setting.Lokasi & Kolam-Tambah','Master Setting.Lokasi & Kolam-Ubah'])){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         $validators = Validator::make($req->all(), [
             'name' => 'required|string',
             'address' => 'required|string|max:255',
@@ -98,6 +117,9 @@ class VenuesAndPoolController extends Controller
 
     }
     public function destroyVenue($id){
+        if(!auth()->user()->can('Master Setting.Lokasi & Kolam-Hapus')){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         try {
             $item = Venue::findOrFail($id);
             $item->delete();
@@ -113,6 +135,9 @@ class VenuesAndPoolController extends Controller
         }
     }
     public function storePool(Request $req){
+        if(Gate::none(['Master Setting.Lokasi & Kolam-Tambah','Master Setting.Lokasi & Kolam-Ubah'])){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         $validators = Validator::make($req->all(), [
             'venue_id' => 'required|exists:venues,id',
             'name' => 'required|string',
@@ -207,6 +232,9 @@ class VenuesAndPoolController extends Controller
         }
     }
     public function destroyPool($id){
+        if(!auth()->user()->can('Master Setting.Lokasi & Kolam-Hapus')){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         try {
             $item = Pool::findOrFail($id);
             $item->delete();

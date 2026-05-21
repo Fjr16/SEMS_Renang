@@ -7,11 +7,13 @@
       <h2 class="fw-bold mb-1">Master Organisasi</h2>
       <p class="text-muted mb-0">Kelola master data organisasi / penyelenggara kompetisi dan acara</p>
     </div>
+    @can('Master Setting.Atlet-Tambah')
     <div class="mt-3 mt-md-0">
       <button data-bs-toggle="modal" data-bs-target="#modalOrganisasi" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Kelompok Umur'); $('#age_group_id').val('');">
         <i class="bi bi-plus-circle me-1"></i> Tambah Organisasi
       </button>
     </div>
+    @endcan
   </div>
 
   <!-- Card Content -->
@@ -20,7 +22,9 @@
         <table id="organizationTable" class="table table-striped align-middle">
             <thead class="table-light">
             <tr>
+                @canany(['Master Setting.Atlet-Ubah', 'Master Setting.Atlet-Hapus'])
                 <th>Aksi</th>
+                @endcanany
                 <th>Nama</th>
                 <th>Dibuat Pada</th>
             </tr>
@@ -63,12 +67,11 @@
         table = $('#organizationTable').DataTable({
             processing:true,
             serverSide:true,
-            columnDefs: [
-                { targets: 0, className: 'dt-actions',  }, // kolom Aksi
-            ],
             ajax:"{{ route('organizations.data') }}",
             columns:[
-                {data:'action', name:'action', orderable:false, searchable:false},
+                @canany(['Master Setting.Atlet-Ubah', 'Master Setting.Atlet-Hapus'])
+                {data:'action', name:'action', className:'dt-actions', orderable:false, searchable:false},
+                @endcanany
                 {data:'name', name:'name', orderable:true, searchable:true},
                 {data:'created_at', name:'created_at', defaultContent:'--/--/--', orderable:true, searchable:false},
             ],
@@ -101,11 +104,11 @@
                         method:'DELETE',
                         headers:{
                             'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                            'Accept': 'application/json',
                         }
                     });
-                    if(!res.ok) throw new Error('Terjadi kesalahan pada server');
-
                     const result = await res.json();
+                    if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
                     hideSpinner();
                     if(!result.status) throw new Error(result.message || 'Gagal menghapus data');
@@ -141,12 +144,12 @@
                 method:'POST',
                 headers:{
                     'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                    'Accept': 'application/json',
                 },
                 body:formData
             });
-            if(!res.ok) throw new Error('Terjadi kesalahan pada server');
-
             const result = await res.json();
+            if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
             hideSpinner();
             if(!result.status) throw new Error(result.message || 'Gagal menyimpan data');

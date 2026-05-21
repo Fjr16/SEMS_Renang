@@ -3,23 +3,34 @@
 namespace App\Http\Controllers;
 
 use App\Models\AgeGroup;
+use App\Traits\HasApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 
 class AgeGroupController extends Controller
 {
-     public function data(){
+    use HasApiResponse;
+
+    public function data(){
+        if(!auth()->user()->can('Master Setting.Kelompok Umur-List')){
+            return DataTables::of([])->make(true);
+        };
         $data = AgeGroup::query();
 
         return DataTables::of($data)
         ->addColumn('action', function($row){
             $edit = '<button class="btn btn-warning btn-sm" data-id="'.$row->id.'" data-label="'.$row->label.'" data-min_age="'.$row->min_age.'" data-max_age="'.$row->max_age.'" onclick="edit(this)"><i class="bi bi-pencil"></i></button>';
             $dlt = '<button class="btn btn-danger btn-sm" onclick="destroy('.$row->id.')"><i class="bi bi-trash"></i></button>';
+
+            if(!auth()->user()->hasAnyPermission(['Master Setting.Kelompok Umur-Ubah', 'Master Setting.Kelompok Umur-Hapus'])) return '';
+
             return '<div class="btn-group">
                         '.
-                        $edit .
-                        $dlt
+                        (auth()->user()->can('Master Setting.Kelompok Umur-Ubah') ? $edit : '')
+                        .
+                        (auth()->user()->can('Master Setting.Kelompok Umur-Hapus') ? $dlt : '')
                         .'
                     </div>';
         })
@@ -27,9 +38,13 @@ class AgeGroupController extends Controller
         ->make(true);
     }
     public function index(){
+        $this->authorize('Master Setting.Kelompok Umur-List');
         return view('pages.age_group.index');
     }
     public function store(Request $r){
+        if(Gate::none(['Master Setting.Kelompok Umur-Tambah','Master Setting.Kelompok Umur-Ubah'])){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         $validators = Validator::make($r->all(), [
             'label' => 'required|string|max:255',
             'min_age' => 'nullable|numeric|min:0',
@@ -63,6 +78,9 @@ class AgeGroupController extends Controller
         }
     }
     public function destroy($id){
+        if(!auth()->user()->can('Master Setting.Kelompok Umur-Hapus')){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         try {
             $item = AgeGroup::findOrFail($id);
             $item->delete();

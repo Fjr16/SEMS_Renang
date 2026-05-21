@@ -143,11 +143,13 @@
             <h2 class="fw-bold mb-1">Kompetisi & Event</h2>
             <p class="text-muted mb-0">Kelola data Kompetisi dan Event yang terdaftar dalam sistem</p>
         </div>
+        @can('Master Setting.Kompetisi-Tambah')
         <div class="mt-3 mt-md-0">
             <button data-bs-toggle="modal" data-bs-target="#modalCompetition" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Kompetisi'); $('#competition_id').val(''); document.getElementById('form-submit').reset();">
                 <i class="bi bi-plus-circle me-1"></i> Tambah Kompetisi
             </button>
         </div>
+        @endcan
     </div>
 
     <div class="card shadow-sm border-0">
@@ -155,7 +157,9 @@
             <table id="competitionTable" class="table table-striped">
                 <thead>
                     <tr class="text-nowrap">
+                        @canany(['Master Setting.Kompetisi-Ubah', 'Master Setting.Kompetisi-Hapus', 'Master Setting.Kompetisi-Kelola'])
                         <th>Aksi</th>
+                        @endcanany
                         <th>Nama Kompetisi</th>
                         <th>Penyelenggara</th>
                         <th>Waktu Kompetisi</th>
@@ -330,7 +334,9 @@
                     {target:0, className:'dt-actions'}
                 ],
                 columns:[
+                    @canany(['Master Setting.Kompetisi-Ubah', 'Master Setting.Kompetisi-Hapus', 'Master Setting.Kompetisi-Kelola'])
                     {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
+                    @endcanany
                     {data:'comp_desc', name:'name', orderable:true, searchable:true},
                     {data:'organizer', name:'organization.name', orderable:true, searchable:true},
                     {data:'comp_date', name:'start_date', orderable:true, searchable:true},
@@ -406,17 +412,15 @@
             try {
                 const res = await fetch("{{ route('competition.store') }}", {
                     method:'POST',
-                    headers: {
-                        'X-CSRF-TOKEN' : "{{ csrf_token() }}"
+                    headers:{
+                        'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                        'Accept': 'application/json',
                     },
                     body:formData,
                 });
 
-                if(!res.ok) {
-                    throw new Error("Terjadi kesalahan pada server");
-                }
-
                 const result = await res.json();
+                if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
                 hideSpinner();
                 if (result.status) {
@@ -501,14 +505,14 @@
                 const url = "{{ route('competition.destroy', ':id') }}".replace(':id', compId);
                 const res = await fetch(url, {
                     method:'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN' : '{{ csrf_token() }}',
+                    headers:{
+                        'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                        'Accept': 'application/json',
                     }
                 });
-                if (!res.ok) {
-                    throw new Error("Terjadi Kesalahan Server");
-                }
+
                 const result = await res.json();
+                if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
                 table.ajax.reload();
                 if (result.status) {
                     Toast.fire({

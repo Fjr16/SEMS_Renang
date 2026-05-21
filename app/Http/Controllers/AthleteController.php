@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Enums\Gender;
 use App\Enums\TeamType;
 use App\Models\Athlete;
+use App\Traits\HasApiResponse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Enum;
@@ -15,17 +17,26 @@ use Yajra\DataTables\Facades\DataTables;
 
 class AthleteController extends Controller
 {
+    use HasApiResponse;
+
     public function data(){
+        if(!auth()->user()->can('Master Setting.Atlet-List')){
+            return DataTables::of([])->make(true);
+        };
         $data = Athlete::query()->with('club');
 
         return DataTables::of($data)
         ->addColumn('action', function($row){
             $edit = '<button class="btn btn-warning btn-sm" onclick="edit('.$row->id.')"><i class="bi bi-pencil"></i></button>';
             $dlt = '<button class="btn btn-danger btn-sm" onclick="destroy('.$row->id.')"><i class="bi bi-trash"></i></button>';
+
+            if(!auth()->user()->hasAnyPermission(['Master Setting.Atlet-Ubah', 'Master Setting.Atlet-Hapus'])) return '';
+
             return '<div class="btn-group">
                         '.
-                        $edit .
-                        $dlt
+                        (auth()->user()->can('Master Setting.Atlet-Ubah') ? $edit : '')
+                        .
+                        (auth()->user()->can('Master Setting.Atlet-Hapus') ? $dlt : '')
                         .'
                     </div>';
         })
@@ -76,11 +87,15 @@ class AthleteController extends Controller
     }
 
     public function index(){
+        $this->authorize('Master Setting.Atlet-List');
         $genders = Gender::cases();
         $clubCategories = TeamType::cases();
         return view('pages.atlet.index', compact('genders', 'clubCategories'));
     }
     public function store(Request $r){
+        if(Gate::none(['Master Setting.Atlet-Tambah','Master Setting.Atlet-Ubah'])){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         $validators = Validator::make($r->all(), [
             'club_id' => 'required|integer|exists:clubs,id',
             'registration_number' => 'nullable|string|max:255',
@@ -132,6 +147,10 @@ class AthleteController extends Controller
         }
     }
     public function destroy($id){
+        if(!auth()->user()->can('Master Setting.Atlet-Hapus')){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
+
         try {
             $item = Athlete::findOrFail($id);
             $item->delete();

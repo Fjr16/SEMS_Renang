@@ -7,16 +7,23 @@ use App\Models\Competition;
 use App\Models\CompetitionEntry;
 use App\Models\CompetitionHeat;
 use App\Models\Pool;
+use App\Traits\HasApiResponse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Enum;
 use Yajra\DataTables\Facades\DataTables;
 
 class CompetitionController extends Controller
 {
+    use HasApiResponse;
+
     public function data(){
+        if(!auth()->user()->can('Master Setting.Kompetisi-List')){
+            return DataTables::of([])->make(true);
+        };
         $data = Competition::query()
                 ->with(['organization', 'venue']);
 
@@ -27,16 +34,24 @@ class CompetitionController extends Controller
             $dlt = '<div class="split-item danger" data-id="'.$row->id.'" onclick="destroy(this)"><i class="bi bi-trash"></i> Hapus</div>';
             $show = '<a href="'.$routeShow.'" class="split-main"><i class="bi bi-clipboard-data"></i> Kelola</a>';
 
+            if(!auth()->user()->hasAnyPermission(['Master Setting.Kompetisi-Ubah', 'Master Setting.Kompetisi-Hapus', 'Master Setting.Kompetisi-Kelola'])) return '';
+
                     return '
                         <div class="split-action">
-                            '. $show .
+                            '.
+                            (auth()->user()->can('Master Setting.Kompetisi-Kelola') ? $show : '')
+                            .
                             '<button class="split-caret" onclick="toggleSplit(this)">
                                 <i class="bi bi-chevron-down"></i>
                             </button>
                             <div class="split-dropdown">
-                                '. $edit .
+                                '.
+                                (auth()->user()->can('Master Setting.Kompetisi-Ubah') ? $edit : '')
+                                .
                                 '<div class="split-divider"></div>
-                                ' . $dlt .
+                                ' .
+                                (auth()->user()->can('Master Setting.Kompetisi-Hapus') ? $dlt : '')
+                                 .
                             '</div>
                         </div>';
         })
@@ -77,10 +92,14 @@ class CompetitionController extends Controller
         ->make(true);
     }
     public function index(){
+        $this->authorize('Master Setting.Kompetisi-List');
         $data = CompetitionStatus::cases();
         return view('pages.competition.index', compact('data'));
     }
     public function store(Request $r){
+        if(Gate::none(['Master Setting.Kompetisi-Tambah','Master Setting.Kompetisi-Ubah'])){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         $validators = Validator::make($r->all(), [
             'name' => 'required|string|max:255',
             'organization_id' => 'required|exists:organizations,id',
@@ -139,6 +158,9 @@ class CompetitionController extends Controller
         }
     }
     public function destroy($id){
+        if(!auth()->user()->can('Master Setting.Kompetisi-Hapus')){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         try {
             $item = Competition::findOrFail($id);
             $item->delete();
@@ -155,6 +177,9 @@ class CompetitionController extends Controller
     }
     // manajemen competition || show detail kompetisi
     public function show(Competition $competition){
+        if(!auth()->user()->can('Master Setting.Kompetisi-Kelola')){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         Carbon::setLocale('id');
         $enumStts = CompetitionStatus::class;
         $pools = Pool::select('name', 'code', 'id')

@@ -42,11 +42,13 @@
       <h2 class="fw-bold mb-1">Manajemen Official</h2>
       <p class="text-muted mb-0">Kelola data official yang terdaftar dalam sistem</p>
     </div>
+    @can('Master Setting.Official-Tambah')
     <div class="mt-3 mt-md-0">
       <button data-bs-toggle="modal" data-bs-target="#modalOfficial" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Official'); $('#official_id').val('');">
         <i class="bi bi-plus-circle me-1"></i> Tambah Official
       </button>
     </div>
+    @endcan
   </div>
 
   <!-- Card Content -->
@@ -55,7 +57,9 @@
         <table id="officialTable" class="table table-striped align-middle">
             <thead class="table-light">
             <tr>
+                @canany(['Master Setting.Official-Ubah', 'Master Setting.Official-Hapus'])
                 <th>Aksi</th>
+                @endcanany
                 <th>Foto</th>
                 <th>Jabatan</th>
                 <th>Nama</th>
@@ -162,14 +166,12 @@
         table = $('#officialTable').DataTable({
             processing:true,
             serverSide:true,
-            columnDefs: [
-                { targets: 0, className: 'dt-actions',  }, // kolom Aksi
-                { targets: 1, className: 'dt-fotos',  } // kolom foto
-            ],
             ajax:"{{ route('official.data') }}",
             columns:[
-                {data:'action', name:'action', className:'text-center', orderable:false, searchable:false},
-                {data:'foto', name:'foto', className:'text-center', orderable:false, searchable:false},
+                @canany(['Master Setting.Official-Ubah', 'Master Setting.Official-Hapus'])
+                {data:'action', name:'action', className:'text-center dt-actions', orderable:false, searchable:false},
+                @endcanany
+                {data:'foto', name:'foto', className:'text-center dt-fotos', orderable:false, searchable:false},
                 {data:'role', name:'role', className:'text-center', orderable:true, searchable:true},
                 {data:'name', name:'name', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
                 {data:'genderAttr', name:'gender', defaultContent:'-', className:'text-center', orderable:true, searchable:true},
@@ -338,11 +340,11 @@
                         method:'DELETE',
                         headers:{
                             'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                            'Accept': 'application/json',
                         }
                     });
-                    if(!res.ok) throw new Error('Terjadi kesalahan pada server');
-
                     const result = await res.json();
+                    if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
                     hideSpinner();
                     if(!result.status) throw new Error(result.message || 'Gagal menghapus data');
@@ -391,12 +393,13 @@
                 method:'POST',
                 headers:{
                     'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                    'Accept': 'application/json',
                 },
                 body:formData
             });
-            if(!res.ok) throw new Error('Terjadi kesalahan pada server');
 
             const result = await res.json();
+            if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
             hideSpinner();
             if(!result.status) throw new Error(result.message || 'Gagal menyimpan data');

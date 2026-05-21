@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\TeamType;
 use App\Models\Club;
+use App\Traits\HasApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Enum;
@@ -12,8 +14,12 @@ use Yajra\DataTables\Facades\DataTables;
 
 class ClubController extends Controller
 {
+    use HasApiResponse
     // CRUD Master Data
     public function data(){
+        if(!auth()->user()->can('Master Setting.Klub-List')){
+            return DataTables::of([])->make(true);
+        };
         $data = Club::select(
             'id',
             'club_name',
@@ -30,10 +36,14 @@ class ClubController extends Controller
         ->addColumn('action', function($row){
             $edit = '<button class="btn btn-warning btn-sm" onclick="edit(this)"><i class="bi bi-pencil"></i></button>';
             $dlt = '<button class="btn btn-danger btn-sm" data-id="'.$row->id.'" onclick="destroy(this)"><i class="bi bi-trash"></i></button>';
+
+            if(!auth()->user()->hasAnyPermission(['Master Setting.Klub-Ubah', 'Master Setting.Klub-Hapus'])) return '';
+
             return '<div class="btn-group">
                         '.
-                        $edit .
-                        $dlt
+                        (auth()->user()->can('Master Setting.Klub-Ubah') ? $edit : '')
+                        .
+                        (auth()->user()->can('Master Setting.Klub-Hapus') ? $dlt : '')
                         .'
                     </div>';
         })
@@ -63,10 +73,15 @@ class ClubController extends Controller
     }
 
     public function index(){
+        $this->authorize('Master Setting.Klub-List');
         $data = TeamType::cases();
         return view('pages.club.index', compact('data'));
     }
     public function store(Request $r){
+        if(Gate::none(['Master Setting.Klub-Tambah','Master Setting.Klub-Ubah'])){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
+
         try {
             $validators = Validator::make($r->all(), [
                 'team_type' => ['required', new Enum(TeamType::class)],
@@ -112,6 +127,9 @@ class ClubController extends Controller
         }
     }
     public function destroy($id){
+        if(!auth()->user()->can('Master Setting.Klub-Hapus')){
+            return $this->unauthorized('Anda tidak memiliki akses');
+        };
         try {
             $item = Club::find($id);
             $item->delete();
