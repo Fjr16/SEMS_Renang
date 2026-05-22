@@ -93,7 +93,7 @@ class AthleteController extends Controller
         return view('pages.atlet.index', compact('genders', 'clubCategories'));
     }
     public function store(Request $r){
-        if(Gate::none(['Master Setting.Atlet-Tambah','Master Setting.Atlet-Ubah'])){
+        if(Gate::none(['Master Setting.Atlet-Tambah','Master Setting.Atlet-Ubah', 'Tim Saya.Kelola Atlet-Tambah', 'Tim Saya.Kelola Atlet-Ubah'])){
             return $this->unauthorized('Anda tidak memiliki akses');
         };
         $validators = Validator::make($r->all(), [

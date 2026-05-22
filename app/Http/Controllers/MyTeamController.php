@@ -21,13 +21,16 @@ class MyTeamController extends Controller
 
     public function dashboard(){
         $item = $this->club;
+        if(!$item) return back()->with('error', 'Anda belum terhubung ke klub');
         return view('pages.club.dashboard', compact('item'));
     }
 
     public function athletes(Club $club){
+        if(!auth()->user()->hasAnyPermission(['Tim Saya.Kelola Atlet-List', 'Tim Saya.Kelola Atlet-Tambah'])){
+            abort(403);
+        };
         $q = request('q');
         $gender = request('gender');
-        $province = request('province');
 
         $query = Athlete::query()
         ->where('club_id', $club->id)
@@ -60,6 +63,9 @@ class MyTeamController extends Controller
     }
 
     public function officials(){
+        if(!auth()->user()->can('Tim Saya.Kelola Official-List')){
+            abort(403);
+        };
         $club = $this->club;
         $genders = Gender::cases();
         $licenses = License::cases();

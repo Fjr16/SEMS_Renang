@@ -2,11 +2,14 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
+use Illuminate\Support\Str;
 
 class UserRolePermissionSeeder extends Seeder
 {
@@ -16,11 +19,11 @@ class UserRolePermissionSeeder extends Seeder
     public function run(): void
     {
         // Wajib: reset cache spatie
-        DB::table('role_has_permissions')->delete();
-        DB::table('model_has_roles')->delete();
-        DB::table('model_has_permissions')->delete();
-        DB::table('roles')->delete();
-        DB::table('permissions')->delete();
+        // DB::table('role_has_permissions')->delete();
+        // DB::table('model_has_roles')->delete();
+        // DB::table('model_has_permissions')->delete();
+        // DB::table('roles')->delete();
+        // DB::table('permissions')->delete();
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $guard = 'web';
@@ -32,6 +35,7 @@ class UserRolePermissionSeeder extends Seeder
         $permissionsByModule = [
             'my_teams' => [
                 'Tim Saya.Pendaftaran Kompetisi',
+                'Tim Saya.Dashboard',
 
                 'Tim Saya.Kelola Atlet-List',
                 'Tim Saya.Kelola Atlet-Tambah',
@@ -100,19 +104,40 @@ class UserRolePermissionSeeder extends Seeder
             ]);
         }
 
-        $roles = [
-            'admin',
-            'penyelenggara',
-            'panitia',
-            'manajer_tim',
-        ];
+        // $roles = [
+        //     'admin',
+        //     'penyelenggara',
+        //     'panitia',
+        //     'manajer_tim',
+        // ];
 
-        foreach ($roles as $roleName) {
-            Role::firstOrCreate([
-                'name' => $roleName,
-                'guard_name' => $guard,
-            ]);
-        }
+        // foreach ($roles as $roleName) {
+        //     Role::firstOrCreate([
+        //         'name' => $roleName,
+        //         'guard_name' => $guard,
+        //     ]);
+        // }
+
+        $admin = Role::firstOrCreate([
+            'name' => 'admin',
+            'guard_name' => 'web',
+        ]);
+
+        // $admin = Role::where('name', 'admin')->first();
+        $admin->givePermissionTo($allPermissions);
+        $user = User::firstOrCreate([
+                'name' => 'admin',
+                'email' => 'admin@gmail.com',
+            ],[
+            'organization_id' => null,
+            'club_id' => null,
+            'name' => 'admin',
+            'email' => 'admin@gmail.com',
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+            'remember_token' => Str::random(10),
+        ]);
+        $user->assignRole('admin');
 
         // reset cache lagi setelah sync
         app(PermissionRegistrar::class)->forgetCachedPermissions();

@@ -42,11 +42,13 @@
       <h2 class="fw-bold mb-1">Manajemen Official</h2>
       <p class="mb-0 text-primary" style="font-weight: bold; font-size:18px;">{{ $club->club_name ?? '-' }}</p>
     </div>
+    @can('Tim Saya.Kelola Official-Tambah')
     <div class="mt-3 mt-md-0">
       <button data-bs-toggle="modal" data-bs-target="#modalOfficial" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Official'); $('#official_id').val('');">
         <i class="bi bi-plus-circle me-1"></i> Tambah Official
       </button>
     </div>
+    @endcan
   </div>
 
   <!-- Card Content -->
@@ -258,11 +260,12 @@
                         method:'DELETE',
                         headers:{
                             'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                            'Accept':'application/json'
                         }
                     });
-                    if(!res.ok) throw new Error('Terjadi kesalahan pada server');
 
                     const result = await res.json();
+                    if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
                     hideSpinner();
                     if(!result.status) throw new Error(result.message || 'Gagal menghapus data');
@@ -307,12 +310,13 @@
                 method:'POST',
                 headers:{
                     'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                    'Accept':'application/json'
                 },
                 body:formData
             });
-            if(!res.ok) throw new Error('Terjadi kesalahan pada server');
 
             const result = await res.json();
+            if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server');
 
             hideSpinner();
             if(!result.status) throw new Error(result.message || 'Gagal menyimpan data');

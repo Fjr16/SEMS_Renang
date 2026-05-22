@@ -260,13 +260,14 @@
                     method:'POST',
                     headers:{
                         'X-CSRF-TOKEN' : "{{ csrf_token() }}",
+                        'Accept':'application/json'
                     },
                     body:data,
                 });
 
-                if (!res.ok) throw new Error('Terjadi Kesalahan Pada server');
 
                 const result = await res.json();
+                if (!res.ok) throw new Error(result.message || 'Terjadi Kesalahan Pada server');
                 hideSpinner();
 
                 if (result.status) {
@@ -313,12 +314,13 @@
                     method:'DELETE',
                     headers: {
                         'X-CSRF-TOKEN' : '{{ csrf_token() }}',
+                        'Accept':'application/json'
                     }
                 });
-                if (!res.ok) {
-                    throw new Error("Terjadi Kesalahan Server");
-                }
                 const result = await res.json();
+                if (!res.ok) {
+                    throw new Error(result.message || "Terjadi Kesalahan Server");
+                }
 
                 if (result.status) {
                     Toast.fire({
@@ -794,7 +796,7 @@
                 try {
                     const res = await fetch("{{ route('competition.tab.entries.verification', $competition ) }}", {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}",'Accept': 'application/json' },
                         body: JSON.stringify({
                             competition_team_id : competitionTeamId,
                             notes : message ?? null,
@@ -802,9 +804,9 @@
                             payment_status: paymentStatus
                         })
                     });
-                    if(!res.ok) throw new Error('Terjadi kesalahan pada server, coba lagi beberapa saat');
 
                     const result = await res.json();
+                    if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server, coba lagi beberapa saat');
                     hideSpinner();
 
                     if(result.errors) console.log(result.errors);
@@ -842,11 +844,11 @@
                 try {
                     const res = await fetch(url, {
                         method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}",'Accept': 'application/json' },
                     });
-                    if(!res.ok) throw new Error('Terjadi kesalahan pada server, coba lagi beberapa saat');
 
                     const result = await res.json();
+                    if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server, coba lagi beberapa saat');
                     hideSpinner();
 
                     if(!result.status) throw new Error(result.message || 'Proses hapus entry gagal');
@@ -881,15 +883,15 @@
                 try {
                     const res = await fetch(url, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}", 'Accept': 'application/json' },
                         body:JSON.stringify({
                             competition_entry_id:entryId,
                             status:stts
                         })
                     });
-                    if(!res.ok) throw new Error('Terjadi kesalahan pada server, coba lagi beberapa saat');
 
                     const result = await res.json();
+                    if(!res.ok) throw new Error(result.message || 'Terjadi kesalahan pada server, coba lagi beberapa saat');
                     hideSpinner();
 
                     if(!result.status) throw new Error(result.message || 'Proses update status entry gagal');
@@ -998,16 +1000,17 @@
                             method:'POST',
                             headers:{
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN' : "{{ csrf_token() }}"
+                                'X-CSRF-TOKEN' : "{{ csrf_token() }}",
+                                'Accept': 'application/json'
                             },
                             body:JSON.stringify({
                                 competition_entry_id:entryId,
                                 seed_time:value
                             })
                         });
-                        if(!res.ok) throw new Error("Terjadi Kesalahan pada server, coba lagi beberapa saat !!");
 
                         const result = await res.json();
+                        if(!res.ok) throw new Error(result.message || "Terjadi Kesalahan pada server, coba lagi beberapa saat !!");
                         hideSpinner();
 
                         if(!result.status) throw new Error(result.message || 'Proses simpan seed time gagal');
@@ -1316,13 +1319,13 @@
                 try {
                     const res = await fetch(resetUrl, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}", 'Accept': 'application/json' },
                         body:JSON.stringify({
                             event_id:eventId,
                         })
                     });
-                    if (!res.ok) throw new Error("Terjadi Kesalahan pada server");
                     const result = await res.json();
+                    if (!res.ok) throw new Error(result.message || "Terjadi Kesalahan pada server");
                     if (!result.status) {
                         Toast.fire({
                             icon:'error',
@@ -1363,7 +1366,7 @@
 
             fetch(generateUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}", 'Accept': 'application/json' },
                 body: JSON.stringify({ event_id: eventId, rounds }),
             })
             .then(async r => {

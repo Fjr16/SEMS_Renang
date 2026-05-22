@@ -27,5 +27,49 @@
     @include('layouts.partials.footer')
 
     @include('layouts.partials.script')
+
+    @if(session('success'))
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Toast.fire({
+            icon: 'success',
+            title: @json(session('success'))
+        });
+    });
+    </script>
+    @endif
+
+    @if(session('error'))
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Toast.fire({
+            icon: 'error',
+            title: @json(session('error'))
+        });
+    });
+    </script>
+    @endif
+
+    @if(session('warning'))
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Toast.fire({
+            icon: 'warning',
+            title: @json(session('warning'))
+        });
+    });
+    </script>
+    @endif
+
+    @if(session('info'))
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Toast.fire({
+            icon: 'info',
+            title: @json(session('info'))
+        });
+    });
+    </script>
+    @endif
 </body>
 </html>

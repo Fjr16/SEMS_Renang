@@ -14,7 +14,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class ClubController extends Controller
 {
-    use HasApiResponse
+    use HasApiResponse;
     // CRUD Master Data
     public function data(){
         if(!auth()->user()->can('Master Setting.Klub-List')){

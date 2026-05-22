@@ -405,7 +405,7 @@
         try{
             const res = await fetch(url, {
                 method: 'POST',
-                headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}"},
+                headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}", 'Accept': 'application/json'},
                 body: fd
             });
             const json = await res.json();
@@ -450,12 +450,13 @@
             const  res = await fetch(url, {
                 method:'DELETE',
                 headers:{
-                    'X-CSRF-TOKEN' : "{{ csrf_token() }}"
+                    'X-CSRF-TOKEN' : "{{ csrf_token() }}",
+                    'Accept': 'application/json'
                 }
             });
 
-            if(!res.ok) throw new Error('Terjadi kesalahan sistem, hubungi admin');
             const data = await res.json();
+            if(!res.ok) throw new Error(data.message || 'Terjadi kesalahan sistem, hubungi admin');
             if(data.status){
                 Toast.fire({
                     icon:'success',
@@ -500,12 +501,13 @@
             const  res = await fetch(url, {
                 method:'POST',
                 headers:{
-                    'X-CSRF-TOKEN' : "{{ csrf_token() }}"
+                    'X-CSRF-TOKEN' : "{{ csrf_token() }}",
+                    'Accept': 'application/json'
                 }
             });
 
-            if(!res.ok) throw new Error('Terjadi kesalahan sistem, hubungi admin');
             const data = await res.json();
+            if(!res.ok) throw new Error(data.message || 'Terjadi kesalahan sistem, hubungi admin');
             if(data.status){
                 Toast.fire({
                     icon:'success',
@@ -588,7 +590,7 @@
         try{
         const res = await fetch(url, {
             method: 'POST',
-            headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}"},
+            headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}", 'Accept': 'application/json'},
             body: fd
         });
         const json = await res.json();
@@ -641,7 +643,7 @@
         try{
         const res = await fetch(url, {
             method: 'POST',
-            headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}"},
+            headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}", 'Accept': 'application/json'},
             body: fd
         });
         const json = await res.json();
@@ -805,7 +807,7 @@
         try{
             const res = await fetch(url, {
                 method: 'POST',
-                headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}"},
+                headers: {'X-CSRF-TOKEN': "{{ csrf_token() }}", 'Accept': 'application/json'},
                 body: fd
             });
             const json = await res.json();

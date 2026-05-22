@@ -535,12 +535,12 @@
                         method:'POST',
                         headers:{
                             'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                            'Accept':'application/json'
                         },
                         body:formData
                     });
-                    if(!res.ok) throw new Error('Terjadi kesalahan pada server');
-
                     const result = await res.json();
+                    if(!res.ok) throw new Error(result.message ||'Terjadi kesalahan pada server');
 
                     hideSpinner();
                     if(!result.status) throw new Error(result.message || 'Gagal menyimpan data');

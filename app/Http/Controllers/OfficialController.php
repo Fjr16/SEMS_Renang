@@ -20,7 +20,7 @@ class OfficialController extends Controller
     use HasApiResponse;
 
     public function data(Request $req){
-        if(!auth()->user()->can('Master Setting.Official-List')){
+        if(!auth()->user()->hasAnyPermission(['Master Setting.Official-List', 'Tim Saya.Kelola Official-List'])){
             return DataTables::of([])->make(true);
         };
         $clubId = $req->input('club_id');
@@ -33,12 +33,12 @@ class OfficialController extends Controller
         ->addColumn('action', function($row){
             $edit = '<button class="btn btn-warning btn-sm" onclick="edit('.$row->id.')"><i class="bi bi-pencil"></i></button>';
             $dlt = '<button class="btn btn-danger btn-sm" onclick="destroy('.$row->id.')"><i class="bi bi-trash"></i></button>';
-            if(!auth()->user()->hasAnyPermission(['Master Setting.Official-Ubah', 'Master Setting.Official-Hapus'])) return '';
+            if(!auth()->user()->hasAnyPermission(['Master Setting.Official-Ubah', 'Master Setting.Official-Hapus', 'Tim Saya.Kelola Official-Ubah', 'Tim Saya.Kelola Official-Hapus'])) return '';
             return '<div class="btn-group">
                         '.
-                        (auth()->user()->can('Master Setting.Official-Ubah') ? $edit : '')
+                        (auth()->user()->hasAnyPermission(['Master Setting.Official-Ubah', 'Tim Saya.Kelola Official-Ubah']) ? $edit : '')
                         .
-                        (auth()->user()->can('Master Setting.Official-Hapus') ? $dlt : '')
+                        (auth()->user()->hasAnyPermission(['Master Setting.Official-Hapus', 'Tim Saya.Kelola Official-Hapus']) ? $dlt : '')
                         .'
                     </div>';
         })
@@ -98,7 +98,7 @@ class OfficialController extends Controller
         return view('pages.official.index', compact('genders', 'clubCategories', 'licenses'));
     }
     public function store(Request $r){
-        if(Gate::none(['Master Setting.Official-Tambah','Master Setting.Official-Ubah'])){
+        if(Gate::none(['Master Setting.Official-Tambah','Master Setting.Official-Ubah', 'Tim Saya.Kelola Official-Ubah', 'Tim Saya.Kelola Official-Tambah'])){
             return $this->unauthorized('Anda tidak memiliki akses');
         };
         $validators = Validator::make($r->all(), [
@@ -145,7 +145,7 @@ class OfficialController extends Controller
         }
     }
     public function destroy($id){
-        if(!auth()->user()->can('Master Setting.Official-Hapus')){
+        if(!auth()->user()->hasAnyPermission(['Master Setting.Official-Hapus', 'Tim Saya.Kelola Official-Hapus'])){
             return $this->unauthorized('Anda tidak memiliki akses');
         };
         try {

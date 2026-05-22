@@ -93,8 +93,7 @@
         'desc'  => 'Kelola data user dan hak akses sistem',
         'icon'  => 'bi-shield-lock',
         'route' => route('users.index'),
-        // 'akses' => auth()->user()->can('Master Setting.User & Hak Akses-List'),
-        'akses' => true,
+        'akses' => auth()->user()->can('Master Setting.User Hak Akses-List'),
         ],
     ];
     @endphp

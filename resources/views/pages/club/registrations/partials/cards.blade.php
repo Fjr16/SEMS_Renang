@@ -108,19 +108,23 @@
         @endphp
 
         {{-- actions --}}
-        @if ($ableToRegister)
-        <div class="mt-3">
-            <a href="{{ route('manager.club.registration.create', ['competition' => $c]) }}" class="btn btn-primary btn-sm comp-btn">
-                <i class="bi bi-clipboard-check me-1"></i>Daftar
-            </a>
-        </div>
-        @else
-        <div class="mt-3">
-            <a class="btn btn-primary btn-sm comp-btn disabled">
-                <i class="bi bi-clipboard-check me-1"></i>Daftar
-            </a>
-        </div>
-        @endif
+        @auth
+            @can('Tim Saya.Pendaftaran Kompetisi')
+                @if ($ableToRegister)
+                <div class="mt-3">
+                    <a href="{{ route('manager.club.registration.create', ['competition' => $c]) }}" class="btn btn-primary btn-sm comp-btn">
+                        <i class="bi bi-clipboard-check me-1"></i>Daftar
+                    </a>
+                </div>
+                @else
+                <div class="mt-3">
+                    <a class="btn btn-primary btn-sm comp-btn disabled">
+                        <i class="bi bi-clipboard-check me-1"></i>Daftar
+                    </a>
+                </div>
+                @endif
+            @endcan
+        @endauth
     </div>
     @endforeach
 </div>

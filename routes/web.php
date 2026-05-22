@@ -19,16 +19,12 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VenuesAndPoolController;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/', function () {
-//     return view('pages.dashboard');
-// })->name('dashboard');
 Route::get('/', function () {
     return redirect()->route('guest.competition.index');
 })->name('dashboard');
 
-Route::get('/users/profile/{id}', [UserController::class, 'profile'])->name('user.profile');
-
 Route::middleware(['auth'])->group(function(){
+    Route::get('/users/profile/{id}', [UserController::class, 'profile'])->name('user.profile');
     Route::prefix('/master')->group(function(){
         Route::get('/', function(){
             return view('pages.master.index');
@@ -59,14 +55,14 @@ Route::middleware(['auth'])->group(function(){
         Route::prefix('/atlet')->group(function(){
             Route::get('/', [AthleteController::class, 'index'])->name('atlet.index')->middleware('permission:Master Setting.Atlet-List');
             Route::get('/data', [AthleteController::class, 'data'])->name('atlet.data')->middleware('permission:Master Setting.Atlet-List');
-            Route::post('/store', [AthleteController::class, 'store'])->name('atlet.store')->middleware('permission:Master Setting.Atlet-Tambah|Master Setting.Atlet-Ubah');
+            Route::post('/store', [AthleteController::class, 'store'])->name('atlet.store')->middleware('permission:Master Setting.Atlet-Tambah|Master Setting.Atlet-Ubah|Tim Saya.Kelola Atlet-Tambah|Tim Saya.Kelola Atlet-Ubah');
             Route::delete('/destroy/{id}', [AthleteController::class, 'destroy'])->name('atlet.destroy')->middleware('permission:Master Setting.Atlet-Hapus');
         });
         Route::prefix('/official')->group(function(){
             Route::get('/', [OfficialController::class, 'index'])->name('official.index')->middleware('permission:Master Setting.Official-List');
-            Route::get('/data', [OfficialController::class, 'data'])->name('official.data')->middleware('permission:Master Setting.Official-List');
-            Route::post('/store', [OfficialController::class, 'store'])->name('official.store')->middleware('permission:Master Setting.Official-Tambah|Master Setting.Official-Ubah');
-            Route::delete('/destroy/{id}', [OfficialController::class, 'destroy'])->name('official.destroy')->middleware('permission:Master Setting.Official-Hapus');
+            Route::get('/data', [OfficialController::class, 'data'])->name('official.data')->middleware('permission:Master Setting.Official-List|Tim Saya.Kelola Official-List');
+            Route::post('/store', [OfficialController::class, 'store'])->name('official.store')->middleware('permission:Master Setting.Official-Tambah|Master Setting.Official-Ubah|Tim Saya.Kelola Official-Tambah|Tim Saya.Kelola Official-Ubah');
+            Route::delete('/destroy/{id}', [OfficialController::class, 'destroy'])->name('official.destroy')->middleware('permission:Master Setting.Official-Hapus|Tim Saya.Kelola Official-Hapus');
         });
 
         Route::prefix('/users')->group(function(){
@@ -107,16 +103,16 @@ Route::middleware(['auth'])->group(function(){
     });
     // manager club menu
     Route::prefix('/club')->group(function() {
-        Route::get('/dashboard', [MyTeamController::class, 'dashboard'])->name('manager.club.dashboard');
+        Route::get('/dashboard', [MyTeamController::class, 'dashboard'])->name('manager.club.dashboard')->middleware('permission:Tim Saya.Dashboard');
 
         // entries
-        Route::get('/registrations', [CompetitionEntryController::class, 'index'])->name('manager.club.registration');
-        Route::get('/registrations/create/{competition}', [CompetitionEntryController::class, 'create'])->name('manager.club.registration.create');
-        Route::post('/registrations/store', [CompetitionEntryController::class, 'store'])->name('manager.club.registration.store');
+        Route::get('/registrations', [CompetitionEntryController::class, 'index'])->name('manager.club.registration')->middleware('permission:Tim Saya.Pendaftaran Kompetisi');
+        Route::get('/registrations/create/{competition}', [CompetitionEntryController::class, 'create'])->name('manager.club.registration.create')->middleware('permission:Tim Saya.Pendaftaran Kompetisi');
+        Route::post('/registrations/store', [CompetitionEntryController::class, 'store'])->name('manager.club.registration.store')->middleware('permission:Tim Saya.Pendaftaran Kompetisi');
         // entries
 
-        Route::get('/atlet/{club}', [MyTeamController::class, 'athletes'])->name('manager.club.atlet');
-        Route::get('/official', [MyTeamController::class, 'officials'])->name('manager.club.official');
+        Route::get('/atlet/{club}', [MyTeamController::class, 'athletes'])->name('manager.club.atlet')->middleware('permission:Tim Saya.Kelola Atlet-List');
+        Route::get('/official', [MyTeamController::class, 'officials'])->name('manager.club.official')->middleware('permission:Tim Saya.Kelola Official-List');
     });
 
     Route::prefix('/export')->group(function(){
@@ -161,7 +157,7 @@ Route::middleware(['auth'])->group(function(){
         Route::post('/heats/reset/by/event', [CompetitionHeatLaneController::class, 'resetByEvent'])->name('competition.heats.resetByEvent');
         Route::post('/heats/save/result', [CompetitionHeatLaneController::class, 'saveResult'])->name('competition.heats.saveResult');
         Route::post('/heats/promote/atlet', [CompetitionHeatLaneController::class, 'promoteAthletes'])->name('competition.heats.promoteAthletes');
-    });
+    })->middleware('permission:Master Setting.Kompetisi-Kelola');
 });
 
 Route::prefix('/guest')->group(function(){
@@ -177,7 +173,5 @@ Route::get('/findOfficialById/{id}', [OtherController::class, 'findOfficialById'
 Route::get('/select2/getOrganization', [OtherController::class, 'getOrganization'])->name('getOrganization');
 Route::get('/select2/getVenue', [OtherController::class, 'getVenue'])->name('getVenue');
 // Route::get('/select2/getAllEvent', [OtherController::class, 'getAllEvent'])->name('getAllEvent');
-
-// Route::get('generate/heat/lane', [CompetitionHeatLaneController::class, 'generateHeat']);
 
 require __DIR__ . '/auth.php';

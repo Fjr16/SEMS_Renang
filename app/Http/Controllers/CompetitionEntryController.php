@@ -16,6 +16,7 @@ use App\Models\CompetitionEvent;
 use App\Models\CompetitionTeam;
 use App\Models\CompetitionTeamOfficial;
 use App\Models\Official;
+use App\Traits\HasApiResponse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,10 @@ use Illuminate\Support\Facades\Validator;
 
 class CompetitionEntryController extends Controller
 {
+    use HasApiResponse;
     public function index(){
+        $this->authorize('Tim Saya.Pendaftaran Kompetisi');
+
         Carbon::setLocale('id');
         $q = request('q');
         $stts = request('status', null);
@@ -85,6 +89,9 @@ class CompetitionEntryController extends Controller
     }
 
     public function create(Competition $competition){
+        $this->authorize('Tim Saya.Pendaftaran Kompetisi');
+        if(!auth()->user()->club_id) return back()->with('error', 'Anda belum terhubung ke klub');
+
         Carbon::setLocale('id');
         $events = $competition->events;
         $club = Auth::user()->club;
