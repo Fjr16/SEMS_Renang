@@ -7,7 +7,7 @@
       <h2 class="fw-bold mb-1">Master Organisasi</h2>
       <p class="text-muted mb-0">Kelola master data organisasi / penyelenggara kompetisi dan acara</p>
     </div>
-    @can('Master Setting.Atlet-Tambah')
+    @can('Master Setting.Organisasi-Tambah')
     <div class="mt-3 mt-md-0">
       <button data-bs-toggle="modal" data-bs-target="#modalOrganisasi" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Kelompok Umur'); $('#age_group_id').val('');">
         <i class="bi bi-plus-circle me-1"></i> Tambah Organisasi
@@ -22,7 +22,7 @@
         <table id="organizationTable" class="table table-striped align-middle">
             <thead class="table-light">
             <tr>
-                @canany(['Master Setting.Atlet-Ubah', 'Master Setting.Atlet-Hapus'])
+                @canany(['Master Setting.Organisasi-Ubah', 'Master Setting.Organisasi-Hapus'])
                 <th>Aksi</th>
                 @endcanany
                 <th>Nama</th>
@@ -69,7 +69,7 @@
             serverSide:true,
             ajax:"{{ route('organizations.data') }}",
             columns:[
-                @canany(['Master Setting.Atlet-Ubah', 'Master Setting.Atlet-Hapus'])
+                @canany(['Master Setting.Organisasi-Ubah', 'Master Setting.Organisasi-Hapus'])
                 {data:'action', name:'action', className:'dt-actions', orderable:false, searchable:false},
                 @endcanany
                 {data:'name', name:'name', orderable:true, searchable:true},
