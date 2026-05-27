@@ -20,18 +20,33 @@ class CompetitionEvent extends Model
         'event_type',
         'max_relay_athletes',
         'registration_fee',
+        'limit_waktu'
     ];
 
     private static function generateEventNumber($event, bool $isUpdate = false): string
     {
         return DB::transaction(function () use ($event, $isUpdate) {
-            $sessionOrder = $event->competitionSession->session_order;
-            $prefix = (string) $sessionOrder;
+            $competitionId = $event->competitionSession->competition->id;
+
+            $dayOrder = CompetitionSession::where('competition_id', $competitionId)
+                ->select('session_date')
+                ->distinct()
+                ->orderBy('session_date')
+                ->pluck('session_date')
+                ->search($event->competitionSession->session_date);
+
+            // search() return index (0-based), +1 untuk hari ke-1, ke-2, dst
+            $dayNumber = $dayOrder + 1;
+            $prefix = (string) $dayNumber;
+
+            $sessionIdsOnSameDay = CompetitionSession::where('competition_id', $competitionId)
+            ->where('session_date', $event->competitionSession->session_date)
+            ->pluck('id');
 
             if ($isUpdate) {
                 // Ambil semua nomor yang sudah ada dengan prefix sesi ini
                 $existingNumbers = self::lockForUpdate()
-                    ->where('competition_session_id', $event->competition_session_id)
+                    ->whereIn('competition_session_id', $sessionIdsOnSameDay)
                     ->where('id', '!=', $event->id) // exclude diri sendiri
                     ->pluck('event_number')
                     ->map(fn($n) => (int) substr($n, strlen($prefix))) // ambil bagian belakang saja
@@ -50,7 +65,7 @@ class CompetitionEvent extends Model
             } else {
                 // Creating: cukup count + 1
                 $total = self::lockForUpdate()
-                    ->where('competition_session_id', $event->competition_session_id)
+                    ->whereIn('competition_session_id', $sessionIdsOnSameDay)
                     ->count();
                 $nextNumber = $total + 1;
             }
@@ -67,6 +82,8 @@ class CompetitionEvent extends Model
 
         static::updating(function ($event) {
             if ($event->isDirty('competition_session_id')) {
+                // Unset cache relasi agar reload dengan session_id yang baru
+                unset($event->relations['competitionSession']);
                 $event->event_number = self::generateEventNumber($event, true);
             }
         });

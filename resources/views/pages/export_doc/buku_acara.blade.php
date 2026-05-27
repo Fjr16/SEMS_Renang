@@ -69,28 +69,6 @@
             border-top: 130px solid #1a1a1a;
         }
 
-        /* Kotak-kotak dekoratif kanan */
-        .cover-deco-right {
-            position: absolute;
-            right: 20px;
-            bottom: 80px;
-        }
-
-        .cover-deco-right .deco-box {
-            width: 55px;
-            height: 55px;
-            border: 3px solid #F5C400;
-            margin-bottom: 8px;
-            margin-left: 20px;
-        }
-
-        .cover-deco-right .deco-box-gray {
-            width: 45px;
-            height: 45px;
-            background-color: #ccc;
-            margin-bottom: 8px;
-        }
-
         /* Logo area */
         .cover-logos {
             position: absolute;
@@ -404,31 +382,10 @@
         <div class="cover-tri-black-left"></div>
         <div class="cover-tri-black-right"></div>
 
-        {{-- Dekorasi kotak kanan --}}
-        <div class="cover-deco-right">
-            <div style="display:flex; gap:8px; margin-bottom:8px;">
-                <div class="deco-box-gray" style="width:45px;height:45px;background:#ccc;"></div>
-                <div class="deco-box" style="width:55px;height:55px;border:3px solid #F5C400;"></div>
-            </div>
-            <div style="display:flex; gap:8px; margin-bottom:8px; margin-left:20px;">
-                <div class="deco-box" style="width:55px;height:55px;border:3px solid #F5C400;"></div>
-                <div class="deco-box-gray" style="width:45px;height:45px;background:#ccc;"></div>
-            </div>
-            <div style="display:flex; gap:8px;">
-                <div style="width:30px;height:30px;border:3px solid #F5C400;"></div>
-                <div class="deco-box" style="width:55px;height:55px;border:3px solid #F5C400;"></div>
-            </div>
-        </div>
-
         {{-- Logo --}}
         <div class="cover-logos">
             @if(!empty($logoKiri))
                 @foreach($logoKiri as $logo)
-                    <img src="{{ $logo }}" alt="logo">
-                @endforeach
-            @endif
-            @if(!empty($logoKanan))
-                @foreach($logoKanan as $logo)
                     <img src="{{ $logo }}" alt="logo">
                 @endforeach
             @endif
@@ -454,7 +411,7 @@
     @foreach($jadwalHari as $hari)
     <div class="schedule-page">
 
-        <div class="schedule-day-title">{{ $loop->iteration }}) {{ $hari['label'] }}</div>
+        <div class="schedule-day-title">{{ $loop->iteration }}) {{ $hari['label'] ?? '' }}</div>
 
         {{-- Ganti bagian schedule-table --}}
         <table class="schedule-table">

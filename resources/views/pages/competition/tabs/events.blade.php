@@ -193,7 +193,7 @@
                            value="{{ $competition->name ?? '' }}" disabled>
                     <input type="hidden" value="{{ $competition->id ?? '' }}" name="competition_id" id="competition_id">
                 </div>
-                <div class="col-md-8 col-12">
+                <div class="col-md-4 col-12">
                     <label class="form-label">Sesi Perlombaan</label>
                     <select name="competition_session_id" id="competition_session_id" class="form-control">
                         @foreach ($competition->sessions as $sesi)
@@ -202,6 +202,10 @@
                             </option>
                         @endforeach
                     </select>
+                </div>
+                <div class="col-md-4 col-12">
+                    <label class="form-label">Limit Waktu</label>
+                    <input type="text" name="limit_waktu" class="form-control" id="limit_waktu">
                 </div>
 
                 <div class="col-md-4 col-12">

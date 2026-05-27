@@ -8,6 +8,7 @@ use App\Enums\Stroke;
 use App\Models\AgeGroup;
 use App\Models\Competition;
 use App\Models\CompetitionEvent;
+use App\Models\CompetitionSession;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -36,9 +37,15 @@ class CompetitionEventController extends Controller
                 'nullable', 'integer', 'max:4',
             ],
             'registration_fee'       => 'required|numeric|min:0',
+            'limit_waktu'           => 'nullable|regex:/^\d{2}:\d{2}\.\d{2}$/'
         ]);
 
-        $exists = CompetitionEvent::where('competition_session_id', $request->competition_session_id)
+        $session_date = CompetitionSession::where('id', $request->competition_session_id)->value('session_date');
+        $sessionIdsOnSameDay = CompetitionSession::where('competition_id', $competition->id)
+            ->where('session_date', $session_date)
+            ->pluck('id');
+
+        $exists = CompetitionEvent::whereIn('competition_session_id', $sessionIdsOnSameDay)
             ->where('distance', $request->distance)
             ->where('stroke', $request->stroke)
             ->where('age_group_id', $request->age_group_id)
@@ -98,11 +105,17 @@ class CompetitionEventController extends Controller
                 'nullable', 'integer', 'max:4',
             ],
             'registration_fee'       => 'required|numeric|min:0',
+            'limit_waktu'           => 'nullable|regex:/^\d{2}:\d{2}\.\d{2}$/'
         ], [
             'max_relay_athletes.required' => 'Maks. jumlah atlet wajib diisi untuk tipe estafet'
         ]);
 
-        $exists = CompetitionEvent::where('competition_session_id', $request->competition_session_id)
+        $sessionIdsOnSameDay = CompetitionSession::where('competition_id', $competition->id)
+            ->where('session_date', $event->competitionSession->session_date)
+            ->pluck('id');
+
+        $exists = CompetitionEvent::where('id', '!=', $event->id)
+            ->whereIn('competition_session_id', $sessionIdsOnSameDay)
             ->where('distance', $request->distance)
             ->where('stroke', $request->stroke)
             ->where('age_group_id', $request->age_group_id)

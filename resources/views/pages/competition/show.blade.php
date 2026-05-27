@@ -415,6 +415,7 @@
             document.getElementById('max_relay_athletes').disabled = true;
 
             document.getElementById('event_type').dispatchEvent(new Event('change'));
+            document.getElementById('limit_waktu').placeholder       = 'Kosongkan untuk NO LIMIT';
         }
         // ── Toggle Sesi (fix) ──────────────────────────────────────────────────────
         function toggleSessionGroup(btn) {
@@ -488,6 +489,11 @@
                 modal.querySelector('#age_group_id').value           = ev.age_group_id;
                 modal.querySelector('#event_type').value             = ev.event_type;
                 modal.querySelector('#registration_fee').value       = toNum(ev.registration_fee);
+                if(ev.limit_waktu && ev.limit_waktu != 'NO LIMIT'){
+                    modal.querySelector('#limit_waktu').value       = ev.limit_waktu ?? '';
+                }else{
+                    modal.querySelector('#limit_waktu').placeholder       = ev.limit_waktu ?? 'NO LIMIT';
+                }
 
                 const maxEl = modal.querySelector('#max_relay_athletes');
                 maxEl.disabled = ev.event_type !== ESTAFET_VALUE;
@@ -613,6 +619,24 @@
                 if (this.value === ESTAFET_VALUE) {
                     select.innerHTML += `<option value="mixed">Campuran</option>`;
                 }
+            });
+
+            document.getElementById('limit_waktu').addEventListener('input', function(){
+                let digits = this.value.replace(/\D/g, '');
+
+                digits = digits.slice(0, 6);
+
+                let formatted = '';
+
+                if (digits.length <= 2) {
+                    formatted = digits;
+                } else if (digits.length <= 4) {
+                    formatted = digits.slice(0, 2) + ':' + digits.slice(2);
+                } else {
+                    formatted = digits.slice(0, 2) + ':' + digits.slice(2, 4) + '.' + digits.slice(4);
+                }
+
+                this.value = formatted;
             });
 
             // ── SUBMIT FORM (Create & Update) ────────────────────────────────────

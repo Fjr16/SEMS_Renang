@@ -144,6 +144,8 @@
                                 @elseif ($compTeam->status === App\Enums\CompetitionTeamStatus::Active->value && $compTeam->competition->status === App\Enums\CompetitionStatus::register->value)
                                     <button class="btn btn-sm" style="background:#FEE2E2;color:#991B1B;font-size:11px;border:none;border-radius:20px;padding:3px 10px"
                                         onclick="confirmEntry({{ $compTeam?->id }}, '{{ $compTeam?->payment_status }}', '{{ App\Enums\CompetitionTeamStatus::Rejected->value }}')">✕ Tolak</button>
+                                    <button class="btn btn-sm" style="background:#D1FAE5;color:#065F46;font-size:11px;border:none;border-radius:20px;padding:3px 10px"
+                                        onclick="confirmEntry({{ $compTeam?->id }}, '{{ $compTeam?->payment_status }}', '{{ App\Enums\CompetitionTeamStatus::Active->value }}')"><span class="bi bi-pencil"></span> Status Bayar</button>
                                 {{-- pendaftaran = diterima / aktif && status kompetisi = running --}}
                                 @elseif ($compTeam->status === App\Enums\CompetitionTeamStatus::Active->value && $compTeam->competition->status === App\Enums\CompetitionStatus::running->value)
                                 <button class="btn btn-sm" style="background:#FEF3C7;color:#92400E;font-size:11px;border:none;border-radius:20px;padding:3px 10px"
@@ -154,6 +156,8 @@
                                     onclick="confirmEntry({{ $compTeam?->id }}, '{{ $compTeam?->payment_status }}', '{{ App\Enums\CompetitionTeamStatus::Disqualified->value }}')">
                                     ⊘ Diskualifikasi
                                 </button>
+                                <button class="btn btn-sm" style="background:#D1FAE5;color:#065F46;font-size:11px;border:none;border-radius:20px;padding:3px 10px"
+                                        onclick="confirmEntry({{ $compTeam?->id }}, '{{ $compTeam?->payment_status }}', '{{ App\Enums\CompetitionTeamStatus::Active->value }}')"><span class="bi bi-pencil"></span> Status Bayar</button>
                                 {{-- pendaftaran = ditolak && status kompetisi = registrasi --}}
                                 @elseif ($compTeam->status === App\Enums\CompetitionTeamStatus::Rejected->value && $compTeam->competition->status === App\Enums\CompetitionStatus::register->value)
                                 <button class="btn btn-sm" style="background:#D1FAE5;color:#065F46;font-size:11px;border:none;border-radius:20px;padding:3px 10px"

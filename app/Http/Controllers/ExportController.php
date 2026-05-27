@@ -147,11 +147,10 @@ class ExportController extends Controller
             $jadwalHari = [
                 [
                     'label' => $akhirKompetisi->translatedFormat('l, d F Y'),
-                    'sesi' => $item->sessions->map(function ($sesi) use ($akhirKompetisi) {
+                    'sesi' => $item->sessions->map(function ($sesi) {
                         return [
                             'nama' => $sesi->name ?? '-',
                             'acara' => $sesi->competitionEvents
-                                // ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->age_group_id)
                                 ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->event_type)
                                 ->map(function($events){
                                     $first = $events->first();
@@ -176,51 +175,49 @@ class ExportController extends Controller
                 ],
             ];
         } else {
-            $jadwalHari = [
-                $item->sessions->groupBy('session_date')->map(function($byDate){
-                    $tglSesi = Carbon::parse($byDate->first()->session_date);
-                    return [
-                        'label' => $tglSesi->translatedFormat('l, d F Y'),
-                        'sesi' => $byDate->map(function ($sesi) {
-                            return [
-                                'nama' => $sesi->name ?? '-',
-                                'acara' => $sesi->competitionEvents
-                                    // ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->age_group_id)
-                                    ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->event_type)
-                                    ->map(function($events){
-                                        $first = $events->first();
-                                        return [
-                                            'nomor' => $first->distance . ' M ' . Stroke::tryFrom($first->stroke)->label() ?? '-',
-                                            'tipe_event' => EventType::tryFrom($first->event_type)->label() ?? '-',
-                                            'ku_list' => $events->groupBy('age_group_id')->map(function ($eByKu){
-                                                $noPa = $eByKu->where('gender', Gender::pria->value)->value('event_number');
-                                                $noPi = $eByKu->where('gender', Gender::wanita->value)->value('event_number');
-                                                return [
-                                                    'pa' => $noPa,
-                                                    'ku' => $eByKu->first()?->ageGroup?->label ?? '-',
-                                                    'pi' => $noPi
-                                                ];
-                                            })->values()->toArray(),
-                                        ];
-                                })->values()->toArray(),
-                            ];
-                        })->values()->toArray(),
-                    ];
-                })->toArray(),
-            ];
+            $jadwalHari = $item->sessions->groupBy('session_date')->map(function($byDate){
+                $tglSesi = Carbon::parse($byDate->first()->session_date);
+                return [
+                    'label' => $tglSesi->translatedFormat('l, d F Y'),
+                    'sesi' => $byDate->map(function ($sesi) {
+                        return [
+                            'nama' => $sesi->name ?? '-',
+                            'acara' => $sesi->competitionEvents
+                                ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->event_type)
+                                ->map(function($events){
+                                    $first = $events->first();
+                                    return [
+                                        'nomor' => $first->distance . ' M ' . Stroke::tryFrom($first->stroke)->label() ?? '-',
+                                        'tipe_event' => EventType::tryFrom($first->event_type)->label() ?? '-',
+                                        'ku_list' => $events->groupBy('age_group_id')->map(function ($eByKu){
+                                            $noPa = $eByKu->where('gender', Gender::pria->value)->value('event_number');
+                                            $noPi = $eByKu->where('gender', Gender::wanita->value)->value('event_number');
+                                            $noCampuran = $eByKu->where('gender', 'mixed')->value('event_number');
+                                            return [
+                                                'pa' => $noPa,
+                                                'ku' => $eByKu->first()?->ageGroup?->label ?? '-',
+                                                'pi' => $noPi,
+                                                'mix' => $noCampuran
+                                            ];
+                                        })->values()->toArray(),
+                                    ];
+                            })->values()->toArray(),
+                        ];
+                    })->values()->toArray(),
+                ];
+            })->toArray();
         }
 
         // list acara dan entry
         $acaraList = $item->events->sortBy('event_number')->map(function($e){
             $roundAwal = count($e->configs) > 1 ? $e->configs?->where('order', 1)->first()?->round_type : $e->configs?->first()?->round_type;
-            // $usedLanes = count($e->configs) > 1 ? $e->configs?->where('order', 1)->first()?->used_lanes : $e->configs?->first()?->used_lanes;
             $totalLanes = $e->competitionSession?->pool?->total_lanes ?? '8';
             return [
                 'nomor' => $e?->event_number,
-                'nama' => ($e?->distance ?? '-') . ' M ' . Stroke::tryFrom($e->stroke)->label() ?? '-',
+                'nama' => ($e?->distance ?? '-') . ' M ' . (Stroke::tryFrom($e->stroke)->label() ?? '-') . ', ' . $e?->competitionSession->pool->course_type ?? '-' ,
                 'tanggal' => Carbon::parse($e->competitionSession?->session_date)->translatedFormat('l, d F Y') . ' — ' . ($e?->competitionSession?->name ?? '-'),
                 'status' => $roundAwal ? RoundTypeEnum::from($roundAwal)->label() : '-',
-                'limit'  => 'NO LIMIT ',
+                'limit'  => ($e?->limit_waktu ?? 'NO LIMIT'),
                 'kategori' => $e?->ageGroup?->label ?? '-',
                 'seri' => $e->heats->where('round_type', $roundAwal)->sortBy('heat_number')->map(function($heat) use ($e, $totalLanes){
                     $existingLanes = $heat->heatLanes->keyBy('lane_number');
@@ -240,7 +237,7 @@ class ExportController extends Controller
                             'ku'        => $e?->ageGroup?->label ?? '-',
                             'tim'       => $lane?->entry?->competitionTeam?->team?->club_name ?? '-',
                             'prestasi'  => $lane?->entry?->seed_time ?? '-',
-                            'id_lomba'  => '',
+                            'id_lomba'  => '-', //id kompetisi dari prestasi berasal
                         ];
                     });
 
@@ -258,12 +255,8 @@ class ExportController extends Controller
             'venue'     => ($item?->venue?->name ?? '-') . ', ' . ($item?->venue?->city ?? '-'),
 
             'logoKiri'  => [
-                public_path('images/logo-dispora.png'),
-                public_path('images/logo-prsi-batam.png'),
-            ],
-            'logoKanan' => [
-                public_path('images/logo-sponsor-a.png'),
-                public_path('images/logo-sponsor-b.png'),
+                public_path('assets/akuatik-indonesia-seeklogo.png'),
+                // public_path('assets/akuatik-indonesia-seeklogo.png'),
             ],
 
             'jadwalHari' => $jadwalHari,
@@ -292,10 +285,17 @@ class ExportController extends Controller
             $fontBold   = $fontMetrics->getFont("Arial", "bolder");
             $fontNormal = $fontMetrics->getFont("Arial", "normal");
 
-            $canvas->text($w / 2 - 120, 18, $data['namaEvent'],  $fontBold,   9,   [0, 0, 0]);
-            $canvas->text($w / 2 - 80,  32, $data['venue'],       $fontNormal, 7.5, [0, 0, 0]);
-            $canvas->text($w / 2 - 60,  44, $data['tanggal'],     $fontBold,   7.5, [0, 0, 0]);
-            $canvas->text($w / 2 - 35,  56, "BUKU ACARA",         $fontBold,   14,  [0, 0, 0]);
+            // Helper: hitung x agar teks tepat di tengah
+            $centerX = function ($text, $font, $size) use ($fontMetrics, $w) {
+                $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
+                return ($w - $textWidth) / 2;
+            };
+
+            $canvas->text($centerX($data['namaEvent'], $fontBold,   9),   18, $data['namaEvent'], $fontBold,   9,   [0, 0, 0]);
+            $canvas->text($centerX($data['venue'],     $fontNormal, 7.5), 32, $data['venue'],     $fontNormal, 7.5, [0, 0, 0]);
+            $canvas->text($centerX($data['tanggal'],   $fontBold,   7.5), 44, $data['tanggal'],   $fontBold,   7.5, [0, 0, 0]);
+            $canvas->text($centerX("BUKU ACARA",       $fontBold,   14),  56, "BUKU ACARA",       $fontBold,   14,  [0, 0, 0]);
+
             $canvas->line(28, 72, $w - 28, 72, [0, 0, 0], 0.5);
         });
 
