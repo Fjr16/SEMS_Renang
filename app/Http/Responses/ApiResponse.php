@@ -56,6 +56,19 @@ class ApiResponse {
     }
 
     /**
+     * Empty data
+     */
+    public static function empty(string $message = 'Data belum tersedia')
+    {
+        return response()->json([
+            'status'  => false,
+            'code'    => 200,
+            'message' => $message,
+            'data'    => [],
+        ], 200);
+    }
+
+    /**
      * Unauthenticate Response
      */
     public static function unauthenticate(string $message = 'Belum login / tidak terautentikasi')

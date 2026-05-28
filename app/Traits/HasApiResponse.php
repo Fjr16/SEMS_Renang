@@ -26,6 +26,11 @@ trait HasApiResponse
         return ApiResponse::notFound($message);
     }
 
+    protected function empty(string $message = 'Data belum tersedia')
+    {
+        return ApiResponse::empty($message);
+    }
+
     protected function paginate($paginator, string $message = 'Success')
     {
         return ApiResponse::paginate($paginator, $message);

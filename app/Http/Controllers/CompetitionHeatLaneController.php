@@ -11,8 +11,6 @@ use App\Models\Competition;
 use App\Models\CompetitionEvent;
 use App\Models\CompetitionHeat;
 use App\Models\CompetitionHeatLane;
-use App\Models\CompetitionResult;
-use App\Models\EventResult;
 use App\Models\EventRoundConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -284,15 +282,6 @@ class CompetitionHeatLaneController extends Controller
                 $item->rank_in_heat = $row['rank_heat'] ?? null;
                 $item->record_type = !empty($row['record_types']) ? implode(',' , array_filter($row['record_types'])) : null;
                 $item->save();
-
-                // input juga ke event result sebagai tabel rekap akhir per event
-                if($row->last()){
-                    $payload = [
-                        'competition_event_id' => $item->heat->event->id,
-                        'round_type' => $item->heat->round_type,
-                    ];
-                    $this->updateEventResult($payload);
-                }
             }
 
             DB::commit();
@@ -495,49 +484,6 @@ class CompetitionHeatLaneController extends Controller
         return ((int)$min * 60 * 100)
             + ((int)$sec * 100)
             + (int)$cs;
-    }
-
-    private function updateEventResult(array $payload){
-        $data = CompetitionHeatLane::query()
-        ->from('competition_heat_lanes as chl')
-        ->select(
-            'chl.id',
-            'chl.competition_entry_id',
-            'chl.swim_time',
-            'ch.round_type',
-            'ch.heat_number',
-            'ch.competition_event_id',
-        )
-        ->leftJoin('competition_heats as ch', 'chl.competition_heat_id', '=', 'ch.id')
-        ->where('chl.status', 'valid')
-        ->where('ch.competition_event_id', $payload['competition_event_id'])
-        ->where('ch.round_type', $payload['round_type'])
-        ->get();
-
-        $fixed = $data
-                ->map(function($item) {
-                    $item->time_in_cs = $this->swimTimeToCs($item->swim_time);
-                    return $item;
-                })
-                ->sortBy('time_in_cs')
-                ->values()
-                ->map(function($item, $index){
-                    return [
-                        'competition_event_id' => $item->competition_event_id,
-                        'competition_entry_id' => $item->competition_entry_id,
-                        'round_type'           => $item->round_type,
-                        'rank_overral'         => $index+1,
-                        'time_in_cs'           => $item->time_in_cs,
-                        'time_in_display'      => $item->swim_time,
-                        'points'               => null,
-                    ];
-                })->toArray();
-
-        EventResult::upsert(
-            $fixed,
-            ['competition_event_id', 'competition_entry_id', 'round_type'],
-            ['rank_overral', 'time_in_cs', 'time_in_display', 'points']
-        );
     }
 
     // ============================================================

@@ -51,23 +51,23 @@
         }
 
         .event-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 2px;
+            width: 100%;
         }
 
         .event-title {
+            float: left;
             font-size: 8pt;
             font-weight: bold;
-            color: #000;
         }
 
         .event-category {
+            float: right;
             font-size: 8pt;
             font-weight: bold;
-            color: #000;
-            text-align: right;
+        }
+
+        .clear {
+            clear: both;
         }
 
         table {
@@ -188,17 +188,17 @@
     <div class="page-header">
         <div class="title-main">KEJUARAAN DAERAH AQUATIK INDONESIA</div>
         <div class="title-sub">SUMATERA BARAT</div>
-        <div class="title-date">{{ strtoupper($hariLabel ?? 'hari pertama, Jumat 10 april 2026') }}</div>
+        <div class="title-date">{{ strtoupper($hariLabel ?? '----') }}</div>
     </div>
 
     {{-- ===== LOOP EVENTS ===== --}}
     @foreach ($events ?? collect() as $event)
     <div class="event-wrapper">
 
-        {{-- Event Header --}}
         <div class="event-header-row">
             <div class="event-title">{{ $event['event_label'] }}</div>
             <div class="event-category">{{ $event['category_label'] }}</div>
+            <div class="clear"></div>
         </div>
 
         {{-- Results Table --}}

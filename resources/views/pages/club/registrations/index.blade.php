@@ -456,6 +456,11 @@
                             <button class="btn btn-outline-primary btn-pill btn-sm" target="_blank" onclick="exportBukuAcara({{ $e->competition?->id }})">
                                 <i class="bi bi-download me-1"></i>Buku Acara
                             </button>
+                            @foreach($e->competition->sessions->sortBy('session_date')->unique('session_date')->values() as $index => $sesi)
+                                <button class="btn btn-outline-primary btn-pill btn-sm" target="_blank" onclick="exportBukuHasil({{ $e->competition->id }}, '{{ $sesi->session_date }}')">
+                                    <i class="bi bi-download me-1"></i>Buku Hasil {{ $index+1 }}
+                                </button>
+                            @endforeach
                         @endif
                         @if(($e->payment_status ?? 'unpaid') !== App\Enums\CompetitionTeamPaymentStatus::Paid->value)
                             <span class="text-secondary small fst-italic align-self-center">
@@ -689,6 +694,63 @@
             icon:'error',
             title:result.message ?? 'gagal export data'
         });
+    }
+
+    async function exportBukuHasil(competition_id, session_date){
+        if(!competition_id){
+            Toast.fire({
+                icon:'error',
+                title:'Kompetisi tidak ditemukan'
+            });
+        }
+        if(!session_date || session_date == ''){
+            Toast.fire({
+                icon:'error',
+                title:'Sesi atau hari kompetisi tidak ada'
+            });
+        }
+        const url = "{{ route('export.buku.hasil') }}";
+        const res = await fetch(url, {
+            method:"POST",
+            headers: {
+                "Content-Type": "application/json",   // wajib untuk JSON
+                "X-CSRF-TOKEN":  "{{ csrf_token() }}",                // wajib di Laravel
+                "Accept":        "application/json",
+            },
+            body:JSON.stringify({
+                comp_id : competition_id,
+                comp_date : session_date
+            })
+        });
+        const contentType = res.headers.get("Content-Type");
+
+        if (contentType && contentType.includes("application/json")) {
+            const error = await res.json();
+            Toast.fire({
+                icon: 'error',
+                title: error.message ?? 'Gagal export data'
+            });
+            return;
+        }
+
+        if (res.ok) {
+            const disposition = res.headers.get("Content-Disposition");
+            let filename = "buku_hasil.pdf";
+            if (disposition && disposition.includes("filename=")) {
+                filename = disposition
+                    .split("filename=")[1]
+                    .replace(/"/g, "")   // hapus tanda kutip
+                    .trim();
+            }
+            const blob        = await res.blob();
+            const downloadUrl = URL.createObjectURL(blob);
+            const a           = document.createElement("a");
+            a.href            = downloadUrl;
+            a.download        = filename;
+            a.click();
+            URL.revokeObjectURL(downloadUrl);
+            return;
+        }
     }
 </script>
 @endpush

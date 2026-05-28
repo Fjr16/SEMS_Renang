@@ -23,7 +23,4 @@ class CompetitionHeatLane extends Model
     public function entry(){
         return $this->belongsTo(CompetitionEntry::class,'competition_entry_id', 'id');
     }
-    public function result(){
-        return $this->hasOne(CompetitionResult::class);
-    }
 }
