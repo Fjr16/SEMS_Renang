@@ -7,7 +7,7 @@ enum RoundTypeEnum :string
     case prelim = 'PRELIM';
     case semi = 'SEMI';
     case final = 'FINAL';
-    case timed_final = 'TIMED_FINAL';
+    // case timed_final = 'TIMED_FINAL';
 
 
     public function label(): string {
@@ -15,7 +15,7 @@ enum RoundTypeEnum :string
             self::prelim => "Penyisihan",
             self::semi => "Semi Final",
             self::final => "Final",
-            self::timed_final => "Langsung Final"
+            // self::timed_final => "Langsung Final"
         };
     }
 
@@ -24,7 +24,7 @@ enum RoundTypeEnum :string
             self::prelim => "#E6F1FB",
             self::semi => "#FAEEDA",
             self::final => "#EAF3DE",
-            self::timed_final => "#EAF3DE"
+            // self::timed_final => "#EAF3DE"
         };
     }
 
@@ -33,7 +33,7 @@ enum RoundTypeEnum :string
             self::prelim => "#0C447C",
             self::semi => "#633806",
             self::final => "#27500A",
-            self::timed_final => "#27500A"
+            // self::timed_final => "#27500A"
         };
     }
 }

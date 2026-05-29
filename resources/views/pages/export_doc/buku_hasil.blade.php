@@ -183,6 +183,11 @@
     </style>
 </head>
 {{-- <body style="margin: 25px 50px;"> --}}
+@php
+    $rondePenyisihan = App\Enums\RoundTypeEnum::prelim->value;
+    $rondeSemi = App\Enums\RoundTypeEnum::semi->value;
+    $rondeFinal = App\Enums\RoundTypeEnum::final->value;
+@endphp
 <body>
     {{-- ===== PAGE HEADER ===== --}}
     <div class="page-header">
@@ -217,47 +222,50 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($event['results'] as $index => $row)
-                <tr>
-                    {{-- Rank / Line --}}
-                    <td class="rank
-                        @if($index === 0) rank-1
-                        @elseif($index === 1) rank-2
-                        @elseif($index === 2) rank-3
-                        @endif
-                    ">
-                        {{ $row['rank'] ?? ($index + 1) }}
-                    </td>
+                @foreach ($event['results'] as $round)
+                    <tr style="background-color: rgb(97, 140, 175);">
+                        <td colspan="9" class="round-header" style="font-weight:bold;font-style:italic;color:#fff;text-align:center;">
+                            {{ strtoupper($round['label']) }}
+                        </td>
+                    </tr>
 
-                    <td class="nama">{{ $row['nama'] }}</td>
-                    <td class="center">{{ $row['papi'] }}</td>
-                    <td class="center">{{ $row['yob'] }}</td>
-                    <td class="center">{{ $row['age'] }}</td>
-                    <td>{{ $row['club'] }}</td>
-                    <td>{{ $row['kota'] }}</td>
-                    <td class="time">{{ $row['best_time'] }}</td>
-                    <td class="
-                        @if(in_array(strtoupper($row['hasil']), ['NS', 'DNF', 'NF'])) ns
-                        @elseif(strtoupper($row['hasil']) === 'DQ') dq
-                        @else hasil
-                        @endif
-                    ">{{ $row['hasil'] }}</td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="9" style="text-align:center; color:#999; font-style:italic;">
-                        Tidak ada data
-                    </td>
-                </tr>
-                @endforelse
+                    @forelse ($round['data'] as $index => $row)
+                    <tr>
+                        <td class="rank
+                            @if($index === 0) rank-1
+                            @elseif($index === 1) rank-2
+                            @elseif($index === 2) rank-3
+                            @endif
+                        ">
+                            {{ $row['rank'] ?? ($index + 1) }}
+                        </td>
+
+                        <td class="nama">{{ $row['nama'] }}</td>
+                        <td class="center">{{ $row['papi'] }}</td>
+                        <td class="center">{{ $row['yob'] }}</td>
+                        <td class="center">{{ $row['age'] }}</td>
+                        <td>{{ $row['club'] }}</td>
+                        <td>{{ $row['kota'] }}</td>
+                        <td class="time">{{ $row['best_time'] }}</td>
+                        <td class="
+                            @if(in_array(strtoupper($row['hasil']), ['NS', 'DNF', 'NF'])) ns
+                            @elseif(strtoupper($row['hasil']) === 'DQ') dq
+                            @else hasil
+                            @endif
+                        ">{{ $row['hasil'] }}</td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="9" style="text-align:center; color:#999; font-style:italic;">
+                            Tidak ada data
+                        </td>
+                    </tr>
+                    @endforelse
+                @endforeach
             </tbody>
         </table>
 
     </div>
     @endforeach
-
-    {{-- ===== PAGE FOOTER ===== --}}
-    {{-- <div class="page-number">Halaman {{ $pageNumber ?? 1 }}</div> --}}
-
 </body>
 </html>

@@ -363,6 +363,7 @@ class ExportController extends Controller
                     'ag.label as kelompok_umur',
                     'cl.club_name',
                     'cl.club_city',
+                    'ch.round_type',
                     'cen.seed_time as best_time',
                     'chl.swim_time as hasil',
                     'ce.id as competition_event_id',
@@ -394,7 +395,12 @@ class ExportController extends Controller
         }
 
         $mulaiKompetisi = Carbon::parse($data->first()->start_date);
-        $events = $data->groupBy('competition_event_id')->map(function($item) use ($ageGroups, $mulaiKompetisi){
+        $roundOrder = [
+            RoundTypeEnum::prelim->value => 1,
+            RoundTypeEnum::semi->value => 2,
+            RoundTypeEnum::final->value => 3,
+        ];
+        $events = $data->groupBy('competition_event_id')->map(function($item) use ($ageGroups, $mulaiKompetisi, $roundOrder){
             $first = $item->first();
             $genderEvFull = match($first->event_gender){
                 Gender::pria->value => 'PUTRA',
@@ -407,37 +413,46 @@ class ExportController extends Controller
                 'event_label' => 'EVENT ' . $first->event_number . ' ' . $genderEv . ' - ' . $first->distance . ' M ' . $strokeEv,
                 'category_label' => 'KU ' . $first->kelompok_umur . ' ' . $genderEvFull,
                 'line_label' => 'RANK',
-                'results' => $item->sortBy(fn($atlet) => $this->swimTimeToCs($atlet->hasil))
-                ->values()
-                ->map(function($row, $index) use ($ageGroups, $mulaiKompetisi){
-                    $atletGender = Gender::pria->value === $row->atlet_gender ? 'PA' : 'PI';
-                    $bod = Carbon::parse($row->bod);
-                    $usia = $bod->diff($mulaiKompetisi)->y;
-                    $yob = $bod->format('Y');
-                    $kuAtlet = $ageGroups->first(function ($ag) use ($usia) {
-                        return !is_null($ag->min_age) &&
-                            !is_null($ag->max_age) &&
-                            $ag->min_age <= $usia &&
-                            $ag->max_age >= $usia;
-                    });
-
-                    if(!$kuAtlet){
-                        $kuAtlet = $ageGroups
-                            ->first(fn($ag) => is_null($ag->min_age) && is_null($ag->max_age));
-                    }
-
+                'results' => $item->groupBy('round_type')->map(function ($entryByRound, $roundType) use ($ageGroups, $mulaiKompetisi){
                     return [
-                        'rank' => $index+1,
-                        'nama' => $row->nama_atlet,
-                        'papi' => $atletGender,
-                        'yob' => $yob,
-                        'age' => $kuAtlet?->label,
-                        'club' => $row->club_name,
-                        'kota' => $row->club_city,
-                        'best_time' => $row->best_time ?? 'NT',
-                        'hasil' => $row->hasil,
+                        'name' => $roundType,
+                        'label' => RoundTypeEnum::from($roundType)->label(),
+                        'data' =>  $entryByRound->sortBy(fn($atlet) => $this->swimTimeToCs($atlet->hasil))
+                            ->values()
+                            ->map(function($row, $index) use ($ageGroups, $mulaiKompetisi){
+                                $atletGender = Gender::pria->value === $row->atlet_gender ? 'PA' : 'PI';
+                                $bod = Carbon::parse($row->bod);
+                                $usia = $bod->diff($mulaiKompetisi)->y;
+                                $yob = $bod->format('Y');
+                                $kuAtlet = $ageGroups->first(function ($ag) use ($usia) {
+                                    return !is_null($ag->min_age) &&
+                                        !is_null($ag->max_age) &&
+                                        $ag->min_age <= $usia &&
+                                        $ag->max_age >= $usia;
+                                });
+
+                                if(!$kuAtlet){
+                                    $kuAtlet = $ageGroups
+                                        ->first(fn($ag) => is_null($ag->min_age) && is_null($ag->max_age));
+                                }
+
+                                return [
+                                    'rank' => $index+1,
+                                    'nama' => $row->nama_atlet,
+                                    'papi' => $atletGender,
+                                    'yob' => $yob,
+                                    'age' => $kuAtlet?->label,
+                                    'club' => $row->club_name,
+                                    'kota' => $row->club_city,
+                                    'best_time' => $row->best_time ?? 'NT',
+                                    'hasil' => $row->hasil,
+                                ];
+                            })->toArray(),
                     ];
-                })->toArray(),
+                })
+                ->sortBy(fn($round) => $roundOrder[$round['name']] ?? 999)
+                ->values()
+                ->toArray(),
             ];
         })->values()->toArray();
 
