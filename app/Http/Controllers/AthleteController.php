@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CompetitionTeamEntryStatus;
 use App\Enums\Gender;
 use App\Enums\TeamType;
 use App\Models\Athlete;
+use App\Models\CompetitionEntry;
+use App\Models\CompetitionEntryRelayMember;
+use App\Models\CompetitionHeatLane;
 use App\Traits\HasApiResponse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -285,4 +289,30 @@ class AthleteController extends Controller
     //         });
     //     return $personalTime->values();
     // }
+
+    public function getEventHistories($athlete_id){
+        $entryIdRelay = CompetitionEntryRelayMember::query()
+                    ->where('status', 'active')
+                    ->where('athlete_id', $athlete_id)
+                    ->pluck('competition_entry_id');
+        $entryIdIndividual = CompetitionEntry::query()
+                    ->where('status', CompetitionTeamEntryStatus::Active->value)
+                    ->where('athlete_id', $athlete_id)
+                    ->where('is_relay', false)
+                    ->pluck('id');
+
+        $allEntryId = $entryIdRelay->merge($entryIdIndividual)
+                    ->unique()
+                    ->filter()
+                    ->toArray();
+
+        $eventHistories = CompetitionHeatLane::query()
+                        ->from('competition_heat_lanes as a')
+                        ->select(
+                            ''
+                        )
+                        ->leftjoin('competition_entry as b', 'b.id', '=', 'a.competition_entry_id')
+                        ->leftjoin('competition_entry as b', 'b.id', '=', 'a.competition_entry_id')
+
+    }
 }
