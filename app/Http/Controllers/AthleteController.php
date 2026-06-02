@@ -209,7 +209,8 @@ class AthleteController extends Controller
         $totalEvents = "4";
         $totalPodium = "3";
         $totalPR = "4";
-        $eventHistories = collect();
+        $eventHistories = $this->getEventHistories($athlete_id);
+        return $eventHistories;
         $personalTimes = collect();
 
         return view('pages.guest.atlet.show',compact(
@@ -309,10 +310,33 @@ class AthleteController extends Controller
         $eventHistories = CompetitionHeatLane::query()
                         ->from('competition_heat_lanes as a')
                         ->select(
-                            ''
+                            'a.swim_time',
+                            'a.status',
+                            'a.record_type',
+                            'b.seed_time',
+                            'b.is_relay',
+                            'c.event_number',
+                            'c.distance',
+                            'c.stroke',
+                            'c.gender',
+                            'c.event_type',
+                            'd.label',
+                            'f.code',
+                            'f.name',
+                            'f.start_date',
+                            'f.end_date',
+                            'g.round_type',
                         )
-                        ->leftjoin('competition_entry as b', 'b.id', '=', 'a.competition_entry_id')
-                        ->leftjoin('competition_entry as b', 'b.id', '=', 'a.competition_entry_id')
+                        ->leftjoin('competition_entries as b', 'b.id', '=', 'a.competition_entry_id')
+                        ->leftjoin('competition_events as c', 'c.id', '=', 'b.competition_event_id')
+                        ->leftjoin('age_groups as d', 'd.id', '=', 'c.age_group_id')
+                        ->leftjoin('competition_sessions as e', 'e.id', '=', 'c.competition_session_id')
+                        ->leftjoin('competitions as f', 'f.id', '=', 'e.competition_id')
+                        ->leftjoin('competition_heats as g', 'g.id', '=', 'a.competition_heat_id')
+                        ->whereIn('competition_entry_id', $allEntryId)
+                        ->get();
+
+        return $eventHistories;
 
     }
 }
