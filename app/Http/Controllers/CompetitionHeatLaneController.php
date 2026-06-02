@@ -12,6 +12,8 @@ use App\Models\CompetitionEvent;
 use App\Models\CompetitionHeat;
 use App\Models\CompetitionHeatLane;
 use App\Models\EventRoundConfig;
+use App\Models\FinalResult;
+use App\Traits\HasApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -19,6 +21,8 @@ use Illuminate\Validation\Rules\Enum;
 
 class CompetitionHeatLaneController extends Controller
 {
+    use HasApiResponse;
+
     public function partialReload(Competition $competition, Request $r){
         $event_id = $r->input('event_id');
         $event = !$event_id
@@ -447,6 +451,88 @@ class CompetitionHeatLaneController extends Controller
             ]);
         }
 
+    }
+
+    public function finalisasiHasilEvent(Request $req){
+        $item = CompetitionEvent::findOrFail($req->event_id);
+
+        $check = CompetitionHeatLane::query()
+            ->from('competition_heat_lanes as a')
+            ->leftjoin('competition_heats as b', 'b.id', '=', 'a.competition_heat_id')
+            ->whereNull('a.swim_time')
+            ->whereNull('a.rank_in_heat')
+            ->where('a.status', CompetitionResultStatus::valid->value)
+            ->where('b.competition_event_id', $req->event_id)
+            ->exists();
+        if($check){
+            return response()->json([
+                'status' => false,
+                'message' => "Hasil event belum lengkap"
+            ]);
+        }
+
+        $data = CompetitionHeatLane::query()
+            ->select(
+                'a.id',
+                'a.swim_time',
+                'a.status',
+                'a.competition_entry_id',
+                'b.competition_event_id',
+                'b.round_type',
+                'c.competition_team_id',
+                'c.athlete_id',
+                'c.seed_time',
+                'c.is_relay',
+                'd.competition_id'
+            )
+            ->from('competition_heat_lanes as a')
+            ->leftjoin('competition_heats as b', 'b.id', '=', 'a.competition_heat_id')
+            ->leftjoin('competition_entries as c', 'c.id', '=', 'a.competition_entry_id')
+            ->leftjoin('competition_teams as d', 'd.id', '=', 'c.competition_team_id')
+            ->get();
+        $payload = $data->orderBy(fn ($item) =>  $this->swimTimeToCs($item->swim_time))
+                ->values()
+                ->map(function($row, $index){
+                    return collect(
+                        [
+                            'competition_id' => $row->competition_id,
+                            'competition_event_id' => $row->competition_event_id,
+                            'competition_entry_id' => $row->competition_entry_id,
+                            'competition_heat_lane_id' => $row->id,
+                            'is_relay' => $row->is_relay,
+                            'athlete_id' => $row->athlete_id,
+                            'competition_team_id' => $row->competition_team_id,
+                            'entry_time' => $row->seed_time,
+                            'swim_time' => $row->swim_time,
+                            'rank_in_event' => $index+1,
+                            'status' => $row->status,
+                        ]
+                    );
+                });
+
+        DB::beginTransaction();
+        try {
+            foreach($payload as $item){
+                FinalResult::insertOrUpdate([
+                    'competition_id' => $item->competition_id,
+                    'competition_event_id' => $item->competition_event_id,
+                    'competition_entry_id' => $item->competition_entry_id,
+                    'competition_heat_lane_id' => $item->competition_heat_lane_id,
+                    'is_relay' => $item->is_relay,
+                    'athlete_id' => $item->athlete_id,
+                    'competition_team_id' => $item->competition_team_id,
+                    'entry_time' => $item->seed_time,
+                    'swim_time' => $item->swim_time,
+                    'rank_in_event' => $item->rank_in_event,
+                    'status' => $item->status,
+                ]);
+            }
+            DB::commit();
+            return $this->success(null,'Berhasil rekap hasil event');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $this->error(substr($th->getMessage(), 0, 150), $th->getCode());
+        }
     }
 
     private function checkResults($event_id, $round){

@@ -315,6 +315,9 @@
                 @endif
             @endif
         </div>
+        <div class="card-footer text-center">
+            <button class="btn btn-md btn-outline-success w-100" data-id="{{ $event?->id }}">Finalisasi Hasil Event</button>
+        </div>
     </div>
 </div>
 
@@ -811,6 +814,10 @@
         }
 
     };
+
+    window.finalisasiHasilEvent = async function() {
+        const selectEventId = HEAT_CONFIG.eventId;
+    }
 
     $(document).off('input', '.swim_time_input');
     $(document).on('input', '.swim_time_input', function(){
