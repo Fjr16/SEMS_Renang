@@ -18,6 +18,7 @@ class FinalResult extends Model
         'swim_time',
         'rank_in_event',
         'status',
+        'round_type',
     ];
 
     public function competition()

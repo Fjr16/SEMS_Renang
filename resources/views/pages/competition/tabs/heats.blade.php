@@ -10,6 +10,7 @@
         reloadUrl:   "{{ route('competition.heats.partial', $competition) }}",
         saveResultUrl:   "{{ route('competition.heats.saveResult', $competition) }}",
         promoteAtletUrl:   "{{ route('competition.heats.promoteAthletes', $competition) }}",
+        finalisasiEventUrl: "{{ route('competition.finalisasi.hasil.event', $event?->id) }}",
     };
 </script>
 
@@ -316,14 +317,14 @@
             @endif
         </div>
         <div class="card-footer text-center">
-            <button class="btn btn-md btn-outline-success w-100" data-id="{{ $event?->id }}">Finalisasi Hasil Event</button>
+            <button class="btn btn-md btn-outline-success w-100" onclick="finalisasiHasilEvent()">{{ $event->finalResults->isNotEmpty() ? 'Finalisasi Ulang' : 'Finalisasi Hasil Event' }} </button>
         </div>
     </div>
 </div>
 
-{{-- ============================================================
-     DRAWER: Input Hasil Seri
-     ============================================================ --}}
+// ============================================================
+// DRAWER: Input Hasil Seri
+// ============================================================
 <div id="resultDrawerOverlay"
     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.2); z-index:1040"
     onclick="closeResultDrawer()">
@@ -443,11 +444,6 @@
     let _activeHeatIdx = 0;
     let _heatsInRound  = [];   // [{id, number, lanes:[{...}]}]
     let _drawerOffset  = 0;
-
-    /* ── Data dari Blade ───────────────────────────────────── */
-    // const HEATS_DATA = @json($heatsData);
-    // const RESULT_STATUSES = @json($resultStatuses);
-    // const RECORD_TYPES = @json($recordTypes);
 
     /* ── Buka Drawer ───────────────────────────────────────── */
     window.openResultDrawer = function(roundType) {
@@ -816,7 +812,53 @@
     };
 
     window.finalisasiHasilEvent = async function() {
-        const selectEventId = HEAT_CONFIG.eventId;
+        const selectEventId = document.getElementById('heat_competition_event_id')?.selectedOptions[0]?.value ?? HEAT_CONFIG.eventId;
+
+        const result = await Swal.fire({
+            title: "Yakin mengunci hasil event ?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Ya, lanjutkan!",
+            cancelButtonText: "Batal",
+            reverseButtons:true
+        });
+
+        if(result.isConfirmed){
+            fetch(HEAT_CONFIG.finalisasiEventUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}", 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    event_id : selectEventId,
+                }),
+            })
+            .then(async r => {
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.message || 'Terjadi kesalahan pada server');
+                return data;
+            })
+            .then(data => {
+                if (data.status){
+                    reloadHeatTab(selectEventId);
+                    Toast.fire({
+                        icon:'success',
+                        title:data.message || 'Sukses'
+                    });
+                }else{
+                    Toast.fire({
+                        icon:'error',
+                        title:data.message || 'Gagal'
+                    });
+                }
+            })
+            .catch(error => {
+                Toast.fire({
+                    icon:'error',
+                    title:error.message || 'Gagal finalisasi event. Silakan coba lagi.'
+                });
+            });
+        }
     }
 
     $(document).off('input', '.swim_time_input');

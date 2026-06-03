@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('swim_time', 20)->nullable(true);
             $table->integer('rank_in_event')->nullable(true);
             $table->string('status')->nullable(false);
-            // $table->enum('status', ['normal', 'DSQ', 'DNS', 'DNF'])->default('normal');
+            $table->string('round_type')->nullable(false);
             $table->timestamps();
         });
     }

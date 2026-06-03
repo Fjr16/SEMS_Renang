@@ -32,7 +32,7 @@ class ApiResponse {
     /**
      * Validation Error Response
      */
-    public static function validationError($errors, string $message = 'Validation Failed')
+    public static function validationError($errors, string $message = 'Kesalahan Validasi')
     {
         return response()->json([
             'status'  => false,

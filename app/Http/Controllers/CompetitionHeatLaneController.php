@@ -454,7 +454,13 @@ class CompetitionHeatLaneController extends Controller
     }
 
     public function finalisasiHasilEvent(Request $req){
-        $item = CompetitionEvent::findOrFail($req->event_id);
+        $validators = Validator::make($req->all(), [
+            'event_id' => 'required|exists:competition_events,id',
+        ]);
+
+        if($validators->fails()){
+            return $this->validationError($validators->errors()->toArray(), 'Event tidak terdaftar');
+        }
 
         $check = CompetitionHeatLane::query()
             ->from('competition_heat_lanes as a')
@@ -489,49 +495,71 @@ class CompetitionHeatLaneController extends Controller
             ->leftjoin('competition_heats as b', 'b.id', '=', 'a.competition_heat_id')
             ->leftjoin('competition_entries as c', 'c.id', '=', 'a.competition_entry_id')
             ->leftjoin('competition_teams as d', 'd.id', '=', 'c.competition_team_id')
+            ->where('b.competition_event_id', $req->event_id)
+            // ->where('b.round_type', RoundTypeEnum::final->value)
             ->get();
-        $payload = $data->orderBy(fn ($item) =>  $this->swimTimeToCs($item->swim_time))
-                ->values()
-                ->map(function($row, $index){
-                    return collect(
-                        [
-                            'competition_id' => $row->competition_id,
-                            'competition_event_id' => $row->competition_event_id,
-                            'competition_entry_id' => $row->competition_entry_id,
-                            'competition_heat_lane_id' => $row->id,
-                            'is_relay' => $row->is_relay,
-                            'athlete_id' => $row->athlete_id,
-                            'competition_team_id' => $row->competition_team_id,
-                            'entry_time' => $row->seed_time,
-                            'swim_time' => $row->swim_time,
-                            'rank_in_event' => $index+1,
-                            'status' => $row->status,
-                        ]
-                    );
-                });
+
+        $resultValid = CompetitionResultStatus::valid->value;
+        $now = now();
+        $rankMap = [];
+
+        $data->groupBy('round_type')->each(function ($rowsByRound, $roundType) use (&$rankMap, $resultValid) {
+            if ($roundType !== RoundTypeEnum::final->value) {
+                return;
+            }
+
+            $sorted = $rowsByRound
+                ->where('status', $resultValid)
+                ->sortBy(fn($item) => $this->swimTimeToCs($item->swim_time))
+                ->values();
+
+            foreach ($sorted as $index => $row) {
+                if ($index === 0) {
+                    $rankMap[$row->id] = 1;
+                } else {
+                    $prevRow = $sorted[$index - 1];
+                    if ($row->swim_time === $prevRow->swim_time) {
+                        $rankMap[$row->id] = $rankMap[$prevRow->id];
+                    } else {
+                        $rankMap[$row->id] = $index + 1;
+                    }
+                }
+            }
+        });
+
+        // 4. Map payload
+        $payload = $data->map(function ($row) use ($rankMap, $resultValid, $now) {
+            $isFinal   = $row->round_type === RoundTypeEnum::final->value;
+            $isNoRank  = $row->status !== $resultValid;
+
+            return [
+                'competition_id'           => $row->competition_id,
+                'competition_event_id'     => $row->competition_event_id,
+                'competition_entry_id'     => $row->competition_entry_id,
+                'competition_heat_lane_id' => $row->id,
+                'is_relay'                 => $row->is_relay,
+                'athlete_id'               => $row->athlete_id,
+                'competition_team_id'      => $row->competition_team_id,
+                'round_type'               => $row->round_type,
+                'entry_time'               => $row->seed_time,
+                'swim_time'                => $row->swim_time,
+                'rank_in_event'            => ($isFinal && !$isNoRank) ? ($rankMap[$row->id] ?? null) : null,
+                'status'                   => $row->status,
+                'created_at'               => $now,
+                'updated_at'               => $now,
+            ];
+        })->toArray();
 
         DB::beginTransaction();
         try {
-            foreach($payload as $item){
-                FinalResult::insertOrUpdate([
-                    'competition_id' => $item->competition_id,
-                    'competition_event_id' => $item->competition_event_id,
-                    'competition_entry_id' => $item->competition_entry_id,
-                    'competition_heat_lane_id' => $item->competition_heat_lane_id,
-                    'is_relay' => $item->is_relay,
-                    'athlete_id' => $item->athlete_id,
-                    'competition_team_id' => $item->competition_team_id,
-                    'entry_time' => $item->seed_time,
-                    'swim_time' => $item->swim_time,
-                    'rank_in_event' => $item->rank_in_event,
-                    'status' => $item->status,
-                ]);
-            }
+            FinalResult::where('competition_event_id', $req->event_id)->delete();
+            FinalResult::insert($payload);
+
             DB::commit();
             return $this->success(null,'Berhasil rekap hasil event');
         } catch (\Throwable $th) {
             DB::rollBack();
-            return $this->error(substr($th->getMessage(), 0, 150), $th->getCode());
+            return $this->error(substr($th->getMessage(), 0, 150));
         }
     }
 

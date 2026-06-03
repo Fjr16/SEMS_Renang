@@ -113,4 +113,7 @@ class CompetitionEvent extends Model
             . ($this->event_type ? EventType::from($this->event_type)->label() : '-')
         ;
     }
+    public function finalResults(){
+        return $this->hasMany(FinalResult::class);
+    }
 }

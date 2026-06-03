@@ -158,6 +158,8 @@ Route::middleware(['auth'])->group(function(){
         Route::post('/heats/reset/by/event', [CompetitionHeatLaneController::class, 'resetByEvent'])->name('competition.heats.resetByEvent');
         Route::post('/heats/save/result', [CompetitionHeatLaneController::class, 'saveResult'])->name('competition.heats.saveResult');
         Route::post('/heats/promote/atlet', [CompetitionHeatLaneController::class, 'promoteAthletes'])->name('competition.heats.promoteAthletes');
+        Route::post('/finalisasi/hasil/event', [CompetitionHeatLaneController::class, 'finalisasiHasilEvent'])->name('competition.finalisasi.hasil.event');
+
     })->middleware('permission:Master Setting.Kompetisi-Kelola');
 });
 
