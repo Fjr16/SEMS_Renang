@@ -25,7 +25,14 @@ class CompetitionController extends Controller
             return DataTables::of([])->make(true);
         };
         $data = Competition::query()
-                ->with(['organization', 'venue']);
+                ->with(['organization', 'venue'])
+                ->when(auth()->user()->hasRole('penyelenggara'), function ($query){
+                    return $query->where('organization_id', auth()->user()->organization_id);
+                });
+
+        if(auth()->user()->hasRole('penyelenggara') && !auth()->user()->organization_id){
+            return DataTables::of(collect([]));
+        }
 
         return DataTables::of($data)
         ->addColumn('action', function($row){

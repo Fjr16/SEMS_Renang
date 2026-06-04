@@ -313,18 +313,16 @@
 
                         </div>
                     @endforeach
+
+                    <div class="card-footer text-center">
+                        <button class="btn btn-md btn-outline-success w-100" onclick="finalisasiHasilEvent()">{{ $event->finalResults->isNotEmpty() ? 'Finalisasi Ulang' : 'Finalisasi Hasil Event' }} </button>
+                    </div>
                 @endif
             @endif
-        </div>
-        <div class="card-footer text-center">
-            <button class="btn btn-md btn-outline-success w-100" onclick="finalisasiHasilEvent()">{{ $event->finalResults->isNotEmpty() ? 'Finalisasi Ulang' : 'Finalisasi Hasil Event' }} </button>
         </div>
     </div>
 </div>
 
-// ============================================================
-// DRAWER: Input Hasil Seri
-// ============================================================
 <div id="resultDrawerOverlay"
     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.2); z-index:1040"
     onclick="closeResultDrawer()">

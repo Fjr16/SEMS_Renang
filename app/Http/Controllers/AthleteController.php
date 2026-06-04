@@ -9,6 +9,7 @@ use App\Models\Athlete;
 use App\Models\CompetitionEntry;
 use App\Models\CompetitionEntryRelayMember;
 use App\Models\CompetitionHeatLane;
+use App\Models\FinalResult;
 use App\Traits\HasApiResponse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -210,7 +211,7 @@ class AthleteController extends Controller
         $totalPodium = "3";
         $totalPR = "4";
         $eventHistories = $this->getEventHistories($athlete_id);
-        return $eventHistories;
+        // return $eventHistories;
         $personalTimes = collect();
 
         return view('pages.guest.atlet.show',compact(
@@ -307,34 +308,39 @@ class AthleteController extends Controller
                     ->filter()
                     ->toArray();
 
-        $eventHistories = CompetitionHeatLane::query()
-                        ->from('competition_heat_lanes as a')
-                        ->select(
-                            'a.swim_time',
-                            'a.status',
-                            'a.record_type',
-                            'b.seed_time',
-                            'b.is_relay',
-                            'c.event_number',
-                            'c.distance',
-                            'c.stroke',
-                            'c.gender',
-                            'c.event_type',
-                            'd.label',
-                            'f.code',
-                            'f.name',
-                            'f.start_date',
-                            'f.end_date',
-                            'g.round_type',
-                        )
-                        ->leftjoin('competition_entries as b', 'b.id', '=', 'a.competition_entry_id')
-                        ->leftjoin('competition_events as c', 'c.id', '=', 'b.competition_event_id')
-                        ->leftjoin('age_groups as d', 'd.id', '=', 'c.age_group_id')
-                        ->leftjoin('competition_sessions as e', 'e.id', '=', 'c.competition_session_id')
-                        ->leftjoin('competitions as f', 'f.id', '=', 'e.competition_id')
-                        ->leftjoin('competition_heats as g', 'g.id', '=', 'a.competition_heat_id')
-                        ->whereIn('competition_entry_id', $allEntryId)
-                        ->get();
+        // $eventHistories = CompetitionHeatLane::query()
+        $eventHistories = FinalResult::query()
+                    ->from('final_results as a')
+                    ->select(
+                        'a.competition_id',
+                        'a.competition_event_id',
+                        'a.entry_time',
+                        'a.swim_time',
+                        'a.rank_in_event',
+                        'a.status',
+                        'a.is_relay',
+                        'a.round_type',
+                        'c.event_number',
+                        'c.distance',
+                        'c.stroke',
+                        'c.gender',
+                        'c.event_type',
+                        'd.label',
+                        'e.code',
+                        'e.name',
+                        'e.start_date',
+                        'e.end_date',
+                    )
+                    ->leftjoin('competition_entries as b', 'b.id', '=', 'a.competition_entry_id')
+                    ->leftjoin('competition_events as c', 'c.id', '=', 'a.competition_event_id')
+                    ->leftjoin('age_groups as d', 'd.id', '=', 'c.age_group_id')
+                    ->leftjoin('competitions as e', 'e.id', '=', 'a.competition_id')
+                    // ->leftjoin('competition_heat_lanes as f', 'f.id', '=', 'a.competition_heat_lane_id')
+                    // ->leftjoin('athletes as g', 'g.id', '=', 'a.athlete_id')
+                    ->leftjoin('competition_teams as h', 'h.id', '=', 'a.competition_team_id')
+                    ->whereIn('a.competition_entry_id', $allEntryId)
+                    ->get()
+                    ->groupBy(fn($item) => $item->competition_id . '|' . $item->competition_event_id);
 
         return $eventHistories;
 

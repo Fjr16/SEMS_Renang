@@ -16,6 +16,7 @@ class FinalResult extends Model
         'competition_team_id',
         'entry_time',
         'swim_time',
+        // 'time_in_cs',
         'rank_in_event',
         'status',
         'round_type',

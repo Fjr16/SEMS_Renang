@@ -145,6 +145,42 @@
         color: #6c757d;
         margin-bottom: .6rem;
     }
+
+    .ev-accordion {
+        border: 0.5px solid #e0e0e0;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        overflow: hidden;
+    }
+    .ev-trigger {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: #fff;
+        border: none;
+        cursor: pointer;
+        gap: 12px;
+        text-align: left;
+    }
+    .ev-trigger[aria-expanded="true"] .ev-chevron {
+        transform: rotate(180deg);
+    }
+    .ev-chevron { transition: transform .2s ease; }
+    .ev-body { border-top: 0.5px solid #e0e0e0; }
+    .round-label {
+        font-size: 11px;
+        font-weight: 500;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        padding: 8px 16px 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .round-label::after { content: ''; flex: 1; height: 0.5px; background: #e0e0e0; }
 </style>
 
 {{-- Breadcrumb / Back --}}
@@ -198,7 +234,7 @@
         </div>
 
         {{-- Stat strip --}}
-        <div class="row g-2 mt-3">
+        {{-- <div class="row g-2 mt-3">
             <div class="col-4">
                 <div class="ath-stat text-center">
                     <div class="val">{{ $totalEvents ?? 0 }}</div>
@@ -217,7 +253,7 @@
                     <div class="lbl">PR dicatat</div>
                 </div>
             </div>
-        </div>
+        </div> --}}
     </div>
 </div>
 
@@ -241,7 +277,7 @@
             <i class="bi bi-trophy me-1"></i>Event history
         </button>
     </li>
-    <li class="nav-item" role="presentation">
+    {{-- <li class="nav-item" role="presentation">
         <button class="nav-link"
                 id="tab-pt-btn"
                 data-bs-toggle="tab"
@@ -249,7 +285,7 @@
                 type="button" role="tab">
             <i class="bi bi-clock-history me-1"></i>Personal time
         </button>
-    </li>
+    </li> --}}
 </ul>
 
 <div class="tab-content" id="athTabContent">
@@ -312,37 +348,70 @@
         </div>
     </div>
 
-    {{-- ── TAB: EVENT HISTORY ── --}}
     <div class="tab-pane fade" id="tab-event" role="tabpanel">
         <div class="card border-0 shadow-sm p-3" style="border-radius:1rem;">
             <p class="sec-label">Riwayat event diikuti</p>
 
-            @forelse($eventHistories ?? [] as $ev)
-                @php
-                    $isPR = $ev->is_personal_record ?? false;
-                    $rank = $ev->rank ?? null;
-                @endphp
-                <div class="event-row">
-                    <div>
-                        <div class="fw-semibold" style="font-size:.9rem;">
-                            {{ $ev->event?->name ?? '-' }}
-                            @if($isPR)<span class="pr-badge">PR</span>@endif
+            @forelse($eventHistories ?? [] as $eventKey => $histories)
+                @php $firstRow = $histories->first(); @endphp
+
+                <div class="ev-accordion">
+                    <button class="ev-trigger" type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#ev-{{ $loop->index }}"
+                        aria-expanded="false">
+                        <div class="ev-meta">
+                            <div class="fw-semibold" style="font-size:.9rem;">
+                                {{ 'Event ' . ($firstRow->event_number ?? '-') . ' - '
+                                    . $firstRow->distance . ' M '
+                                    . ($firstRow->stroke ? App\Enums\Stroke::from($firstRow->stroke)->label() : '-') . ' • '
+                                    . ($firstRow->gender === 'mixed' ? 'Campuran' : App\Enums\Gender::from($firstRow->gender)->label()) . ' • '
+                                    . $firstRow->label . ' / '
+                                    . ($firstRow->event_type ? App\Enums\EventType::from($firstRow->event_type)->label() : '-') }}
+                            </div>
+                            <div class="text-secondary" style="font-size:.78rem;">
+                                {{ $firstRow->name ?? '-' }}
+                                @if($firstRow->start_date && $firstRow->end_date)
+                                    &middot;
+                                    {{ \Carbon\Carbon::parse($firstRow->start_date)->translatedFormat('l, d F Y') }}
+                                    –
+                                    {{ \Carbon\Carbon::parse($firstRow->end_date)->translatedFormat('l, d F Y') }}
+                                @endif
+                            </div>
                         </div>
-                        <div class="text-secondary" style="font-size:.78rem;">
-                            {{ $ev->competition?->name ?? '-' }}
-                            @if($ev->competition?->date)
-                                &middot;
-                                {{ \Carbon\Carbon::parse($ev->competition->date)->translatedFormat('d M Y') }}
-                            @endif
+                        <i class="ti ti-chevron-down ev-chevron" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="ev-body collapse" id="ev-{{ $loop->index }}">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="font-size:12px;">Ronde</th>
+                                        <th style="font-size:12px;">Status</th>
+                                        <th style="font-size:12px;">Waktu Finish</th>
+                                        <th style="font-size:12px;">Rank</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($histories as $ev)
+                                    <tr>
+                                        <td style="font-size:13px;">{{ $ev->round_type ? App\Enums\RoundTypeEnum::from($ev->round_type)->label() : '-' }}</td>
+                                        <td style="font-size:13px;">
+                                            <span class="badge" style="{{ $ev->status ? App\Enums\CompetitionResultStatus::from($ev->status)->styles() : '' }}">
+                                                {{ $ev->status ? App\Enums\CompetitionResultStatus::from($ev->status)->label() : '-' }}
+                                            </span>
+                                        </td>
+                                        <td><span class="time-pill">{{ $ev->swim_time ?? '-' }}</span></td>
+                                        <td><span class="badge text-bg-success" style="font-size:.72rem;">{{ $ev->rank_in_event ? '#' . $ev->rank_in_event : '-' }}</span></td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                        @if($rank)
-                            <span class="badge text-bg-success" style="font-size:.72rem;">#{{ $rank }}</span>
-                        @endif
-                        <span class="time-pill">{{ $ev->time ?? '-' }}</span>
                     </div>
                 </div>
+
             @empty
                 <div class="empty-state p-4 text-center">
                     <i class="bi bi-calendar-x fs-2 text-secondary mb-2 d-block"></i>
@@ -354,7 +423,7 @@
     </div>
 
     {{-- ── TAB: PERSONAL TIME ── --}}
-    <div class="tab-pane fade" id="tab-pt" role="tabpanel">
+    {{-- <div class="tab-pane fade" id="tab-pt" role="tabpanel">
         <div class="card border-0 shadow-sm p-3" style="border-radius:1rem;">
             <p class="sec-label">Waktu terbaik pribadi</p>
 
@@ -390,7 +459,7 @@
                 </div>
             @endforelse
         </div>
-    </div>
+    </div> --}}
 
 </div>
 
