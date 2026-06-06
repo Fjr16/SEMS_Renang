@@ -182,26 +182,26 @@
 
     {{-- PAGE HEADER --}}
     <div class="page-header">
-        <div class="logo-left">
+        {{-- <div class="logo-left">
             @if(!empty($logoKiri))
                 @foreach($logoKiri as $logo)
                     <img src="{{ $logo }}" alt="logo">
                 @endforeach
             @endif
-        </div>
+        </div> --}}
         <div class="header-center">
             <div class="ev-name">{{ $namaEvent }}</div>
             <div class="ev-venue">{{ $venue }}</div>
             <div class="ev-date">{{ $tanggal }}</div>
             <div class="ev-section">DAFTAR ATLET TERBAIK</div>
         </div>
-        <div class="logo-right">
+        {{-- <div class="logo-right">
             @if(!empty($logoKanan))
                 @foreach($logoKanan as $logo)
                     <img src="{{ $logo }}" alt="logo">
                 @endforeach
             @endif
-        </div>
+        </div> --}}
     </div>
 
     {{-- TABLE --}}
@@ -234,25 +234,20 @@
                 <td class="center">{{ $atlet['ku'] }}</td>
                 <td>{{ $atlet['tim'] }}</td>
 
-                {{-- Emas --}}
                 <td class="{{ $atlet['emas'] > 0 ? 'medal-val' : 'medal-zero' }}">
                     {{ $atlet['emas'] }}
                 </td>
 
-                {{-- Perak --}}
                 <td class="{{ $atlet['perak'] > 0 ? 'medal-val' : 'medal-zero' }}">
                     {{ $atlet['perak'] }}
                 </td>
 
-                {{-- Perunggu --}}
                 <td class="{{ $atlet['perunggu'] > 0 ? 'medal-val' : 'medal-zero' }}">
                     {{ $atlet['perunggu'] }}
                 </td>
 
-                {{-- Poin --}}
                 <td class="medal-zero center">{{ $atlet['poin'] ?? 0 }}</td>
 
-                {{-- 4 kolom extra (selalu 0) --}}
                 <td class="medal-zero">0</td>
                 <td class="medal-zero">0</td>
                 <td class="medal-zero">0</td>
