@@ -211,26 +211,26 @@
          HALAMAN 1: REKAP MEDALI PER KONTINGEN
     ============================================= --}}
     <div class="page-header">
-        <div class="logo-left">
+        {{-- <div class="logo-left">
             @if(!empty($logoKiri))
                 @foreach($logoKiri as $logo)
                     <img src="{{ $logo }}" alt="logo">
                 @endforeach
             @endif
-        </div>
+        </div> --}}
         <div class="header-center">
             <div class="ev-name">{{ $namaEvent }}</div>
             <div class="ev-venue">{{ $venue }}</div>
             <div class="ev-date">{{ $tanggal }}</div>
             <div class="ev-section">REKAP MEDALI PER KONTINGEN</div>
         </div>
-        <div class="logo-right">
+        {{-- <div class="logo-right">
             @if(!empty($logoKanan))
                 @foreach($logoKanan as $logo)
                     <img src="{{ $logo }}" alt="logo">
                 @endforeach
             @endif
-        </div>
+        </div> --}}
     </div>
 
     <div class="header-divider-top"></div>
@@ -245,7 +245,7 @@
                 <th class="col-rek-perak center">Perak</th>
                 <th class="col-rek-perunggu center">Perunggu</th>
                 <th class="col-rek-total center">Jumlah Medali</th>
-                <th class="col-rek-poin center">Jumlah Poin</th>
+                {{-- <th class="col-rek-poin center">Jumlah Poin</th> --}}
             </tr>
         </thead>
         <tbody>
@@ -257,7 +257,7 @@
                 <td class="center">{{ $row['perak'] ?: '' }}</td>
                 <td class="center">{{ $row['perunggu'] ?: '' }}</td>
                 <td class="center">{{ ($row['emas'] + $row['perak'] + $row['perunggu']) ?: '' }}</td>
-                <td class="center">{{ $row['poin'] ?? 0 }}</td>
+                {{-- <td class="center">{{ $row['poin'] ?? 0 }}</td> --}}
             </tr>
             @endforeach
         </tbody>

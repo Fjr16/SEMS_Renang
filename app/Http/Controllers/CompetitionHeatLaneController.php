@@ -467,7 +467,10 @@ class CompetitionHeatLaneController extends Controller
             ->leftjoin('competition_heats as b', 'b.id', '=', 'a.competition_heat_id')
             ->whereNull('a.swim_time')
             ->whereNull('a.rank_in_heat')
-            ->where('a.status', CompetitionResultStatus::valid->value)
+            ->where(function($query) {
+                $query->where('a.status', CompetitionResultStatus::valid->value)
+                    ->orWhereNull('a.status');
+            })
             ->where('b.competition_event_id', $req->event_id)
             ->exists();
         if($check){

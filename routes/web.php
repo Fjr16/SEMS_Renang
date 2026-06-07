@@ -120,9 +120,8 @@ Route::middleware(['auth'])->group(function(){
         Route::post('/starting/list', [ExportController::class, 'startingList'])->name('export.starting.list');
         Route::post('/buku/acara', [ExportController::class, 'bukuAcara'])->name('export.buku.acara');
         Route::post('/buku/hasil', [ExportController::class, 'bukuHasil'])->name('export.buku.hasil');
-        Route::get('/rekap/medali/kontingen', [ExportController::class, 'rekapMedali'])->name('export.rekap.medali');
-        Route::get('/best/club', [ExportController::class, 'bestClub'])->name('export.best.club');
-        Route::get('/best/swimmer', [ExportController::class, 'bestSwimmer'])->name('export.best.swimmer');
+        Route::post('/best/club', [ExportController::class, 'bestClub'])->name('export.best.club');
+        Route::post('/best/swimmer', [ExportController::class, 'bestSwimmer'])->name('export.best.swimmer');
     });
 
     Route::prefix('/competition/{competition}')->group(function(){
