@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Club;
 use App\Models\Organization;
 use App\Models\User;
+use App\Traits\HasApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -15,6 +16,8 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    use HasApiResponse;
+
     public function index(){
         $organizations = Organization::pluck('id', 'name');
         $clubs = Club::pluck('id', 'club_name');
@@ -164,6 +167,73 @@ class UserController extends Controller
             ]);
         } catch (\Throwable $th) {
             return back()->with('error', 'Pengguna tidak ditemukan');
+        }
+    }
+
+    public function updatePassword(Request $req){
+        $validators = Validator::make($req->all(), [
+            'user_id'          => 'required|exists:users,id',
+            'password'         => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/[a-zA-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[A-Z]/',
+                'regex:/[^a-zA-Z0-9]/',
+            ],
+            'password_confirm' => 'required|same:password',
+        ], [
+            'user_id.required'          => 'Akun tidak ditemukan',
+            'user_id.exists'            => 'Akun tidak ditemukan',
+            'password.required'         => 'Password harus diisi',
+            'password.min'              => 'Password minimal 8 karakter',
+            'password.regex'            => 'Password harus mengandung huruf, angka, huruf besar, dan simbol',
+            'password_confirm.required' => 'Konfirmasi password harus diisi',
+            'password_confirm.same'     => 'Konfirmasi password tidak cocok',
+        ]);
+
+        if($validators->fails()){
+            return $this->validationError($validators->errors(), 'Validasi gagal');
+        }
+
+        if ((int) $req->user_id !== auth()->user()->id) {
+            return $this->error('Anda tidak memiliki akses untuk mengubah password ini');
+        }
+
+        try {
+            $item = User::find($req->user_id);
+            $item->password = Hash::make($req->password);
+            $item->save();
+
+            return $this->success($item,'berhasil ubah password');
+        } catch (\Throwable $th) {
+            return $this->error(substr($th->getMessage,0,150));
+        }
+    }
+
+    public function updateProfile(Request $req){
+        $userId = $req->input('user_id');
+
+        $validators = Validator::make($req->all(), [
+            'user_id' => 'required|exists:users,id',
+            'user_name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . ($userId ?: 'NULL') . ',id',
+        ]);
+
+        if ($validators->fails()) {
+            return $this->validationError($validators->errors(), 'Validasi gagal');
+        }
+
+        try {
+            $user = User::findOrFail($userId);
+            $user->name = $req->user_name;
+            $user->email = $req->email;
+            $user->save();
+
+            return $this->success($user,'berhasil perbarui profil');
+        } catch (\Throwable $th) {
+            return $this->error(substr($th->getMessage,0,150));
         }
     }
 

@@ -25,6 +25,9 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function(){
     Route::get('/users/profile/{id}', [UserController::class, 'profile'])->name('user.profile');
+    Route::post('/users/profile/update-password', [UserController::class, 'updatePassword'])->name('user.update-password');
+    Route::post('/users/profile/update-profile', [UserController::class, 'updateProfile'])->name('user.update-profile');
+
     Route::prefix('/master')->group(function(){
         Route::get('/', function(){
             return view('pages.master.index');

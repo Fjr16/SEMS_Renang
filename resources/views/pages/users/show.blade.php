@@ -124,14 +124,6 @@
     }
   </style>
 
-  {{-- Breadcrumb --}}
-  <nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb mb-0" style="font-size:.85rem">
-      <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-      <li class="breadcrumb-item active">Profil Pengguna</li>
-    </ol>
-  </nav>
-
   @php
     $user     = auth()->user();
     $initials = strtoupper(implode('', array_map(fn($w) => $w[0], explode(' ', trim($user->name ?? 'U')))));
@@ -187,14 +179,12 @@
         </div>
 
         <div class="d-flex gap-2 flex-wrap" style="padding-top:.5rem">
-          {{-- <a href="{{ route('profile.edit') }}" class="btn btn-primary btn-sm btn-pill"> --}}
-          <a href="" class="btn btn-primary btn-sm btn-pill">
+          <button data-bs-toggle="modal" data-bs-target="#modalUser" class="btn btn-primary btn-sm btn-pill">
             <i class="bi bi-pencil me-1"></i>Edit Profil
-          </a>
-          {{-- <a href="{{ route('profile.password') }}" class="btn btn-outline-secondary btn-sm btn-pill"> --}}
-          <a href="" class="btn btn-outline-secondary btn-sm btn-pill">
+          </buttin>
+          <button data-bs-toggle="modal" data-bs-target="#modal-ubah-pw" class="btn btn-outline-secondary btn-sm btn-pill">
             <i class="bi bi-lock me-1"></i>Ubah Password
-          </a>
+          </button>
           <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm btn-pill">
             <i class="bi bi-arrow-left me-1"></i>Kembali
           </a>
@@ -324,4 +314,225 @@
     </div>
   @endif
 
+  {{-- modal ubah password --}}
+  <div class="modal fade" id="modal-ubah-pw" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form id="form-ubah-pw">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Ubah Password</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+                <input type="hidden" name="user_id" id="user_id" value="{{ $user->id }}">
+                <div class="mb-3">
+                    <label class="form-label" for="name">Password</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" name="password"  id="password" placeholder="Masukkan password" autocomplete="current-password" required>
+                        <button type="button" class="btn btn-outline-secondary" id="btnTogglePass">
+                            <i class="bi bi-eye" id="iconEye"></i>
+                        </button>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="mb-3">
+                    <label class="form-label" for="name">Konfirmasi Password</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" name="password_confirm" placeholder="Konfirmasi password disini" autocomplete="current-password"  id="password_confirm" required>
+                        <button type="button" class="btn btn-outline-secondary" id="btnTogglePassConfirm">
+                            <i class="bi bi-eye" id="iconEyeConfirm"></i>
+                        </button>
+                        <div class="invalid-feedback">
+                            <small class="fst-italic">* Password tidak sama</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Simpan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {{-- modal edit profile --}}
+  <div class="modal fade" id="modalUser" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="formUser">
+          <input type="hidden" name="user_id" id="user_id" value="{{ $user->id }}">
+          <div class="modal-header">
+            <h5 class="modal-title" id="userTitle">Edit Profile</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Nama Lengkap</label>
+              <input type="text" class="form-control" name="user_name" id="user_name" value="{{ $user->name ?? '' }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" name="email" id="user_email" value="{{ $user->email }}" required>
+            </div>
+            @if($hasOrg)
+                <div class="mb-3">
+                  <label class="form-label">Organisasi</label>
+                  <input type="text" class="form-control" value="{{ $user->organization->name ?? '' }}" disabled>
+                </div>
+            @endif
+
+            @if($hasClub)
+            <div class="mb-3">
+                <label class="form-label">Klub</label>
+                <input type="text" class="form-control" value="{{ $user->club->club_name ?? '' }}" disabled>
+            </div>
+            @endif
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary">Simpan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
 @endsection
+
+@push('scripts')
+    <script>
+        $('#btnTogglePass').on('click', function(){
+            const input   = $('#password');
+            const isHidden = input.attr('type') === 'password';
+
+            input.attr('type', isHidden ? 'text' : 'password');
+            $('#iconEye')
+                .toggleClass('bi-eye',        !isHidden)
+                .toggleClass('bi-eye-slash',   isHidden);
+        });
+        $('#btnTogglePassConfirm').on('click', function(){
+            const input   = $('#password_confirm');
+            const isHidden = input.attr('type') === 'password';
+
+            input.attr('type', isHidden ? 'text' : 'password');
+            $('#iconEyeConfirm')
+                .toggleClass('bi-eye',        !isHidden)
+                .toggleClass('bi-eye-slash',   isHidden);
+        });
+
+        $('#password').on('input', function(){
+            let pw = $(this).val();
+            let errors = [];
+
+            if(pw.length < 8){
+                errors.push ("Minimal 8 karakter");
+            }
+            if(!/[a-zA-Z]/.test(pw)){
+                errors.push ("Harus mengandung huruf");
+            }
+            if(!/[A-Z]/.test(pw)){
+                errors.push ("Harus mengandung huruf besar");
+            }
+            if(!/[0-9]/.test(pw)){
+                errors.push ("Harus mengandung angka");
+            }
+            if(!/[^a-zA-Z0-9]/.test(pw)){
+                errors.push ("Harus mengandung simbol (!@#$% dll)");
+            }
+
+            if(errors.length > 0){
+                $(this).addClass('is-invalid');
+                $(this).siblings('.invalid-feedback')
+                .html(errors.map(e => `<small class="d-block fst-italic"> * ${e}</small>`).join(''));
+            }else{
+                $(this).removeClass('is-invalid');
+                $(this).siblings('.invalid-feedback').html('');
+            }
+        });
+        $('#password_confirm').on('input', function(){
+            let newPw = $('#password').val();
+            let confirmPw = $(this).val();
+
+            if(newPw !== confirmPw){
+                $(this).addClass('is-invalid');
+            }else{
+                $(this).removeClass('is-invalid');
+            }
+        });
+
+        $('#form-ubah-pw').on('submit', async function (e) {
+            e.preventDefault();
+
+            const url = "{{ route('user.update-password') }}";
+
+            try {
+                const res  = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept':       'application/json',
+                    },
+                    body: new FormData(this),
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.status) {
+                    if (data.errors) {
+                        const msg = Object.values(data.errors).flat().join('\n');
+                        Toast.fire({ icon: 'error', title: msg || 'Terjadi kesalahan' });
+                    } else {
+                        Toast.fire({ icon: 'error', title: data.message || 'Terjadi kesalahan' });
+                    }
+                    return;
+                }
+
+                Toast.fire({ icon: 'success', title: data.message || 'Password berhasil diubah' });
+                $('#modal-ubah-pw').modal('hide');
+            } catch (error) {
+                console.error(error);
+                Toast.fire({ icon: 'error', title: 'Gagal update password.' });
+            }
+        });
+
+        $('#formUser').on('submit', async function (e) {
+            e.preventDefault();
+
+            const url = "{{ route('user.update-profile') }}";
+
+            try {
+                const res  = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept':       'application/json',
+                    },
+                    body: new FormData(this),
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.status) {
+                    if (data.errors) {
+                        const msg = Object.values(data.errors).flat().join('\n');
+                        Toast.fire({ icon: 'error', title: msg || 'Terjadi kesalahan' });
+                    } else {
+                        Toast.fire({ icon: 'error', title: data.message || 'Terjadi kesalahan' });
+                    }
+                    return;
+                }
+
+                Toast.fire({ icon: 'success', title: data.message || 'profile berhasil diubah' });
+                $('#modalUser').modal('hide');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 100);
+            } catch (error) {
+                console.error(error);
+                Toast.fire({ icon: 'error', title: 'Gagal update profile.' });
+            }
+        });
+    </script>
+@endpush
