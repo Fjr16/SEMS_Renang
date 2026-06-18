@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\CompetitionTeamEntryStatus;
 use App\Enums\Gender;
 use App\Enums\TeamType;
+use App\Imports\AthleteImport;
 use App\Models\Athlete;
 use App\Models\CompetitionEntry;
 use App\Models\CompetitionEntryRelayMember;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Enum;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class AthleteController extends Controller
@@ -151,6 +153,15 @@ class AthleteController extends Controller
             ]);
         }
     }
+    public function import(Request $req){
+        dd($req->input('file'));
+        try {
+            $import = Excel::import(new AthleteImport, $req->input('file'));
+            return $this->success(null,'Berhasil mengimport data atlet');
+        } catch (\Throwable $th) {
+            return $this->error(substr($th->getMessage(),0,150));
+        }
+    }
     public function destroy($id){
         if(!auth()->user()->can('Master Setting.Atlet-Hapus')){
             return $this->unauthorized('Anda tidak memiliki akses');
@@ -219,78 +230,6 @@ class AthleteController extends Controller
             'eventHistories', 'personalTimes'
         ));
     }
-
-
-    // public function getEventHistories(): Collection
-    // {
-    //     // ── 1. INDIVIDUAL ────────────────────────────────────────
-    //     $individual = $this->entries()          // hasMany Entry
-    //         ->with([
-    //             'event',                        // belongsTo Event
-    //             'event.competition',            // Event belongsTo Competition
-    //         ])
-    //         ->get()
-    //         ->map(function ($entry) {
-    //             return [
-    //                 'type'             => 'individual',
-    //                 'event_id'         => $entry->event_id,
-    //                 'event_name'       => $entry->event?->getLabel() ?? '-',
-    //                 'competition_code' => $entry->event?->competition?->competitionSession?->competition?->code ?? '-',
-    //                 'competition_name' => $entry->event?->competition?->competitionSession?->competition?->name ?? '-',
-    //                 'competition_start' => $entry->event?->competition?->competitionSession?->competition?->start_date ?? null,
-    //                 'competition_end' => $entry->event?->competition?->competitionSession?->competition?->end_date ?? null,
-    //                 // 'time'             => $entry->time ?? '-',
-    //                 // 'rank'             => $entry->rank ?? null,
-    //             ];
-    //         });
-
-    //     // ── 2. ESTAFET ───────────────────────────────────────────
-    //     $relay = $this->entryRelayMembers()     // hasMany EntryRelayMember
-    //         ->with([
-    //             'entry',                        // belongsTo Entry
-    //             'entry.event',                  // Entry belongsTo Event
-    //             'entry.event.competition',      // Event belongsTo Competition
-    //         ])
-    //         ->get()
-    //         ->map(function ($member) {
-    //             $entry = $member->entry;
-    //             return [
-    //                 'type'             => 'Estafet',
-    //                 'event_id'         => $entry?->event_id,
-    //                 'event_name'       => $entry?->event?->name ?? '-',
-    //                 'competition_name' => $entry?->event?->competition?->name ?? '-',
-    //                 'competition_date' => $entry?->event?->competition?->date ?? null,
-    //                 'time'             => $entry?->time ?? '-',
-    //                 'rank'             => $entry?->rank ?? null,
-    //             ];
-    //         });
-
-    //     // ── MERGE & urutkan terbaru dulu ─────────────────────────
-    //     return $individual
-    //         ->merge($relay)
-    //         ->sortByDesc('competition_date')
-    //         ->values();
-    // }
-
-    // public function personalTime(){
-    //     $personalTime = $this->heatLanes()
-    //         ->with([
-    //             'heat',
-    //         ])
-    //         ->where('status', CompetitionResultStatus::valid->value)
-    //         ->whereNotNull('swim_time')
-    //         ->get()
-    //         ->map(function($heatLanes){
-    //             return [
-    //                 'lane_number' => $heatLanes->lane_number,
-    //                 'swim_time' => $heatLanes->swim_time,
-    //                 'rank_in_heat' => $heatLanes->rank_in_heat,
-    //                 'record_type' => $heatLanes->record_type,
-    //                 'round_type' => $heatLanes->heat?->round_type
-    //             ];
-    //         });
-    //     return $personalTime->values();
-    // }
 
     public function getEventHistories($athlete_id){
         $entryIdRelay = CompetitionEntryRelayMember::query()

@@ -59,6 +59,7 @@ Route::middleware(['auth'])->group(function(){
             Route::get('/', [AthleteController::class, 'index'])->name('atlet.index')->middleware('permission:Master Setting.Atlet-List');
             Route::get('/data', [AthleteController::class, 'data'])->name('atlet.data')->middleware('permission:Master Setting.Atlet-List');
             Route::post('/store', [AthleteController::class, 'store'])->name('atlet.store')->middleware('permission:Master Setting.Atlet-Tambah|Master Setting.Atlet-Ubah|Tim Saya.Kelola Atlet-Tambah|Tim Saya.Kelola Atlet-Ubah');
+            Route::post('/import', [AthleteController::class, 'import'])->name('atlet.import')->middleware('permission:Master Setting.Atlet-Tambah|Master Setting.Atlet-Ubah|Tim Saya.Kelola Atlet-Tambah|Tim Saya.Kelola Atlet-Ubah');
             Route::delete('/destroy/{id}', [AthleteController::class, 'destroy'])->name('atlet.destroy')->middleware('permission:Master Setting.Atlet-Hapus');
         });
         Route::prefix('/official')->group(function(){
