@@ -40,7 +40,7 @@ class MyTeamController extends Controller
             $qq->where(function($subQ) use ($q){
                 $subQ->where('name', 'LIKE', '%'.$q.'%')
                     ->orWhere('code', 'LIKE', '%'.$q.'%')
-                    ->orWhere('registration_number', 'LIKE', '%'.$q.'%')
+                    ->orWhere('id', 'LIKE', '%'.$q.'%')
                     ->orWhereHas('club', function($clubQ) use ($q){
                         $clubQ->where('club_name', 'LIKE', '%'.$q.'%')
                             ->orWhere('club_code', 'LIKE', '%'.$q.'%');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\CompetitionTeamEntryStatus;
 use App\Enums\Gender;
 use App\Enums\TeamType;
+use App\Exports\AthleteTemplate;
 use App\Imports\AthleteImport;
 use App\Models\Athlete;
 use App\Models\CompetitionEntry;
@@ -105,7 +106,7 @@ class AthleteController extends Controller
         };
         $validators = Validator::make($r->all(), [
             'club_id' => 'required|integer|exists:clubs,id',
-            'registration_number' => 'nullable|string|max:255',
+            // 'registration_number' => 'nullable|string|max:255',
             'name' => 'required|string|max:255',
             'bod' => 'required|date|before_or_equal:today',
             'gender' => ['required', new Enum(Gender::class)],
@@ -128,7 +129,7 @@ class AthleteController extends Controller
         $item->name = $r->name;
         $item->bod = $r->bod;
         $item->gender = $r->gender;
-        $item->registration_number = $r->registration_number;
+        // $item->registration_number = $r->registration_number;
         $item->status = $r->status ? ($r->status === 'active' ? 'active' : 'inactive') : 'inactive';
         $item->kota = $r->kota;
         $item->provinsi = $r->provinsi;
@@ -153,10 +154,23 @@ class AthleteController extends Controller
             ]);
         }
     }
+
+    public function downloadTemplate(){
+        return Excel::download(new AthleteTemplate(), 'template-atlet.xlsx');
+    }
     public function import(Request $req){
         dd($req->input('file'));
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:2048'],
+        ]);
+
         try {
-            $import = Excel::import(new AthleteImport, $req->input('file'));
+            $import = Excel::import(new AthleteImport(), $req->input('file'));
+
+            $errorCount = count($import->errors());
+            if($errorCount > 0){
+                return $this->error("Import selesai dengan {$errorCount} baris gagal (nama kosong/tidak valid).",422,collect($import->errors())->map->getMessage());
+            }
             return $this->success(null,'Berhasil mengimport data atlet');
         } catch (\Throwable $th) {
             return $this->error(substr($th->getMessage(),0,150));
@@ -195,7 +209,7 @@ class AthleteController extends Controller
             $qq->where(function($subQ) use ($q){
                 $subQ->where('name', 'LIKE', '%'.$q.'%')
                     ->orWhere('code', 'LIKE', '%'.$q.'%')
-                    ->orWhere('registration_number', 'LIKE', '%'.$q.'%')
+                    ->orWhere('id', 'LIKE', '%'.$q.'%')
                     ->orWhereHas('club', function($clubQ) use ($q){
                         $clubQ->where('club_name', 'LIKE', '%'.$q.'%')
                             ->orWhere('club_code', 'LIKE', '%'.$q.'%');

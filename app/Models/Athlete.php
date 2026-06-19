@@ -18,7 +18,7 @@ class Athlete extends Model
         'name',
         'bod',
         'gender',
-        'registration_number',
+        // 'registration_number',
         'status',
         'kota',
         'provinsi',

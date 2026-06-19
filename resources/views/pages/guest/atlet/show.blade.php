@@ -228,7 +228,7 @@
 
                 <div class="mt-1 d-flex flex-wrap align-items-center gap-2">
                     <span class="badge text-bg-light border">[{{ $athlete->code ?? '-' }}]</span>
-                    <span class="text-secondary small">No. Reg: {{ $athlete->registration_number ?? '-' }}</span>
+                    <span class="text-secondary small">No. Reg: {{ $athlete->id ?? '-' }}</span>
                 </div>
             </div>
         </div>

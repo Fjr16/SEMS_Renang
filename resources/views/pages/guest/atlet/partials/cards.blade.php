@@ -4,7 +4,7 @@
     $photo  = $a->foto ?? null;
     $code   = $a->code ?? '-';
     $name   = $a->name ?? '-';
-    $no_reg = $a->registration_number ?? '-';
+    $no_reg = $a->id ?? '-';
     $clubCurrent = '[' . ($a->club?->club_code ?? '-') . '] - ' . ($a->club?->club_name ?? '-');
     $bod    = $a->bod ?? null;
 

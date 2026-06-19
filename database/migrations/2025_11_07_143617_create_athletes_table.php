@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('name')->nullable(false);
             $table->date('bod')->nullable(false);
             $table->string('gender', 50)->nullable(false);
-            $table->string('registration_number')->nullable(true);
+            // $table->string('registration_number')->nullable(true);
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->string('kota',50)->nullable(true);
             $table->string('provinsi',50)->nullable(true);
