@@ -5,25 +5,43 @@ namespace App\Imports;
 use App\Models\Athlete;
 use App\Models\Club;
 use Carbon\Carbon;
-use Carbon\Traits\Date;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\SkipsFailures;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
 
-class AthleteImport implements ToModel
+class AthleteImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure, SkipsEmptyRows
 {
-    /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
-    */
+    use SkipsFailures;
+
+    public function prepareForValidation($data, $index)
+    {
+        if (!empty($data['tanggal_lahir']) && is_numeric($data['tanggal_lahir'])) {
+            $data['tanggal_lahir'] = Carbon::instance(
+                Date::excelToDateTimeObject($data['tanggal_lahir'])
+            )->format('Y-m-d');
+        }
+
+        return $data;
+    }
 
     public function model(array $row)
     {
         $club = Club::where('club_code', $row['kode_klub'])->first();
+        $skip = Athlete::where('name', $row['nama'])
+                ->where('bod', $row['tanggal_lahir'])
+                ->where('gender', $this->parseGender($row['jenis_kelamin']))
+                ->exists();
+        if($skip) return null;
+
         return new Athlete([
             'club_id' => $club->id,
             'code' => $row['kode_klub'],
             'name' => $row['nama'],
-            'bod' => $this->parseDate($row['tanggal_lahir']),
+            'bod' => $row['tanggal_lahir'],
             'gender' => $this->parseGender($row['jenis_kelamin']),
             'status' => $this->parseStatus($row['status']),
             'kota' => $row['kota'],
@@ -57,19 +75,6 @@ class AthleteImport implements ToModel
             'jenis_kelamin.in'         => 'Jenis_kelamin harus Pria atau Wanita.',
             'status.in'         => 'Status harus Aktif atau Nonaktif.',
         ];
-    }
-
-    private function parseDate($value): ?string
-    {
-        if (empty($value)) return null;
-
-        // Angka serial dari Excel (misal: 34714)
-        if (is_numeric($value)) {
-            return Carbon::instance(Date::excelToDateTimeObject($value))->format('Y-m-d');
-        }
-
-        // String biasa: "15/01/1995" atau "1995-01-15"
-        return Carbon::parse($value)->format('Y-m-d');
     }
 
     private function parseGender(?string $value): string

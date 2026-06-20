@@ -159,17 +159,35 @@ class AthleteController extends Controller
         return Excel::download(new AthleteTemplate(), 'template-atlet.xlsx');
     }
     public function import(Request $req){
-        dd($req->input('file'));
-        $request->validate([
+        $validators = Validator::make($req->all(), [
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:2048'],
         ]);
 
-        try {
-            $import = Excel::import(new AthleteImport(), $req->input('file'));
+        if($validators->fails()){
+            return $this->validationError($validators->errors(), 'validasi gagal, file tidak valid');
+        }
 
-            $errorCount = count($import->errors());
-            if($errorCount > 0){
-                return $this->error("Import selesai dengan {$errorCount} baris gagal (nama kosong/tidak valid).",422,collect($import->errors())->map->getMessage());
+        try {
+            $import = new AthleteImport();
+            Excel::import($import, $req->file('file'));
+
+            $failures = $import->failures();
+
+            if($failures->count() > 0){
+                $detail = $failures->map(function ($failure) {
+                    return [
+                        'baris' => $failure->row(),
+                        'kolom' => $failure->attribute(),
+                        'pesan' => implode(', ', $failure->errors()),
+                        'data'  => $failure->values(),
+                    ];
+                })->values();
+
+                return $this->error(
+                    "Import selesai dengan {$failures->count()} baris gagal. Silakan perbaiki dan upload ulang baris tersebut.",
+                    422,
+                    $detail
+                );
             }
             return $this->success(null,'Berhasil mengimport data atlet');
         } catch (\Throwable $th) {

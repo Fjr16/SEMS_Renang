@@ -597,6 +597,7 @@
 
         const btn = $('#btnImportSubmit');
         const formData = new FormData(this);
+        console.log('formData');
 
         btn.prop('disabled', true);
         btn.html(`
@@ -635,32 +636,32 @@
             },
 
             error: function(xhr){
+                tampilkanErrorImport(xhr);
+                // let html = '';
 
-                let html = '';
+                // if(xhr.status === 422){
 
-                if(xhr.status === 422){
+                //     const errors = xhr.responseJSON.errors;
 
-                    const errors = xhr.responseJSON.errors;
+                //     html += '<div class="alert alert-danger"><ul class="mb-0">';
 
-                    html += '<div class="alert alert-danger"><ul class="mb-0">';
+                //     Object.keys(errors).forEach(key => {
+                //         html += `<li>${errors.}</li>`;
+                //     });
 
-                    Object.keys(errors).forEach(key => {
-                        html += `<li>${errors[key][0]}</li>`;
-                    });
+                //     html += '</ul></div>';
 
-                    html += '</ul></div>';
+                // }else{
 
-                }else{
+                //     html = `
+                //         <div class="alert alert-danger">
+                //             ${xhr.responseJSON?.message ??
+                //             'Terjadi kesalahan saat import data'}
+                //         </div>
+                //     `;
+                // }
 
-                    html = `
-                        <div class="alert alert-danger">
-                            ${xhr.responseJSON?.message ??
-                            'Terjadi kesalahan saat import data'}
-                        </div>
-                    `;
-                }
-
-                $('#importMessage').html(html);
+                // $('#importMessage').html(html);
             },
 
             complete: function(){
@@ -675,5 +676,43 @@
         });
 
     });
+
+    function tampilkanErrorImport(xhr) {
+        if (xhr.status !== 422) {
+            $('#importMessage').html(
+                `<div class="alert alert-danger">${xhr.responseJSON?.message || 'Terjadi kesalahan.'}</div>`
+            );
+            return;
+        }
+
+        const res = xhr.responseJSON;
+        const errors = res.errors;
+        let html = '<div class="alert alert-danger">';
+
+        if (Array.isArray(errors)) {
+            // Baris import gagal
+            html += `<p class="mb-1">${res.message}</p><ul class="mb-0">`;
+            errors.forEach(item => {
+                html += `<li>Baris ${item.baris} atlet:${item.data?.nama ?? '-'} (${item.kolom}): ${item.pesan}</li>`;
+            });
+            html += '</ul>';
+
+        } else if (errors && typeof errors === 'object') {
+            // Validasi field gagal (misal file kosong/format salah)
+            html += `<p class="mb-1">${res.message}</p><ul class="mb-0">`;
+            Object.keys(errors).forEach(key => {
+                errors[key].forEach(msg => {
+                    html += `<li>${msg}</li>`;
+                });
+            });
+            html += '</ul>';
+
+        } else {
+            html += `<p class="mb-0">${res.message}</p>`;
+        }
+
+        html += '</div>';
+        $('#importMessage').html(html);
+    }
 </script>
 @endpush
