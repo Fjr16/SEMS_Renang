@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\TeamType;
+use App\Exports\ClubTemplate;
+use App\Imports\ClubImport;
 use App\Models\Club;
 use App\Traits\HasApiResponse;
 use Illuminate\Http\Request;
@@ -10,6 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Enum;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class ClubController extends Controller
@@ -124,6 +127,45 @@ class ClubController extends Controller
                 'status' => false,
                 'message' => substr($th->getMessage(),0,100) ?? 'Gagal Simpan Data',
             ]);
+        }
+    }
+    public function downloadTemplate(){
+        return Excel::download(new ClubTemplate(), 'template-klub.xlsx');
+    }
+    public function import(Request $req){
+        $validators = Validator::make($req->all(), [
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+        ]);
+
+        if($validators->fails()){
+            return $this->validationError($validators->errors(), 'validasi gagal, file tidak valid');
+        }
+
+        try {
+            $import = new ClubImport();
+            Excel::import($import, $req->file('file'));
+
+            $failures = $import->failures();
+
+            if($failures->count() > 0){
+                $detail = $failures->map(function ($failure) {
+                    return [
+                        'baris' => $failure->row(),
+                        'kolom' => $failure->attribute(),
+                        'pesan' => implode(', ', $failure->errors()),
+                        'data'  => $failure->values(),
+                    ];
+                })->values();
+
+                return $this->error(
+                    "Import selesai dengan {$failures->count()} baris gagal. Silakan perbaiki dan upload ulang baris tersebut.",
+                    422,
+                    $detail
+                );
+            }
+            return $this->success(null,'Berhasil mengimport data klub');
+        } catch (\Throwable $th) {
+            return $this->error(substr($th->getMessage(),0,150));
         }
     }
     public function destroy($id){

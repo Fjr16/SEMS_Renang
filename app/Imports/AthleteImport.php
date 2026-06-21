@@ -34,6 +34,7 @@ class AthleteImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnF
         $skip = Athlete::where('name', $row['nama'])
                 ->where('bod', $row['tanggal_lahir'])
                 ->where('gender', $this->parseGender($row['jenis_kelamin']))
+                ->where('club_id', $club->id)
                 ->exists();
         if($skip) return null;
 

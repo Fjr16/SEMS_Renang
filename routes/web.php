@@ -54,6 +54,9 @@ Route::middleware(['auth'])->group(function(){
             Route::get('/data', [ClubController::class, 'data'])->name('club.data')->middleware('permission:Master Setting.Klub-List');
             Route::post('/store', [ClubController::class, 'store'])->name('club.store')->middleware('permission:Master Setting.Klub-Tambah|Master Setting.Klub-Ubah');
             Route::delete('/destroy/{id}', [ClubController::class, 'destroy'])->name('club.destroy')->middleware('permission:Master Setting.Klub-Hapus');
+            // import
+            Route::get('/template', [ClubController::class, 'downloadTemplate'])->name('klub.template')->middleware('permission:Master Setting.Klub-Tambah|Master Setting.Klub-Ubah');
+            Route::post('/import', [ClubController::class, 'import'])->name('klub.import')->middleware('permission:Master Setting.Klub-Tambah|Master Setting.Klub-Ubah');
         });
         Route::prefix('/atlet')->group(function(){
             Route::get('/', [AthleteController::class, 'index'])->name('atlet.index')->middleware('permission:Master Setting.Atlet-List');

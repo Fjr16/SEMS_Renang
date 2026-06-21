@@ -10,7 +10,6 @@ use App\Imports\AthleteImport;
 use App\Models\Athlete;
 use App\Models\CompetitionEntry;
 use App\Models\CompetitionEntryRelayMember;
-use App\Models\CompetitionHeatLane;
 use App\Models\FinalResult;
 use App\Traits\HasApiResponse;
 use Carbon\Carbon;
@@ -160,7 +159,7 @@ class AthleteController extends Controller
     }
     public function import(Request $req){
         $validators = Validator::make($req->all(), [
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:2048'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
         ]);
 
         if($validators->fails()){
@@ -279,7 +278,6 @@ class AthleteController extends Controller
                     ->filter()
                     ->toArray();
 
-        // $eventHistories = CompetitionHeatLane::query()
         $eventHistories = FinalResult::query()
                     ->from('final_results as a')
                     ->select(

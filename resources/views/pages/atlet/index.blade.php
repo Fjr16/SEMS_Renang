@@ -43,12 +43,6 @@
       <p class="text-muted mb-0">Kelola data atlet yang terdaftar dalam sistem</p>
     </div>
     @can('Master Setting.Atlet-Tambah')
-    {{-- <div class="mt-3 mt-md-0">
-      <button data-bs-toggle="modal" data-bs-target="#modalAthlete" class="btn btn-primary" onclick="$('#modalTitle').text('Tambah Atlet'); $('#athlete_id').val('');">
-        <i class="bi bi-plus-circle me-1"></i> Tambah Atlet
-      </button>
-    </div> --}}
-
     <div class="mt-3 mt-md-0 d-flex gap-2">
         <button data-bs-toggle="modal" data-bs-target="#modalImport" class="btn btn-success">
             <i class="bi bi-file-earmark-arrow-up me-1"></i> Import Excel
@@ -226,7 +220,7 @@
                                     Klik atau drag & drop file di sini
                                 </p>
                                 <p class="mb-0 text-muted" style="font-size:12px">
-                                    Format: .xlsx, .xls, .csv — Maks. 5MB
+                                    Format: .xlsx, .xls, .csv
                                 </p>
                             </div>
 
@@ -597,7 +591,6 @@
 
         const btn = $('#btnImportSubmit');
         const formData = new FormData(this);
-        console.log('formData');
 
         btn.prop('disabled', true);
         btn.html(`
@@ -637,31 +630,6 @@
 
             error: function(xhr){
                 tampilkanErrorImport(xhr);
-                // let html = '';
-
-                // if(xhr.status === 422){
-
-                //     const errors = xhr.responseJSON.errors;
-
-                //     html += '<div class="alert alert-danger"><ul class="mb-0">';
-
-                //     Object.keys(errors).forEach(key => {
-                //         html += `<li>${errors.}</li>`;
-                //     });
-
-                //     html += '</ul></div>';
-
-                // }else{
-
-                //     html = `
-                //         <div class="alert alert-danger">
-                //             ${xhr.responseJSON?.message ??
-                //             'Terjadi kesalahan saat import data'}
-                //         </div>
-                //     `;
-                // }
-
-                // $('#importMessage').html(html);
             },
 
             complete: function(){
@@ -714,5 +682,8 @@
         html += '</div>';
         $('#importMessage').html(html);
     }
+    document.getElementById('modalImport').addEventListener('hidden.bs.modal', function (e) {
+        document.getElementById('importMessage').innerHTML  = '';
+    });
 </script>
 @endpush
