@@ -360,6 +360,8 @@
 
     {{-- scripts untuk tab sessions --}}
     <script>
+        const CHECK_SESSIONS_URL = "{{ route('competition.tab.sessions.checkExisting', $competition) }}";
+
         function getDataSessions(){
             if($.fn.DataTable.isDataTable('#sessionsTable') ) {
                 $('#sessionsTable').DataTable().ajax.reload(null, false);
@@ -379,6 +381,115 @@
                 });
             }
         }
+
+        function selectSessionType(card){
+            if (card.classList.contains('disabled-card')) return;
+
+            document.querySelectorAll('.session-type-card').forEach(c => {
+                c.style.borderColor = '#dee2e6';
+                c.style.background = '#fff';
+                c.classList.remove('selected');
+            });
+            card.style.borderColor = '#0d6efd';
+            card.style.background = '#e7f1ff';
+            card.classList.add('selected');
+
+            document.getElementById('name').value = card.dataset.value;
+            autoSetSessionOrder();
+        }
+
+        async function checkExistingSessions(date, excludeId = null){
+            const cards = document.querySelectorAll('.session-type-card');
+            const feedback = document.getElementById('sessionTypeFeedback');
+
+            cards.forEach(c => {
+                c.classList.remove('disabled-card');
+                c.style.opacity = '1';
+                c.style.pointerEvents = 'auto';
+                c.style.borderColor = '#dee2e6';
+                c.style.background = '#fff';
+                c.classList.remove('selected');
+            });
+            feedback.classList.add('d-none');
+            document.getElementById('name').value = '';
+            document.getElementById('session_order').value = '';
+
+            if (!date) return;
+
+            let url = `${CHECK_SESSIONS_URL}?date=${date}`;
+            if (excludeId) url += `&exclude_id=${excludeId}`;
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+
+                if (data.status && data.sessions.length > 0){
+                    data.sessions.forEach(name => {
+                        cards.forEach(c => {
+                            if (c.dataset.value === name){
+                                c.classList.add('disabled-card');
+                                c.style.opacity = '.45';
+                                c.style.pointerEvents = 'none';
+                            }
+                        });
+                    });
+
+                    if (data.sessions.length >= 2){
+                        feedback.textContent = 'Sesi Pagi dan Siang sudah ada pada tanggal ini.';
+                        feedback.classList.remove('d-none');
+                    }
+                }
+            } catch (err) {
+                console.error('Check sessions error:', err.message);
+            }
+        }
+
+        function autoSetSessionOrder(){
+            const date = document.getElementById('session_date').value;
+            const name = document.getElementById('name').value;
+            if (!date || !name) return;
+
+            const table = $('#sessionsTable').DataTable();
+            if (!$.fn.DataTable.isDataTable('#sessionsTable')){
+                document.getElementById('session_order').value = 1;
+                return;
+            }
+
+            const allRows = table.rows().data().toArray();
+            const editId = document.getElementById('competition_session_id').value;
+
+            const otherSessions = allRows.filter(r => String(r.id) !== String(editId));
+
+            const beforeDate = otherSessions.filter(r => r.session_date_raw < date);
+            const sameDate = otherSessions.filter(r => r.session_date_raw === date);
+            const pagiExists = sameDate.some(r => r.name === 'Sesi Pagi');
+            const siangExists = sameDate.some(r => r.name === 'Sesi Siang');
+
+            let offset = beforeDate.length;
+            let order;
+            if (name === 'Sesi Pagi'){
+                order = offset + 1;
+            } else {
+                order = offset + (pagiExists ? 2 : 1);
+            }
+
+            document.getElementById('session_order').value = order;
+        }
+
+        function initSessionDateListener(){
+            const dateInput = document.getElementById('session_date');
+            if (!dateInput) return;
+
+            const fp = dateInput._flatpickr;
+            if (fp){
+                fp.config.onChange.push(function(selectedDates, dateStr){
+                    checkExistingSessions(dateStr);
+                });
+            }
+        }
+
         async function editSession(element) {
             const tableId = '#'+element.dataset.table;
             const modalId = '#'+element.dataset.modal;
@@ -386,14 +497,36 @@
             const form = document.getElementById(element.dataset.form);
             form.reset();
 
+            document.querySelectorAll('.session-type-card').forEach(c => {
+                c.classList.remove('disabled-card', 'selected');
+                c.style.opacity = '1';
+                c.style.pointerEvents = 'auto';
+                c.style.borderColor = '#dee2e6';
+                c.style.background = '#fff';
+            });
+            document.getElementById('sessionTypeFeedback').classList.add('d-none');
+
             const tr = $(element).closest('tr');
             const data = $(tableId).DataTable().row(tr).data();
 
             $('#competition_session_id').val(data.id);
-            $('#name').val(data.name);
-            $('#session_date').flatpickr().setDate(data.session_date);
             $('#pool_id').val(data.pool_id);
             $('#session_order').val(data.session_order);
+
+            const fp = $('#session_date')[0]._flatpickr;
+            fp.setDate(data.session_date_raw, false);
+
+            await checkExistingSessions(data.session_date_raw, data.id);
+
+            document.querySelectorAll('.session-type-card').forEach(c => {
+                if (c.dataset.value === data.name && !c.classList.contains('disabled-card')){
+                    c.style.borderColor = '#0d6efd';
+                    c.style.background = '#e7f1ff';
+                    c.classList.add('selected');
+                    document.getElementById('name').value = data.name;
+                }
+            });
+            autoSetSessionOrder();
 
             $(modalId).modal('show');
         }
@@ -403,7 +536,22 @@
             form.reset();
 
             document.getElementById('competition_session_id').value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('session_order').value = '';
+
+            document.querySelectorAll('.session-type-card').forEach(c => {
+                c.classList.remove('disabled-card', 'selected');
+                c.style.opacity = '1';
+                c.style.pointerEvents = 'auto';
+                c.style.borderColor = '#dee2e6';
+                c.style.background = '#fff';
+            });
+            document.getElementById('sessionTypeFeedback').classList.add('d-none');
         }
+
+        $('#modalSessions').on('shown.bs.modal', function(){
+            initSessionDateListener();
+        });
     </script>
 
     {{-- scripts untuk tab events --}}

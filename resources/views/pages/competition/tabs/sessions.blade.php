@@ -1,4 +1,17 @@
 <!-- Tab Events -->
+<style>
+    .session-type-card:hover:not(.disabled-card) {
+        border-color: #86b7fe !important;
+        background: #f0f6ff !important;
+    }
+    .disabled-card {
+        cursor: not-allowed !important;
+    }
+    .cursor-pointer {
+        cursor: pointer;
+    }
+</style>
+
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
   <div>
     <h5 class="fw-bold mb-1">Daftar Sesi</h5>
@@ -39,11 +52,9 @@
         </div>
         <div class="modal-body">
             <input type="hidden" name="competition_session_id" id="competition_session_id">
-          <div class="mb-3">
-            <label>Kompetisi</label>
-            <input type="text" class="form-control" id="competition_name" value="{{ $competition->name ?? '' }}" disabled>
-            <input type="hidden" value="{{ $competition->id ?? '' }}" name="competition_id" id="competition_id">
-          </div>
+            <input type="hidden" name="competition_id" value="{{ $competition->id }}">
+            <input type="hidden" name="name" id="name">
+            <input type="hidden" name="session_order" id="session_order">
           <div class="row mb-3">
             <div class="col-6">
                 <label>Lokasi / Tempat</label>
@@ -60,20 +71,34 @@
             </div>
           </div>
           <div class="mb-3">
-            <label>Nama Sesi</label>
-            <input type="text" class="form-control" name="name" id="name" required>
-          </div>
-          <div class="mb-3">
             <label>Tanggal Sesi</label>
             <input type="text" class="form-control mark-date" placeholder="Pilih Tanggal" name="session_date" id="session_date" required>
           </div>
-          <div class="mb-3">
-            <label>Urutan</label>
-            <input type="number" min="1" class="form-control" name="session_order" id="session_order" required>
+          <div class="mb-3" id="sessionTypeGroup">
+            <label class="d-block mb-2">Tipe Sesi</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="card session-type-card text-center cursor-pointer" data-value="Sesi Pagi" onclick="selectSessionType(this)" style="border:2px solid #dee2e6; border-radius:10px; transition:all .15s;">
+                  <div class="card-body py-3">
+                    <i class="bi bi-sunrise text-warning" style="font-size:1.5rem;"></i>
+                    <div class="fw-semibold mt-1 small">Sesi Pagi</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="card session-type-card text-center cursor-pointer" data-value="Sesi Siang" onclick="selectSessionType(this)" style="border:2px solid #dee2e6; border-radius:10px; transition:all .15s;">
+                  <div class="card-body py-3">
+                    <i class="bi bi-sun text-orange" style="font-size:1.5rem; color:#f59f00;"></i>
+                    <div class="fw-semibold mt-1 small">Sesi Siang</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="sessionTypeFeedback" class="text-danger small mt-1 d-none"></div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Simpan</button>
+          <button type="submit" class="btn btn-primary" id="sessionSubmitBtn">Simpan</button>
         </div>
       </form>
     </div>

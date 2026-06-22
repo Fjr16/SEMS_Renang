@@ -141,6 +141,7 @@ Route::middleware(['auth'])->group(function(){
 
         // tiap tab sebagai partial HTML (untuk Bootstrap tab)
         Route::get('/tab/sessions/data', [CompetitionSessionController::class, 'data'])->name('competition.tab.sessions.data');
+        Route::get('/tab/sessions/check-existing', [CompetitionSessionController::class, 'checkExisting'])->name('competition.tab.sessions.checkExisting');
         Route::post('/tab/sessions/store', [CompetitionSessionController::class, 'store'])->name('competition.tab.sessions.store');
         Route::delete('/tab/sessions/destroy/{id}', [CompetitionSessionController::class, 'destroy'])->name('competition.tab.sessions.destroy');
 

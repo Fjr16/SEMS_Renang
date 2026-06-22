@@ -37,12 +37,39 @@ class CompetitionSessionController extends Controller
             }
             return Carbon::parse($row->session_date)->translatedFormat('d F Y');
         })
+        ->addColumn('session_date_raw', function($row){
+            return $row->session_date;
+        })
         ->addColumn('desc_pool', function($row){
             return '[' . $row->pool->code . '] ' . $row->pool->name;
         })
         ->rawColumns(['action'])
         ->make(true);
     }
+    public function checkExisting(Competition $competition, Request $request)
+    {
+        $date = $request->query('date');
+        $excludeId = $request->query('exclude_id');
+
+        if (!$date) {
+            return response()->json(['status' => false, 'message' => 'Parameter date diperlukan']);
+        }
+
+        $query = CompetitionSession::where('competition_id', $competition->id)
+                    ->where('session_date', $date);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $sessions = $query->pluck('name')->values();
+
+        return response()->json([
+            'status'   => true,
+            'sessions' => $sessions,
+        ]);
+    }
+
     public function store(Request $r){
         $validators = Validator::make($r->all(), [
             'competition_id' => 'required|integer|exists:competitions,id',
@@ -70,6 +97,9 @@ class CompetitionSessionController extends Controller
         try {
             DB::beginTransaction();
             $item->save();
+
+            $this->reorderSessions($item->competition_id);
+
             DB::commit();
 
             return response()->json([
@@ -84,11 +114,27 @@ class CompetitionSessionController extends Controller
             ]);
         }
     }
+
+    private function reorderSessions(int $competitionId)
+    {
+        $sessions = CompetitionSession::where('competition_id', $competitionId)
+            ->orderBy('session_date', 'asc')
+            ->orderByRaw("CASE WHEN name = 'Sesi Pagi' THEN 0 ELSE 1 END")
+            ->get();
+
+        foreach ($sessions as $index => $session) {
+            $session->update(['session_order' => $index + 1]);
+        }
+    }
+
     public function destroy(Competition $competition, $id){
         try {
             $item = CompetitionSession::findOrFail($id);
             $item->competitionEvents()->delete();
             $item->delete();
+
+            $this->reorderSessions($competition->id);
+
             return response()->json([
                 'status' => true,
                 'message' => 'Sukses hapus data'
