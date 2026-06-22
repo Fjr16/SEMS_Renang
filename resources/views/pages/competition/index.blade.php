@@ -205,7 +205,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="">Tanggal Kompetisi</label>
-                        <div class="row">
+                        <div class="row g-3">
                             <div class="col-md-6">
                                 <input type="text" class="form-control mark-date" id="start_date" name="start_date" placeholder="Tanggal Mulai Kompetisi">
                             </div>
@@ -215,8 +215,8 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <div class="row">
-                            <label class="form-label">Tanggal Registrasi</label>
+                        <label class="form-label">Tanggal Registrasi</label>
+                        <div class="row g-3">
                             <div class="col-md-6">
                                 <input type="text" class="form-control mark-date" id="registration_start" name="registration_start" placeholder="Tanggal Mulai Registrasi">
                             </div>

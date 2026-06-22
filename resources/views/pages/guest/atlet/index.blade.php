@@ -65,6 +65,12 @@
     gap: .5rem;
     }
 
+    .filter-grid{
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+
     @media (min-width: 992px){
     .filter-grid{
         display: grid;
@@ -185,8 +191,8 @@
     }
   </style>
 
-    {{-- ====== HERO + FILTER ====== --}}
-    <div class="page-hero p-3 p-md-4 mb-4">
+    {{-- ====== HERO ====== --}}
+    <div class="page-hero p-3 p-md-4 mb-3">
         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
             <div>
                 <h4 class="fw-bold mb-1">Daftar Atlet</h4>
@@ -218,82 +224,82 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <form method="GET" action="" class="mt-3">
-            <div class="filter-bar">
-                <div class="filter-grid">
-                    {{-- SEARCH --}}
-                    <div class="searchbar">
-                        <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-search text-secondary"></i>
+    {{-- ====== FILTER ====== --}}
+    <form method="GET" action="" class="mb-4">
+        <div class="filter-bar">
+            <div class="filter-grid">
+                {{-- SEARCH --}}
+                <div class="searchbar">
+                    <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-search text-secondary"></i>
 
-                        <input
-                            id="q"
-                            type="text"
-                            name="q"
-                            value="{{ request('q') }}"
-                            class="form-control"
-                            placeholder="Cari atlet / kode / nama klub / kode klub / Nomor Registrasi…"
-                            autocomplete="off"
-                        >
+                    <input
+                        id="q"
+                        type="text"
+                        name="q"
+                        value="{{ request('q') }}"
+                        class="form-control"
+                        placeholder="Cari atlet / kode / nama klub / kode klub / Nomor Registrasi…"
+                        autocomplete="off"
+                    >
 
-                        @if(request('q'))
-                            <a class="btn-clear" href="{{ url()->current() . '?' . http_build_query(request()->except('q')) }}" title="Hapus pencarian">
-                            <i class="bi bi-x-lg"></i>
-                            </a>
-                        @else
-                            <button type="button" class="btn-clear d-none" id="btnClear" title="Hapus">
-                            <i class="bi bi-x-lg"></i>
-                            </button>
-                        @endif
-                        </div>
-                    </div>
-
-                    {{-- GENDER --}}
-                    <select name="gender" class="form-select">
-                        <option value="">Semua Gender</option>
-                        <option value="MALE" @selected(request('gender')==='MALE')>Male</option>
-                        <option value="FEMALE" @selected(request('gender')==='FEMALE')>Female</option>
-                    </select>
-
-                    {{-- ACTIONS --}}
-                    <div class="filter-actions">
-                        <button class="btn btn-primary btn-pill">
-                        <i class="bi bi-funnel me-1"></i>Filter
-                        </button>
-
-                        <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-pill">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                    @if(request('q'))
+                        <a class="btn-clear" href="{{ url()->current() . '?' . http_build_query(request()->except('q')) }}" title="Hapus pencarian">
+                        <i class="bi bi-x-lg"></i>
                         </a>
+                    @else
+                        <button type="button" class="btn-clear d-none" id="btnClear" title="Hapus">
+                        <i class="bi bi-x-lg"></i>
+                        </button>
+                    @endif
                     </div>
                 </div>
 
-                <div class="mt-2 text-secondary small">
-                Tip: gunakan kata kunci seperti <span class="badge text-bg-light border">ATH-01</span> atau nama klub/kode.
+                {{-- GENDER --}}
+                <select name="gender" class="form-select">
+                    <option value="">Semua Gender</option>
+                    <option value="MALE" @selected(request('gender')==='MALE')>Male</option>
+                    <option value="FEMALE" @selected(request('gender')==='FEMALE')>Female</option>
+                </select>
+
+                {{-- ACTIONS --}}
+                <div class="filter-actions">
+                    <button class="btn btn-primary btn-pill">
+                    <i class="bi bi-funnel me-1"></i>Filter
+                    </button>
+
+                    <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-pill">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                    </a>
                 </div>
             </div>
 
-            {{-- Clear button logic (tanpa jQuery) --}}
-            <script>
-                (function(){
-                const q = document.getElementById('q');
-                const btn = document.getElementById('btnClear');
-                if(!q || !btn) return;
+            <div class="mt-2 text-secondary small">
+            Tip: gunakan kata kunci seperti <span class="badge text-bg-light border">ATH-01</span> atau nama klub/kode.
+            </div>
+        </div>
 
-                const toggle = () => btn.classList.toggle('d-none', !q.value);
+        {{-- Clear button logic (tanpa jQuery) --}}
+        <script>
+            (function(){
+            const q = document.getElementById('q');
+            const btn = document.getElementById('btnClear');
+            if(!q || !btn) return;
+
+            const toggle = () => btn.classList.toggle('d-none', !q.value);
+            toggle();
+
+            q.addEventListener('input', toggle);
+            btn.addEventListener('click', () => {
+                q.value = '';
                 toggle();
-
-                q.addEventListener('input', toggle);
-                btn.addEventListener('click', () => {
-                    q.value = '';
-                    toggle();
-                    q.focus();
-                });
-                })();
-            </script>
-        </form>
-
-    </div>
+                q.focus();
+            });
+            })();
+        </script>
+    </form>
 
     {{-- GRID --}}
     <div class="row g-3" id="athleteGrid">

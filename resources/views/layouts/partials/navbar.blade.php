@@ -5,7 +5,6 @@
     gap:.5rem;
   }
 
-  /* tombol umum */
   .nav-auth .btn{
     border-radius: 999px;
     padding: .42rem .85rem;
@@ -22,7 +21,6 @@
     box-shadow: 0 14px 30px rgba(0,0,0,.14);
   }
 
-  /* tombol Login: putih + sedikit glass */
   .btn-nav-login{
     background: rgba(255,255,255,.96);
     border: 1px solid rgba(255,255,255,.55);
@@ -34,7 +32,6 @@
     color: #0b5ed7;
   }
 
-  /* tombol Daftar: outline glass */
   .btn-nav-register{
     background: rgba(255,255,255,.10);
     border: 1px solid rgba(255,255,255,.35);
@@ -47,9 +44,28 @@
     color: #fff;
   }
 
-  /* mode mobile: rapatkan */
+  .navbar-profile-link {
+    display:flex;
+    align-items:center;
+    gap:.4rem;
+    padding: .4rem .6rem;
+    border-radius: 8px;
+    transition: background .15s ease;
+  }
+  .navbar-profile-link:hover {
+    background: rgba(255,255,255,.1);
+  }
+
+  /* mobile auth area: di luar collapse, rata kanan */
+  .navbar-auth-mobile {
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    margin-left:auto;
+  }
+
   @media (max-width: 576px){
-    .nav-auth .btn span{ display:none; } /* hanya icon */
+    .nav-auth .btn span{ display:none; }
     .nav-auth .btn{ padding:.45rem .65rem; }
   }
 </style>
@@ -59,7 +75,41 @@
             🏊 <span class="ms-2">SwimComp</span>
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <!-- Auth MOBILE: di luar collapse, hanya tampil < lg -->
+        <div class="navbar-auth-mobile d-lg-none">
+            @auth
+            <div class="dropdown">
+                <a class="navbar-profile-link text-white text-decoration-none dropdown-toggle"
+                   href="#" id="navbarProfileMobile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle" style="font-size:20px;"></i>
+                    <span class="d-none d-sm-inline fw-semi-bold">{{ Auth::user()->name }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3" aria-labelledby="navbarProfileMobile">
+                    <li><a class="dropdown-item" href="{{ route('user.profile', encrypt(auth()->user()->id)) }}"><i class="bi bi-person-circle me-2"></i>Profil Saya</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Pengaturan</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="bi bi-box-arrow-right me-2"></i>Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            @else
+            <div class="nav-auth">
+                <a href="{{ route('login') }}" class="btn btn-nav-login btn-sm">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>Login</span>
+                </a>
+            </div>
+            @endauth
+        </div>
+
+        <button class="navbar-toggler ms-2 d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -85,44 +135,31 @@
                     @endcanany
                 </ul>
 
-                <!-- Kanan: Toggle + Profile -->
-                <div class="d-flex align-items-center order-1 order-lg-2 ms-lg-3 gap-3">
-                    <!-- Dark Mode Switch -->
-                    {{-- <div class="darkmode-toggle">
-                        <input type="checkbox" class="btn-check" id="darkModeToggle" autocomplete="off">
-                        <label class="btn btn-outline-light btn-sm rounded-pill px-3 d-flex align-items-center gap-2" for="darkModeToggle">
-                        <i class="bi bi-brightness-high-fill"></i>
-                        <i class="bi bi-moon-stars-fill"></i>
-                        </label>
-                    </div> --}}
-
-                    <!-- Profile / Auth Area -->
+                <!-- Auth DESKTOP: di dalam collapse, hanya tampil >= lg -->
+                <div class="d-none d-lg-flex align-items-center order-1 order-lg-2 ms-lg-3 gap-3">
                     @auth
-                    <!-- Profile Dropdown (logged in) -->
                     <div class="dropdown">
                         <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-                        href="#" id="navbarProfile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-circle me-1" style="font-size:18px;"></i>
-                        <span class="d-none fw-semi-bold d-md-inline">{{ Auth::user()->name }}</span>
+                           href="#" id="navbarProfile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-1" style="font-size:18px;"></i>
+                            <span class="fw-semi-bold">{{ Auth::user()->name }}</span>
                         </a>
-
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3" aria-labelledby="navbarProfile">
-                        <li><a class="dropdown-item" href="{{ route('user.profile', encrypt(auth()->user()->id)) }}"><i class="bi bi-person-circle me-2"></i>Profil Saya</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Pengaturan</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="dropdown-item text-danger">
-                                <i class="bi bi-box-arrow-right me-2"></i>Logout
-                            </button>
-                            </form>
-                        </li>
+                            <li><a class="dropdown-item" href="{{ route('user.profile', encrypt(auth()->user()->id)) }}"><i class="bi bi-person-circle me-2"></i>Profil Saya</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Pengaturan</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                    </button>
+                                </form>
+                            </li>
                         </ul>
                     </div>
                     @else
-                    <!-- Guest (not logged in) -->
                     <div class="nav-auth">
                         <a href="{{ route('login') }}" class="btn btn-nav-login btn-sm">
                             <i class="bi bi-box-arrow-in-right"></i>
