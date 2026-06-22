@@ -10,7 +10,7 @@
         reloadUrl:   "{{ route('competition.heats.partial', $competition) }}",
         saveResultUrl:   "{{ route('competition.heats.saveResult', $competition) }}",
         promoteAtletUrl:   "{{ route('competition.heats.promoteAthletes', $competition) }}",
-        finalisasiEventUrl: "{{ route('competition.finalisasi.hasil.event', $event?->id) }}",
+        finalisasiEventUrl: "{{ route('competition.finalisasi.hasil.event', ($event?->id ?? 'event')) }}",
     };
 </script>
 

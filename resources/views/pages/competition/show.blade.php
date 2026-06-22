@@ -44,6 +44,11 @@
       <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">Ringkasan</button>
     </li>
     <li class="nav-item" role="presentation">
+      <button class="nav-link" id="undangan-tab" data-bs-toggle="tab" data-bs-target="#undangan" type="button" role="tab" aria-controls="undangan" aria-selected="false">
+        <i class="bi bi-file-earmark-pdf me-1"></i> Undangan
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
         <button class="nav-link" id="sessions-tab" data-bs-toggle="tab" data-bs-target="#sessions" type="button" role="tab" aria-controls="overview" aria-selected="false">
             Sesi
             <span class="badge bg-secondary">{{ $counts['sessions'] ?? 0 }}</span>
@@ -128,6 +133,9 @@
         </p>
     </div>
 
+    <!-- Undangan -->
+    <div class="tab-pane fade" id="undangan" role="tabpanel"></div>
+
     <!-- Sessions -->
     <div class="tab-pane fade" id="sessions" role="tabpanel" data-table="sessionsTable">
       @include('pages.competition.tabs.sessions')
@@ -148,6 +156,8 @@
         const EVENTS_PARTIAL_URL = "{{ route('competition.tab.events.partial', $competition) }}";
         const ENTRIES_PARTIAL_URL = "{{ route('competition.tab.entries.partial', $competition) }}";
         const HEATS_PARTIAL_URL = "{{ route('competition.heats.partial', $competition) }}";
+        const UNDANGAN_PARTIAL_URL = "{{ route('competition.tab.undangan.partial', $competition) }}";
+        const UNDANGAN_STORE_URL = "{{ route('competition.tab.undangan.store', $competition) }}";
 
         document.addEventListener('shown.bs.tab', async function(ev) {
             const paneSelector = ev.target.getAttribute('data-bs-target');
@@ -163,7 +173,10 @@
             };
 
             try {
-                if(paneSelected.id === 'events'){
+                if(paneSelected.id === 'undangan'){
+                    paneSelected.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+                    fetchPartialUndanganTab();
+                }else if(paneSelected.id === 'events'){
                     // Reload hanya konten tab events
                     paneSelected.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
 
@@ -1425,6 +1438,136 @@
                 document.getElementById('btnGenerateHeat').innerHTML =
                     '<i class="bi bi-grid me-1"></i> Generate Seri';
             });
+        }
+    </script>
+
+    {{-- scripts tab undangan --}}
+    <script>
+        function fetchPartialUndanganTab(){
+            const tab = document.getElementById('undangan');
+            tab.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+
+            fetch(UNDANGAN_PARTIAL_URL)
+                .then(r => r.text())
+                .then(html => {
+                    tab.innerHTML = html;
+                    initUndanganDropZone();
+                })
+                .catch(err => {
+                    console.error('Fetch error:', err.message);
+                    tab.innerHTML = '<div class="py-4 text-danger text-center">Gagal memuat konten.</div>';
+                });
+        }
+
+        function initUndanganDropZone(){
+            const dropZone = document.getElementById('undanganDropZone');
+            if (!dropZone) return;
+
+            dropZone.addEventListener('dragover', function(e){
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', function(e){
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
+            dropZone.addEventListener('drop', function(e){
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && files[0].type === 'application/pdf'){
+                    const input = document.getElementById('undanganFileInput');
+                    input.files = files;
+                    showUndanganFileInfo(files[0]);
+                } else {
+                    Toast.fire({ icon:'error', title:'Hanya file PDF yang diperbolehkan' });
+                }
+            });
+        }
+
+        function handleUndanganFileSelect(event){
+            const file = event.target.files[0];
+            if (file) showUndanganFileInfo(file);
+        }
+
+        function showUndanganFileInfo(file){
+            document.getElementById('dropZonePlaceholder').classList.add('d-none');
+            document.getElementById('dropZoneFileInfo').classList.remove('d-none');
+            document.getElementById('undanganFileName').textContent = file.name;
+            document.getElementById('undanganFileSize').textContent = formatFileSize(file.size);
+        }
+
+        function resetUndanganFile(event){
+            event.stopPropagation();
+            resetUndanganFileDisplay();
+            document.getElementById('undanganFileInput').value = '';
+        }
+
+        function resetUndanganFileDisplay(){
+            const placeholder = document.getElementById('dropZonePlaceholder');
+            const fileInfo = document.getElementById('dropZoneFileInfo');
+            if (placeholder) placeholder.classList.remove('d-none');
+            if (fileInfo) fileInfo.classList.add('d-none');
+        }
+
+        function formatFileSize(bytes){
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        function openUndanganReplace(){
+            const section = document.getElementById('undanganReplaceSection');
+            section.classList.remove('d-none');
+            section.scrollIntoView({ behavior:'smooth', block:'center' });
+        }
+
+        function cancelUndanganReplace(){
+            const section = document.getElementById('undanganReplaceSection');
+            section.classList.add('d-none');
+            document.getElementById('undanganForm').reset();
+            resetUndanganFileDisplay();
+        }
+
+        async function submitUndangan(){
+            const fileInput = document.getElementById('undanganFileInput');
+            if (!fileInput.files.length){
+                Toast.fire({ icon:'error', title:'File PDF wajib diunggah' });
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const btn = document.getElementById('undanganSubmitBtn');
+            btn.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengunggah...';
+
+            try {
+                const res = await fetch(UNDANGAN_STORE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.status){
+                    throw new Error(data.message || 'Gagal mengunggah file');
+                }
+
+                fetchPartialUndanganTab();
+                Toast.fire({ icon:'success', title:data.message || 'Berhasil mengunggah file' });
+            } catch (err) {
+                console.error(err);
+                Toast.fire({ icon:'error', title:err.message || 'Gagal mengunggah file' });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
         }
     </script>
 @endpush

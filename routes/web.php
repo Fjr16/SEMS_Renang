@@ -9,6 +9,7 @@ use App\Http\Controllers\CompetitionEventController;
 use App\Http\Controllers\CompetitionHeatLaneController;
 use App\Http\Controllers\CompetitionSessionController;
 use App\Http\Controllers\CompetitionTabEntriesController;
+use App\Http\Controllers\CompetitionUndanganController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\MyTeamController;
 use App\Http\Controllers\OfficialController;
@@ -155,6 +156,9 @@ Route::middleware(['auth'])->group(function(){
         Route::post('/tab/entries/update-seed-time', [CompetitionTabEntriesController::class, 'updateSeedTime'])->name('competition.tab.entries.updateSeedTime');
         Route::post('/tab/entries/update-status-entry', [CompetitionTabEntriesController::class, 'updateStatusEntry'])->name('competition.tab.entries.updateStatusEntry');
         Route::delete('/tab/entries/delete-entry/{id}', [CompetitionTabEntriesController::class, 'destroyEntry'])->name('competition.tab.entries.deleteEntry');
+
+        Route::get('/tab/undangan/partial/reload', [CompetitionUndanganController::class, 'partialReload'])->name('competition.tab.undangan.partial');
+        Route::post('/tab/undangan/store', [CompetitionUndanganController::class, 'store'])->name('competition.tab.undangan.store');
 
         // Route::get('/tab/results',  [CompetitionSessionController::class, 'results'])->name('competition.tab.results');
         // Route::get('/tab/points',   [CompetitionSessionController::class, 'points'])->name('competition.tab.points');

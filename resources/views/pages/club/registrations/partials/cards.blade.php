@@ -108,23 +108,31 @@
         @endphp
 
         {{-- actions --}}
-        @auth
-            @can('Tim Saya.Pendaftaran Kompetisi')
-                @if ($ableToRegister)
-                <div class="mt-3">
+        <div class="mt-3 d-flex flex-wrap gap-2">
+            @auth
+                @can('Tim Saya.Pendaftaran Kompetisi')
+                    @if ($ableToRegister)
                     <a href="{{ route('manager.club.registration.create', ['competition' => $c]) }}" class="btn btn-primary btn-sm comp-btn">
                         <i class="bi bi-clipboard-check me-1"></i>Daftar
                     </a>
-                </div>
-                @else
-                <div class="mt-3">
+                    @else
                     <a class="btn btn-primary btn-sm comp-btn disabled">
                         <i class="bi bi-clipboard-check me-1"></i>Daftar
                     </a>
-                </div>
-                @endif
-            @endcan
-        @endauth
+                    @endif
+                @endcan
+            @endauth
+
+            @if ($c->undangan_path)
+            <a href="{{ Storage::url($c->undangan_path) }}" target="_blank" class="btn btn-success btn-sm comp-btn" download>
+                <i class="bi bi-file-earmark-pdf me-1"></i>Undangan
+            </a>
+            @else
+            <span class="btn btn-outline-secondary btn-sm comp-btn disabled" aria-disabled="true">
+                <i class="bi bi-file-earmark-pdf me-1"></i>Undangan
+            </span>
+            @endif
+        </div>
     </div>
     @endforeach
 </div>

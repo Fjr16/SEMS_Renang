@@ -24,6 +24,7 @@ class Competition extends Model
         'registration_end',
         'sanction_number',  //PRSI-2026-001
         'status',
+        'undangan_path',
     ];
 
     public function sessions(){
