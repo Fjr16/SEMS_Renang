@@ -15,6 +15,8 @@ return new class extends Migration
             $table->string('gender', 10);
             $table->foreignId('age_group_id')->constrained('age_groups');
             $table->string('event_type', 20);
+            $table->unsignedInteger('max_relay_athletes')->nullable();
+            $table->string('equipment', 20)->nullable();
             $table->string('label')->nullable();
             $table->timestamps();
 
