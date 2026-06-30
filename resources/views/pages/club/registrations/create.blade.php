@@ -178,12 +178,15 @@
         $label = $ev->event_number ?? '';
         $eventGender = $ev->gender ? ($ev->gender != 'mixed' ? (App\Enums\Gender::from($ev->gender)->label()) : 'Campuran') : '-';
         $tipeEvent = $ev->event_type ? App\Enums\EventType::from($ev->event_type)->label() : '-';
-        $tipeLabel   = $tipeEvent == 'Estafet' ? $tipeEvent . ' (maks. Atlet : '. ($ev->max_relay_athletes ?? '-') .')' : $tipeEvent;
+        $isRelay = $tipeEvent == 'Estafet';
+        $tipeLabel   = $isRelay ? $tipeEvent . ' (maks. Atlet : '. ($ev->max_relay_athletes ?? '-') .')' : $tipeEvent;
         $eventKu = $ev->ageGroup ? $ev->ageGroup->label : '';
         $minDob = $ev->ageGroup ? Carbon\Carbon::parse($comp->start_date)->subYears($ev->ageGroup->max_age)->translatedFormat('d F Y') : '-';
         $maxDob = $ev->ageGroup ? Carbon\Carbon::parse($comp->start_date)->subYears($ev->ageGroup->min_age)->translatedFormat('d F Y') : '-';
         $stroke = $ev->stroke ? App\Enums\Stroke::from($ev->stroke)->label() : '###';
-        $meta  = (($ev->distance ?? '-') . ' M ' . ($stroke) . ' • ' . ($eventGender) . ' • '. ($eventKu) . ' - ' . ($tipeEvent == 'Estafet' ? $tipeEvent . ' (maks. Atlet : '. ($ev->max_relay_athletes ?? '-') .')' : $tipeEvent));
+        $equipLabel = $ev->equipment ? ' ' . ucfirst($ev->equipment) : '';
+        $distLabel = ($isRelay && $ev->max_relay_athletes) ? ($ev->max_relay_athletes . 'x' . $ev->distance) : $ev->distance;
+        $meta  = ($distLabel . ' M ' . $stroke . $equipLabel . ' • ' . $eventGender . ' • '. $eventKu . ' - ' . ($isRelay ? $tipeEvent . ' (maks. Atlet : '. ($ev->max_relay_athletes ?? '-') .')' : $tipeEvent));
         return [
             'id' => $ev->id,
             'label' => '[Event ' . trim($label) .'] ' . trim($meta),
@@ -230,12 +233,14 @@
                 @forelse($events as $ev)
                     @php
                     $label = 'Event ' . ($ev->event_number ?? '');
-                    // $meta  = ('['.($ev->code ?? '-').']'. .($ev->distance ?? '-') . ' M ' . ($ev->stroke ?? '-') . ' • ' . (($ev->event_type ?? '-')));
                     $eventGender = $ev->gender ? ($ev->gender != 'mixed' ? (App\Enums\Gender::from($ev->gender)->label()) : 'Campuran') : '-';
                     $tipeEvent = $ev->event_type ? App\Enums\EventType::from($ev->event_type)->label() : '-';
+                    $isRelay = $tipeEvent == 'Estafet';
                     $eventKu = $ev->ageGroup ? $ev->ageGroup->label : '';
                     $stroke = $ev->stroke ? App\Enums\Stroke::from($ev->stroke)->label() : '###';
-                    $meta  = (($ev->distance ?? '-') . ' M ' . ($stroke ?? '-') . ' • ' . ($eventGender) . ' • '. ($eventKu) . ' - ' . ($tipeEvent == 'Estafet' ? $tipeEvent . ' (maks. Atlet : '. ($ev->max_relay_athletes ?? '-') .')' : $tipeEvent));
+                    $equipLabel = $ev->equipment ? ' ' . ucfirst($ev->equipment) : '';
+                    $distLabel = ($isRelay && $ev->max_relay_athletes) ? ($ev->max_relay_athletes . 'x' . $ev->distance) : $ev->distance;
+                    $meta  = ($distLabel . ' M ' . $stroke . $equipLabel . ' • ' . $eventGender . ' • '. $eventKu . ' - ' . ($isRelay ? $tipeEvent . ' (maks. Atlet : '. ($ev->max_relay_athletes ?? '-') .')' : $tipeEvent));
                     @endphp
 
                     <div class="ev-card mb-2" data-evcard data-evtext="{{ strtolower($label.' '.$meta) }}">

@@ -561,22 +561,15 @@
         const EVENTS_URL_UPDATE  = "{{ route('competition.tab.events.update', [$competition, ':event']) }}".replace(':event', '');
         const EVENTS_URL_DESTROY = "{{ route('competition.tab.events.destroy', [$competition, ':event']) }}".replace(':event', '');
         const ESTAFET_VALUE  = "{{ \App\Enums\EventType::estafet->value }}";
-        const ENUM_GENDER = @json(
-            collect(\App\Enums\Gender::cases())->map(fn($g) => [
-                'value' => $g->value,
-                'label' => $g->label(),
-            ])
-        );
 
         // ── Open create modal ────────────────────────────────────────────────
         function openCreateEvent() {
             document.getElementById('eventForm').reset();
             document.getElementById('competition_event_id').value = '';
             document.getElementById('modalEventTitle').textContent = 'Tambah Event';
-            document.getElementById('max_relay_athletes').disabled = true;
-
-            document.getElementById('event_type').dispatchEvent(new Event('change'));
-            document.getElementById('limit_waktu').placeholder       = 'Kosongkan untuk NO LIMIT';
+            document.getElementById('limit_waktu').placeholder = 'Kosongkan untuk NO LIMIT';
+            initModalSelect2();
+            $('#master_event_id').val('').trigger('change');
         }
         // ── Toggle Sesi (fix) ──────────────────────────────────────────────────────
         function toggleSessionGroup(btn) {
@@ -610,7 +603,7 @@
             const empty = card.querySelector('.session-empty-row');
             if (empty) empty.style.display = count === 0 ? '' : 'none';
         }
-        // ── Edit Event (existing, unchanged) ────────────────────────────────
+        // ── Edit Event ────────────────────────────────────────────────
         async function editEvent(eventId) {
             document.getElementById('modalEventTitle').textContent = 'Edit Event';
             try {
@@ -629,26 +622,12 @@
                 }
 
                 const ev = data.event;
+                const masterId = data.master_event_id;
                 const modal = document.getElementById('modalEvent');
-
-                const select = document.getElementById('gender');
-
-                select.innerHTML = ENUM_GENDER.map(g =>
-                    `<option value="${g.value}">${g.label}</option>`
-                ).join('');
-
-                if (ev.event_type === ESTAFET_VALUE) {
-                    select.innerHTML += `<option value="mixed">Campuran</option>`;
-                }
 
                 modal.querySelector('#eventForm').reset();
                 modal.querySelector('#competition_event_id').value   = ev.id;
                 modal.querySelector('#competition_session_id').value = ev.competition_session_id;
-                modal.querySelector('#stroke').value                 = ev.stroke;
-                modal.querySelector('#distance').value               = ev.distance;
-                modal.querySelector('#gender').value                 = ev.gender;
-                modal.querySelector('#age_group_id').value           = ev.age_group_id;
-                modal.querySelector('#event_type').value             = ev.event_type;
                 modal.querySelector('#registration_fee').value       = toNum(ev.registration_fee);
                 if(ev.limit_waktu && ev.limit_waktu != 'NO LIMIT'){
                     modal.querySelector('#limit_waktu').value       = ev.limit_waktu ?? '';
@@ -656,9 +635,16 @@
                     modal.querySelector('#limit_waktu').placeholder       = ev.limit_waktu ?? 'NO LIMIT';
                 }
 
-                const maxEl = modal.querySelector('#max_relay_athletes');
-                maxEl.disabled = ev.event_type !== ESTAFET_VALUE;
-                maxEl.value    = ev.max_relay_athletes ?? '';
+                // Init Select2 first, then set value
+                initModalSelect2();
+                if (masterId) {
+                    $('#master_event_id').val(masterId).trigger('change');
+                } else {
+                    $('#master_event_id').val('').trigger('change');
+                }
+
+                // Refresh session select2
+                $('#competition_session_id').trigger('change.select2');
 
                 new bootstrap.Modal(modal).show();
 
@@ -764,24 +750,70 @@
             applyEventFilter();
         }
 
-        function initEventTabScripts() {
-            // ── Relay toggle (existing) (fix) ──────────────────────────────────────────
-            document.getElementById('event_type').addEventListener('change', function () {
-                const maxEl = document.getElementById('max_relay_athletes');
-                maxEl.disabled = this.value !== ESTAFET_VALUE;
-                if (this.value !== ESTAFET_VALUE) maxEl.value = '';
+        // ── Select2 init for modal (safe to call multiple times) ───────
+        function initModalSelect2() {
+            // Destroy if already initialized
+            if ($('#master_event_id').data('select2')) {
+                $('#master_event_id').select2('destroy');
+            }
+            if ($('#competition_session_id').data('select2')) {
+                $('#competition_session_id').select2('destroy');
+            }
 
-                const select = document.getElementById('gender');
-
-                select.innerHTML = ENUM_GENDER.map(g =>
-                    `<option value="${g.value}">${g.label}</option>`
-                ).join('');
-
-                if (this.value === ESTAFET_VALUE) {
-                    select.innerHTML += `<option value="mixed">Campuran</option>`;
-                }
+            // Session select
+            $('#competition_session_id').select2({
+                width: '100%',
+                placeholder: 'Pilih Sesi',
+                allowClear: false,
+                theme: 'classic',
+                dropdownParent: $('#modalEvent'),
             });
 
+            // Master event select
+            $('#master_event_id').select2({
+                width: '100%',
+                placeholder: 'Ketik untuk cari event...',
+                allowClear: true,
+                theme: 'classic',
+                dropdownParent: $('#modalEvent'),
+                templateResult: function(option) {
+                    if (!option.id) return option.text;
+                    const $el = $(option.element);
+                    const distDisp = $el.data('dist-display') || '';
+                    const stroke   = $el.data('stroke') || '';
+                    const gender   = $el.data('gender') || '';
+                    const gColor   = $el.data('gender-color') || '#6c757d';
+                    const ku       = $el.data('ku') || '';
+                    const equip    = $el.data('equipment') || '';
+                    const isRelay  = $el.data('event-type') === ESTAFET_VALUE;
+
+                    return $(`
+                        <div class="event-option">
+                            <span class="ev-distance">${distDisp}</span>
+                            <span class="ev-stroke">${stroke}</span>
+                            ${equip ? '<span style="font-size:11px;background:#6610f220;color:#6610f2;padding:1px 6px;border-radius:4px;border:1px solid #6610f240">' + equip + '</span>' : ''}
+                            ${isRelay ? '<span style="font-size:10px;background:#fd7e1420;color:#fd7e14;padding:1px 5px;border-radius:3px;border:1px solid #fd7e1440">Estafet</span>' : ''}
+                            <span class="ev-gender" style="background:${gColor}20;color:${gColor};border:1px solid ${gColor}40">${gender}</span>
+                            <span class="ev-ku">${ku}</span>
+                        </div>
+                    `);
+                },
+                templateSelection: function(option) {
+                    if (!option.id) return option.text;
+                    const $el = $(option.element);
+                    const distDisp = $el.data('dist-display') || '';
+                    const stroke   = $el.data('stroke') || '';
+                    const gender   = $el.data('gender') || '';
+                    const ku       = $el.data('ku') || '';
+                    const equip    = $el.data('equipment') || '';
+                    return `${distDisp} ${stroke} ${equip} ${gender} ${ku}`;
+                },
+            }).on('change', function () {
+                // placeholder for future logic
+            });
+        }
+
+        function initEventTabScripts() {
             document.getElementById('limit_waktu').addEventListener('input', function(){
                 let digits = this.value.replace(/\D/g, '');
 
@@ -897,6 +929,12 @@
                     submitBtn.disabled    = false;
                     submitBtn.textContent = 'Simpan';
                 }
+            });
+
+            // ── Cleanup Select2 on modal close ───────────────────────────
+            $('#modalEvent').on('hidden.bs.modal', function () {
+                if ($('#master_event_id').data('select2')) $('#master_event_id').select2('destroy');
+                if ($('#competition_session_id').data('select2')) $('#competition_session_id').select2('destroy');
             });
 
             document.getElementById('eventSearchInput').addEventListener('input', applyEventFilter);

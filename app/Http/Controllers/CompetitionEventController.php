@@ -9,8 +9,8 @@ use App\Models\AgeGroup;
 use App\Models\Competition;
 use App\Models\CompetitionEvent;
 use App\Models\CompetitionSession;
+use App\Models\MasterEvent;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class CompetitionEventController extends Controller
 {
@@ -19,26 +19,21 @@ class CompetitionEventController extends Controller
         $enumGender = Gender::cases();
         $enumEType  = EventType::cases();
         $ageGroups  = AgeGroup::all();
+        $masterEvents = MasterEvent::with('ageGroup')->orderBy('event_type')->orderBy('stroke')->orderBy('distance')->orderBy('gender')->get();
 
         return view('pages.competition.tabs.events', compact(
-            'competition', 'enumStroke', 'enumGender', 'enumEType', 'ageGroups'
+            'competition', 'enumStroke', 'enumGender', 'enumEType', 'ageGroups', 'masterEvents'
         ));
     }
     public function store(Request $request, Competition $competition){
         $validated = $request->validate([
             'competition_session_id' => 'required|exists:competition_sessions,id',
-            'stroke'                 => 'required|string|max:50',
-            'distance'               => 'required|numeric|min:1',
-            'gender'                 => 'required|string|max:10',
-            'age_group_id'           => 'required|exists:age_groups,id',
-            'event_type'             => 'required|string|max:20',
-            'max_relay_athletes'     => [
-                Rule::requiredIf(fn() => $request->event_type === EventType::estafet->value),
-                'nullable', 'integer', 'max:4',
-            ],
+            'master_event_id'        => 'required|exists:master_events,id',
             'registration_fee'       => 'required|numeric|min:0',
             'limit_waktu'           => 'nullable|regex:/^\d{2}:\d{2}\.\d{2}$/'
         ]);
+
+        $masterEvent = MasterEvent::findOrFail($validated['master_event_id']);
 
         $session_date = CompetitionSession::where('id', $request->competition_session_id)->value('session_date');
         $sessionIdsOnSameDay = CompetitionSession::where('competition_id', $competition->id)
@@ -46,20 +41,38 @@ class CompetitionEventController extends Controller
             ->pluck('id');
 
         $exists = CompetitionEvent::whereIn('competition_session_id', $sessionIdsOnSameDay)
-            ->where('distance', $request->distance)
-            ->where('stroke', $request->stroke)
-            ->where('age_group_id', $request->age_group_id)
-            ->where('gender', $request->gender)
+            ->where('distance', $masterEvent->distance)
+            ->where('stroke', $masterEvent->stroke)
+            ->where('age_group_id', $masterEvent->age_group_id)
+            ->where('gender', $masterEvent->gender)
+            ->where('event_type', $masterEvent->event_type)
+            ->where('equipment', $masterEvent->equipment)
             ->exists();
 
         if ($exists) {
             return response()->json([
                 'success'    => false,
-                'message'    => 'Event dengan kombinasi sesi, jarak, gaya, kelompok umur, dan jenis kelamin ini sudah ada.'
+                'message'    => 'Event dengan kombinasi ini sudah ada di sesi yang sama.'
             ]);
         }
 
-        $event = $competition->events()->create($validated);
+        $eventData = [
+            'competition_session_id' => $validated['competition_session_id'],
+            'distance'               => $masterEvent->distance,
+            'stroke'                 => $masterEvent->stroke,
+            'gender'                 => $masterEvent->gender,
+            'age_group_id'           => $masterEvent->age_group_id,
+            'event_type'             => $masterEvent->event_type,
+            'max_relay_athletes'     => $masterEvent->max_relay_athletes,
+            'equipment'              => $masterEvent->equipment,
+            'registration_fee'       => $validated['registration_fee'],
+        ];
+
+        if (!empty($validated['limit_waktu'])) {
+            $eventData['limit_waktu'] = $validated['limit_waktu'];
+        }
+
+        $event = $competition->events()->create($eventData);
         $event->load('ageGroup');
 
         $sessionEvents = $competition->events()
@@ -73,13 +86,13 @@ class CompetitionEventController extends Controller
             'session_id' => $event->competition_session_id,
             'row_html'   => view('pages.competition.tabs._event_row', [
                 'event'       => $event,
-                'sesi'        => $event->session,
+                'sesi'        => $event->competitionSession,
                 'index'       => $index,
                 'competition' => $competition,
             ])->render(),
         ]);
     }
-    public function edit(Competition $competition, CompetitionEvent $event)    {
+    public function edit(Competition $competition, CompetitionEvent $event){
         if($event->competitionSession->competition_id !== $competition->id){
             return response()->json([
                 'success' => false,
@@ -87,28 +100,29 @@ class CompetitionEventController extends Controller
             ]);
         }
 
+        $masterEvent = MasterEvent::where('distance', $event->distance)
+            ->where('stroke', $event->stroke)
+            ->where('gender', $event->gender)
+            ->where('age_group_id', $event->age_group_id)
+            ->where('event_type', $event->event_type)
+            ->where('equipment', $event->equipment)
+            ->first();
+
         return response()->json([
-            'success' => true,
-            'event'   => $event,
+            'success'         => true,
+            'event'           => $event,
+            'master_event_id' => $masterEvent?->id,
         ]);
     }
     public function update(Request $request, Competition $competition, CompetitionEvent $event){
         $validated = $request->validate([
             'competition_session_id' => 'required|exists:competition_sessions,id',
-            'stroke'                 => 'required|string|max:50',
-            'distance'               => 'required|numeric|min:1',
-            'gender'                 => 'required|string|max:10',
-            'age_group_id'           => 'required|exists:age_groups,id',
-            'event_type'             => 'required|string|max:20',
-            'max_relay_athletes'     => [
-                Rule::requiredIf(fn() => $request->event_type === EventType::estafet->value),
-                'nullable', 'integer', 'max:4',
-            ],
+            'master_event_id'        => 'required|exists:master_events,id',
             'registration_fee'       => 'required|numeric|min:0',
             'limit_waktu'           => 'nullable|regex:/^\d{2}:\d{2}\.\d{2}$/'
-        ], [
-            'max_relay_athletes.required' => 'Maks. jumlah atlet wajib diisi untuk tipe estafet'
         ]);
+
+        $masterEvent = MasterEvent::findOrFail($validated['master_event_id']);
 
         $sessionIdsOnSameDay = CompetitionSession::where('competition_id', $competition->id)
             ->where('session_date', $event->competitionSession->session_date)
@@ -116,21 +130,40 @@ class CompetitionEventController extends Controller
 
         $exists = CompetitionEvent::where('id', '!=', $event->id)
             ->whereIn('competition_session_id', $sessionIdsOnSameDay)
-            ->where('distance', $request->distance)
-            ->where('stroke', $request->stroke)
-            ->where('age_group_id', $request->age_group_id)
-            ->where('gender', $request->gender)
+            ->where('distance', $masterEvent->distance)
+            ->where('stroke', $masterEvent->stroke)
+            ->where('age_group_id', $masterEvent->age_group_id)
+            ->where('gender', $masterEvent->gender)
+            ->where('event_type', $masterEvent->event_type)
+            ->where('equipment', $masterEvent->equipment)
             ->exists();
 
         if ($exists) {
             return response()->json([
                 'success'    => false,
-                'message'    => 'Event dengan kombinasi sesi, jarak, gaya, kelompok umur, dan jenis kelamin ini sudah ada.'
+                'message'    => 'Event dengan kombinasi ini sudah ada di sesi yang sama.'
             ]);
         }
 
-        if($request->event_type === EventType::individual->value) $validated['max_relay_athletes'] = null;
-        $event->update($validated);
+        $eventData = [
+            'competition_session_id' => $validated['competition_session_id'],
+            'distance'               => $masterEvent->distance,
+            'stroke'                 => $masterEvent->stroke,
+            'gender'                 => $masterEvent->gender,
+            'age_group_id'           => $masterEvent->age_group_id,
+            'event_type'             => $masterEvent->event_type,
+            'max_relay_athletes'     => $masterEvent->max_relay_athletes,
+            'equipment'              => $masterEvent->equipment,
+            'registration_fee'       => $validated['registration_fee'],
+        ];
+
+        if (!empty($validated['limit_waktu'])) {
+            $eventData['limit_waktu'] = $validated['limit_waktu'];
+        } else {
+            $eventData['limit_waktu'] = 'NO LIMIT';
+        }
+
+        $event->update($eventData);
         $event->load('ageGroup');
 
         $sessionEvents = $competition->events()
@@ -144,7 +177,7 @@ class CompetitionEventController extends Controller
             'session_id' => $event->competition_session_id,
             'row_html'   => view('pages.competition.tabs._event_row', [
                 'event'       => $event,
-                'sesi'        => $event->session,
+                'sesi'        => $event->competitionSession,
                 'index'       => $index,
                 'competition' => $competition,
             ])->render(),

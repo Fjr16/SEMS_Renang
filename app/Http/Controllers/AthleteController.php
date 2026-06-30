@@ -208,7 +208,7 @@ class AthleteController extends Controller
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
-                'message' => substr($th->getMessage(),0,100) || 'Gagal Hapus data'
+                'message' => substr($th->getMessage(),0,100) ?? 'Gagal Hapus data'
             ]);
         }
     }

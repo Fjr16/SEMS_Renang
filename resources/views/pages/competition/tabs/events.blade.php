@@ -6,6 +6,72 @@
 
     /* Table rows */
     .event-row:hover { background:#f8fafc !important; }
+
+    /* Select2 custom override for event modal */
+    #modalEvent .select2-container--classic .select2-selection--single {
+        height: 38px;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        background: #fff;
+    }
+    #modalEvent .select2-container--classic .select2-selection--single .select2-selection__rendered {
+        line-height: 36px;
+        padding-left: 12px;
+        color: #212529;
+        font-size: 14px;
+    }
+    #modalEvent .select2-container--classic .select2-selection--single .select2-selection__arrow {
+        height: 36px;
+    }
+    #modalEvent .select2-container--classic.select2-container--open .select2-selection--single {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.2rem rgba(13,110,253,.15);
+    }
+    #modalEvent .select2-container--classic .select2-results__option {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    #modalEvent .select2-container--classic .select2-results__option--highlighted {
+        background: #4f46e5;
+    }
+    #modalEvent .select2-container--classic .select2-results__group {
+        padding: 8px 12px;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: #4f46e5;
+        background: #f0f0ff;
+    }
+    .select2-results__option .event-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        line-height: 1.3;
+    }
+    .select2-results__option .event-option .ev-distance {
+        font-weight: 700;
+        font-family: monospace;
+        color: #4f46e5;
+        min-width: 52px;
+    }
+    .select2-results__option .event-option .ev-stroke {
+        font-weight: 600;
+        min-width: 90px;
+    }
+    .select2-results__option .event-option .ev-gender {
+        font-size: 11px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .select2-results__option .event-option .ev-ku {
+        font-size: 11px;
+        color: #6b7280;
+    }
+    .select2-results__option[aria-disabled="true"] {
+        display: none;
+    }
 </style>
 @endpush
 
@@ -134,7 +200,7 @@
                             <th class="px-4 py-3 text-uppercase fw-semibold" style="font-size:11px;color:#9ca3af;letter-spacing:.05em">Kelamin</th>
                             <th class="px-4 py-3 text-uppercase fw-semibold" style="font-size:11px;color:#9ca3af;letter-spacing:.05em">Kelompok</th>
                             <th class="px-4 py-3 text-uppercase fw-semibold" style="font-size:11px;color:#9ca3af;letter-spacing:.05em">Tipe</th>
-                            <th class="px-4 py-3 text-uppercase fw-semibold text-center" style="font-size:11px;color:#9ca3af;letter-spacing:.05em">Maks.</th>
+                            <th class="px-4 py-3 text-uppercase fw-semibold text-center" style="font-size:11px;color:#9ca3af;letter-spacing:.05em">Alat</th>
                             <th class="px-4 py-3 text-uppercase fw-semibold text-end" style="font-size:11px;color:#9ca3af;letter-spacing:.05em">Biaya</th>
                             <th class="px-4 py-3 text-uppercase fw-semibold text-center" style="font-size:11px;color:#9ca3af;letter-spacing:.05em">Aksi</th>
                         </tr>
@@ -187,15 +253,15 @@
         <div class="modal-body">
             <div class="row g-3">
                 <input type="hidden" id="competition_event_id" name="competition_event_id">
-                <div class="col-md-4 col-12">
+                <div class="col-md-6 col-12">
                     <label class="form-label">Kompetisi</label>
                     <input type="text" class="form-control" id="competition_name"
                            value="{{ $competition->name ?? '' }}" disabled>
                     <input type="hidden" value="{{ $competition->id ?? '' }}" name="competition_id" id="competition_id">
                 </div>
-                <div class="col-md-4 col-12">
+                <div class="col-md-6 col-12">
                     <label class="form-label">Sesi Perlombaan</label>
-                    <select name="competition_session_id" id="competition_session_id" class="form-control">
+                    <select name="competition_session_id" id="competition_session_id" class="form-select">
                         @foreach ($competition->sessions as $sesi)
                             <option value="{{ $sesi->id }}" @selected(old('competition_session_id') == $sesi->id)>
                                 {{ ($sesi->session_date ?? '-/-') . ' [' . ($sesi->name ?? '-') . ']' }}
@@ -203,65 +269,58 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4 col-12">
-                    <label class="form-label">Limit Waktu</label>
-                    <input type="text" name="limit_waktu" class="form-control" id="limit_waktu">
+
+                <div class="col-12">
+                    <label class="form-label">Pilih Event</label>
+                    <select name="master_event_id" id="master_event_id" class="form-select" required>
+                        <option value="">-- Pilih Event --</option>
+                        @php
+                            $grouped = $masterEvents->groupBy('event_type');
+                        @endphp
+                        @foreach($grouped as $type => $events)
+                            <optgroup label="{{ \App\Enums\EventType::from($type)->label() }}">
+                                @foreach($events as $me)
+                                    @php
+                                        $gLabel = $me->gender === 'mixed' ? 'Campuran' : (\App\Enums\Gender::tryFrom($me->gender)?->label() ?? $me->gender);
+                                        $sLabel = \App\Enums\Stroke::tryFrom($me->stroke)?->label() ?? $me->stroke;
+                                        $bgGender = $me->gender === 'mixed' ? '#6c757d' : ($me->gender === 'male' ? '#0d6efd' : '#d63384');
+                                        $kuLabel = $me->ageGroup?->label ?? '-';
+                                        $isRelay = $me->event_type === \App\Enums\EventType::estafet->value;
+                                        $equipLabel = $me->equipment ? ucfirst($me->equipment) : '';
+                                        if ($isRelay && $me->max_relay_athletes) {
+                                            $distDisplay = $me->max_relay_athletes . 'x' . $me->distance . 'm';
+                                        } else {
+                                            $distDisplay = $me->distance . 'm';
+                                        }
+                                        $searchText = $distDisplay . ' ' . $sLabel . ' ' . ($equipLabel ? $equipLabel . ' ' : '') . ($isRelay ? 'Estafet ' : '') . $gLabel . ' ' . $kuLabel;
+                                    @endphp
+                                    <option value="{{ $me->id }}"
+                                        data-event-type="{{ $me->event_type }}"
+                                        data-stroke="{{ $sLabel }}"
+                                        data-distance="{{ $me->distance }}"
+                                        data-dist-display="{{ $distDisplay }}"
+                                        data-gender="{{ $gLabel }}"
+                                        data-gender-color="{{ $bgGender }}"
+                                        data-ku="{{ $kuLabel }}"
+                                        data-equipment="{{ $equipLabel }}">{{ $searchText }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
                 </div>
 
-                <div class="col-md-4 col-12">
-                    <label class="form-label">Tipe Perlombaan</label>
-                    <select class="form-control" id="event_type" name="event_type" required>
-                        @foreach ($enumEType as $type)
-                            <option value="{{ $type->value }}">{{ $type->label() }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4 col-12">
-                    <label class="form-label">Gaya Perlombaan</label>
-                    <select class="form-control" id="stroke" name="stroke" required>
-                        @foreach ($enumStroke as $stroke)
-                            <option value="{{ $stroke->value }}">{{ $stroke->label() }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4 col-12">
-                    <label class="form-label">Jarak</label>
-                    <div class="input-group">
-                        <input type="number" class="form-control" id="distance" name="distance" required>
-                        <span class="input-group-text">m</span>
-                    </div>
-                </div>
-                <div class="col-md-4 col-12">
-                    <label class="form-label">Jenis Kelamin</label>
-                    <select class="form-control" id="gender" name="gender" required>
-                        @foreach ($enumGender as $gender)
-                            <option value="{{ $gender->value }}">{{ $gender->label() }}</option>
-                        @endforeach
-                        <option value="mixed">Campuran</option>
-                    </select>
-                </div>
-
-                <div class="col-md-4 col-12">
-                    <label class="form-label">Kelompok Umur</label>
-                    <select class="form-control" id="age_group_id" name="age_group_id" required>
-                        @foreach ($ageGroups as $ku)
-                            <option value="{{ $ku->id }}">{{ $ku->label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4 col-12">
-                    <label class="form-label">Maks. Jumlah Atlet</label>
-                    <input class="form-control" type="number" min="0" max="4"
-                           name="max_relay_athletes" id="max_relay_athletes" disabled>
-                </div>
-
-                <div class="col-md-12 col-12">
+                <div class="col-md-6 col-12">
                     <label class="form-label">Biaya Pendaftaran</label>
                     <div class="input-group">
                         <span class="input-group-text">Rp</span>
                         <input type="text" class="form-control rupiah"
                                id="registration_fee" name="registration_fee" required>
                     </div>
+                </div>
+                <div class="col-md-6 col-12">
+                    <label class="form-label">Limit Waktu</label>
+                    <input type="text" name="limit_waktu" class="form-control" id="limit_waktu"
+                           placeholder="Kosongkan untuk NO LIMIT">
                 </div>
             </div>
         </div>

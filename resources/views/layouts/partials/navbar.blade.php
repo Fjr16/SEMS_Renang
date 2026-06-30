@@ -128,6 +128,7 @@
                         'Master Setting.Kompetisi-List',
                         'Master Setting.Lokasi & Kolam-List',
                         'Master Setting.Kelompok Umur-List',
+                        'Master Setting.Event-List',
                         'Master Setting.Organisasi-List',
                         'Master Setting.User Hak Akses-List',
                     ])

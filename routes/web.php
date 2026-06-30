@@ -11,6 +11,7 @@ use App\Http\Controllers\CompetitionSessionController;
 use App\Http\Controllers\CompetitionTabEntriesController;
 use App\Http\Controllers\CompetitionUndanganController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\MasterEventController;
 use App\Http\Controllers\MyTeamController;
 use App\Http\Controllers\OfficialController;
 use App\Http\Controllers\OrganizationController;
@@ -104,6 +105,12 @@ Route::middleware(['auth'])->group(function(){
             Route::get('/data', [AgeGroupController::class, 'data'])->name('age.group.data')->middleware('permission:Master Setting.Kelompok Umur-List');
             Route::post('/store', [AgeGroupController::class, 'store'])->name('age.group.store')->middleware('permission:Master Setting.Kelompok Umur-Tambah|Master Setting.Kelompok Umur-Ubah');
             Route::delete('/destroy/{id}', [AgeGroupController::class, 'destroy'])->name('age.group.destroy')->middleware('permission:Master Setting.Kelompok Umur-Hapus');
+        });
+        Route::prefix('/event')->group(function(){
+            Route::get('/', [MasterEventController::class, 'index'])->name('master.event.index')->middleware('permission:Master Setting.Event-List');
+            Route::get('/data', [MasterEventController::class, 'data'])->name('master.event.data')->middleware('permission:Master Setting.Event-List');
+            Route::post('/store', [MasterEventController::class, 'store'])->name('master.event.store')->middleware('permission:Master Setting.Event-Tambah|Master Setting.Event-Ubah');
+            Route::delete('/destroy/{id}', [MasterEventController::class, 'destroy'])->name('master.event.destroy')->middleware('permission:Master Setting.Event-Hapus');
         });
         Route::prefix('/organization')->group(function(){
             Route::get('/', [OrganizationController::class, 'index'])->name('organizations.index')->middleware('permission:Master Setting.Organisasi-List');

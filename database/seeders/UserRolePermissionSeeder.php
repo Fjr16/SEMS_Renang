@@ -79,6 +79,11 @@ class UserRolePermissionSeeder extends Seeder
                 'Master Setting.Kelompok Umur-Ubah',
                 'Master Setting.Kelompok Umur-Hapus',
 
+                'Master Setting.Event-List',
+                'Master Setting.Event-Tambah',
+                'Master Setting.Event-Ubah',
+                'Master Setting.Event-Hapus',
+
                 'Master Setting.Organisasi-List',
                 'Master Setting.Organisasi-Tambah',
                 'Master Setting.Organisasi-Ubah',

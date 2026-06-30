@@ -208,13 +208,15 @@
                                 <tbody>
                                     @foreach($teamEntries as $i => $entry)
                                     @php
-                                        //  competition Event
                                         $label = 'Event ' . ($entry->competitionEvent->event_number ?? '-');
                                         $eventGender = $entry->competitionEvent->gender ? ($entry->competitionEvent->gender != 'mixed' ? (App\Enums\Gender::from($entry->competitionEvent->gender)->label()) : 'Campuran') : '-';
                                         $tipeEvent = $entry->competitionEvent->event_type ? App\Enums\EventType::from($entry->competitionEvent->event_type)->label() : '-';
+                                        $isRelayEntry = $tipeEvent == 'Estafet';
                                         $eventKu = $entry->competitionEvent->ageGroup ? $entry->competitionEvent->ageGroup->label : '';
                                         $stroke = $entry->competitionEvent->stroke ? App\Enums\Stroke::from($entry->competitionEvent->stroke)->label() : '-';
-                                        $meta  = (($entry->competitionEvent->distance ?? '-') . ' M ' . ($stroke) . ' • ' . ($eventGender) . ' • '. ($eventKu));
+                                        $equipMeta = $entry->competitionEvent->equipment ? ' ' . ucfirst($entry->competitionEvent->equipment) : '';
+                                        $distMeta = ($isRelayEntry && $entry->competitionEvent->max_relay_athletes) ? ($entry->competitionEvent->max_relay_athletes . 'x' . $entry->competitionEvent->distance) : $entry->competitionEvent->distance;
+                                        $meta  = ($distMeta . ' M ' . $stroke . $equipMeta . ' • ' . $eventGender . ' • '. $eventKu);
                                     @endphp
 
                                     @if($entry->is_relay)
@@ -229,7 +231,7 @@
                                                 @endif
                                             </td>
                                             <td>{{ $meta }}</td>
-                                            <td><code>{{ $entry->competitionEvent->max_relay_athletes ?? '—' }}</code></td>
+                                            <td><code>{{ $isRelayEntry ? ($entry->competitionEvent->max_relay_athletes ?? '—') : '—' }}</code></td>
                                             <td><code>{{ $entry->entry_time ?? '—' }}</code></td>
                                             <td style="width: max-content;">
                                                 <input
@@ -396,7 +398,7 @@
                                                 @endif
                                             </td>
                                             <td>{{ $meta }}</td>
-                                            <td><code>{{ $entry->competitionEvent->max_relay_athletes ?? '—' }}</code></td>
+                                            <td><code>{{ $isRelayEntry ? ($entry->competitionEvent->max_relay_athletes ?? '—') : '—' }}</code></td>
                                             <td><code>{{ $entry->entry_time ?? '—' }}</code></td>
                                             {{-- <td><code>{{ $entry->seed_time ?? '—' }}</code></td> --}}
                                             <td>

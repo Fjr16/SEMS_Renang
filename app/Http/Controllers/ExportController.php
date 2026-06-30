@@ -55,7 +55,7 @@ class ExportController extends Controller
                     ->sortBy('distance')
                     ->map(fn($e) => [
                         'id'    => $e->id,
-                        'label' => $e->distance . ' m',               // contoh: "50M", "100M"
+                        'label' => $e->distance . 'm' . ($e->equipment ? ' ' . ucfirst($e->equipment) : ''),
                     ])->values()->toArray(),
             ])
             ->values()
@@ -83,7 +83,7 @@ class ExportController extends Controller
                     ->sortBy('distance')
                     ->map(fn($e) => [
                         'id'    => $e->id,
-                        'label' => $e->distance . ' m',
+                        'label' => ($e->max_relay_athletes ? $e->max_relay_athletes . 'x' : '') . $e->distance . 'm',
                     ])->values()->toArray(),
             ])
             ->values()
@@ -162,12 +162,16 @@ class ExportController extends Controller
                             return [
                                 'nama' => $sesi->name ?? '-',
                                 'acara' => $sesi->competitionEvents
-                                    ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->event_type)
+                                    ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->event_type . '|' . ($e->equipment ?? ''))
                                     ->map(function($events){
                                         $first = $events->first();
+                                        $distLabel = ($first->event_type === EventType::estafet->value && $first->max_relay_athletes)
+                                            ? $first->max_relay_athletes . 'x' . $first->distance
+                                            : $first->distance;
+                                        $equipLabel = $first->equipment ? ' ' . ucfirst($first->equipment) : '';
                                         return [
-                                            'nomor' => $first->distance . ' M ' . Stroke::tryFrom($first->stroke)->label() ?? '-',
-                                            'tipe_event' => EventType::tryFrom($first->event_type)->label() ?? '-',
+                                            'nomor' => $distLabel . ' M ' . (Stroke::tryFrom($first->stroke)?->label() ?? '-') . $equipLabel,
+                                            'tipe_event' => EventType::tryFrom($first->event_type)?->label() ?? '-',
                                             'ku_list' => $events->groupBy('age_group_id')->map(function ($eByKu){
                                                 $noPa = $eByKu->where('gender', Gender::pria->value)->value('event_number');
                                                 $noPi = $eByKu->where('gender', Gender::wanita->value)->value('event_number');
@@ -194,12 +198,16 @@ class ExportController extends Controller
                             return [
                                 'nama' => $sesi->name ?? '-',
                                 'acara' => $sesi->competitionEvents
-                                    ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->event_type)
+                                    ->groupBy(fn($e) => $e->distance .'|'. $e->stroke . '|' . $e->event_type . '|' . ($e->equipment ?? ''))
                                     ->map(function($events){
                                         $first = $events->first();
+                                        $distLabel = ($first->event_type === EventType::estafet->value && $first->max_relay_athletes)
+                                            ? $first->max_relay_athletes . 'x' . $first->distance
+                                            : $first->distance;
+                                        $equipLabel = $first->equipment ? ' ' . ucfirst($first->equipment) : '';
                                         return [
-                                            'nomor' => $first->distance . ' M ' . Stroke::tryFrom($first->stroke)->label() ?? '-',
-                                            'tipe_event' => EventType::tryFrom($first->event_type)->label() ?? '-',
+                                            'nomor' => $distLabel . ' M ' . (Stroke::tryFrom($first->stroke)?->label() ?? '-') . $equipLabel,
+                                            'tipe_event' => EventType::tryFrom($first->event_type)?->label() ?? '-',
                                             'ku_list' => $events->groupBy('age_group_id')->map(function ($eByKu){
                                                 $noPa = $eByKu->where('gender', Gender::pria->value)->value('event_number');
                                                 $noPi = $eByKu->where('gender', Gender::wanita->value)->value('event_number');
@@ -225,7 +233,7 @@ class ExportController extends Controller
                 $totalLanes = $e->competitionSession?->pool?->total_lanes ?? '8';
                 return [
                     'nomor' => $e?->event_number,
-                    'nama' => ($e?->distance ?? '-') . ' M ' . (Stroke::tryFrom($e->stroke)->label() ?? '-') . ', ' . $e?->competitionSession->pool->course_type ?? '-' ,
+                    'nama' => (($e->event_type === EventType::estafet->value && $e->max_relay_athletes) ? $e->max_relay_athletes . 'x' : '') . ($e?->distance ?? '-') . ' M ' . (Stroke::tryFrom($e->stroke)?->label() ?? '-') . ($e->equipment ? ' ' . ucfirst($e->equipment) : '') . ', ' . $e?->competitionSession->pool->course_type ?? '-' ,
                     'tanggal' => Carbon::parse($e->competitionSession?->session_date)->translatedFormat('l, d F Y') . ' — ' . ($e?->competitionSession?->name ?? '-'),
                     'status' => $roundAwal ? RoundTypeEnum::from($roundAwal)->label() : '-',
                     'limit'  => ($e?->limit_waktu ?? 'NO LIMIT'),
@@ -375,6 +383,9 @@ class ExportController extends Controller
                         'ce.gender as event_gender',
                         'ce.distance',
                         'ce.stroke',
+                        'ce.event_type',
+                        'ce.max_relay_athletes',
+                        'ce.equipment',
                         'cs.name',
                         'cs.session_date',
                         'comp.id',
@@ -413,8 +424,11 @@ class ExportController extends Controller
                 };
                 $genderEv = ($genderEvFull === 'PUTRA' ? 'PA' : ($genderEvFull === 'PUTRI' ? 'PI' : 'CAMPURAN'));
                 $strokeEv = Stroke::from($first->stroke)->label();
+                $isRelayEv = $first->event_type === EventType::estafet->value;
+                $distEv = ($isRelayEv && $first->max_relay_athletes) ? ($first->max_relay_athletes . 'x' . $first->distance) : $first->distance;
+                $equipEv = $first->equipment ? ' ' . ucfirst($first->equipment) : '';
                 return [
-                    'event_label' => 'EVENT ' . $first->event_number . ' ' . $genderEv . ' - ' . $first->distance . ' M ' . $strokeEv,
+                    'event_label' => 'EVENT ' . $first->event_number . ' ' . $genderEv . ' - ' . $distEv . ' M ' . $strokeEv . $equipEv,
                     'category_label' => 'KU ' . $first->kelompok_umur . ' ' . $genderEvFull,
                     'line_label' => 'RANK',
                     'results' => $item->groupBy('round_type')->map(function ($entryByRound, $roundType) use ($ageGroups, $mulaiKompetisi){

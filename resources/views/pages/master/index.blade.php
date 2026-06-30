@@ -75,6 +75,13 @@
         'akses' => auth()->user()->can('Master Setting.Kelompok Umur-List'),
         ],
         [
+        'title' => 'Event',
+        'desc'  => 'Kelola data master event / nomor lomba',
+        'icon'  => 'bi-flag',
+        'route' => route('master.event.index'),
+        'akses' => auth()->user()->can('Master Setting.Event-List'),
+        ],
+        [
         'title' => 'Organisasi',
         'desc'  => 'Kelola data master organisasi / penyelenggara',
         'icon'  => 'bi-building',

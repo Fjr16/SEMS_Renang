@@ -1,6 +1,3 @@
-{{-- resources/views/pages/competition/tabs/_event_row.blade.php --}}
-{{-- Dipakai oleh Controller untuk render HTML via response()->json() --}}
-
 @php
     if(!$event->gender || $event->gender == 'mixed'){
         $genderClass = 'badge bg-secondary text-white';
@@ -15,13 +12,18 @@
         $strokeLabel = '-';
     }
 
-        if($event->event_type){
+    if($event->event_type){
         $eTypeClass = 'badge ' .\App\Enums\EventType::from($event->event_type)->class();
         $eTypeLabel = \App\Enums\EventType::from($event->event_type)->label();
     }else{
         $eTypeClass = '';
         $eTypeLabel = '-';
     }
+
+    $isRelay = $event->event_type === \App\Enums\EventType::estafet->value;
+    $distanceDisplay = $isRelay && $event->max_relay_athletes
+        ? $event->max_relay_athletes . 'x' . $event->distance . ' m'
+        : $event->distance . ' m';
 @endphp
 
 <tr class="event-row border-bottom"
@@ -39,12 +41,12 @@
         </span>
     </td>
     <td class="px-4 fw-medium text-dark">{{ $strokeLabel }}</td>
-    <td class="px-4" style="font-family:monospace;color:#6b7280">{{ $event->distance }} m</td>
+    <td class="px-4" style="font-family:monospace;color:#6b7280">{{ $distanceDisplay }}</td>
     <td class="px-4"><span class="{{ $genderClass }}">{{ $genderLabel }}</span></td>
     <td class="px-4 text-muted" style="font-size:12px">{{ $event->ageGroup?->label ?? '-' }}</td>
     <td class="px-4"><span class="{{ $eTypeClass }}">{{ $eTypeLabel }}</span></td>
-    <td class="px-4 text-center" style="font-family:monospace;color:#6b7280;font-weight:600">
-        {{ $event->max_relay_athletes ?? '-' }}
+    <td class="px-4 text-center" style="font-size:12px;color:#6b7280">
+        {{ $event->equipment ? ucfirst($event->equipment) : '-' }}
     </td>
     <td class="px-4 text-end" style="font-family:monospace;font-weight:600;color:#059669;white-space:nowrap">
         Rp {{ $event->registration_fee ? number_format($event->registration_fee, 0, ',', '.') : '-' }}

@@ -13,12 +13,13 @@ class CompetitionEvent extends Model
     protected $fillable = [
         'competition_session_id',
         'age_group_id',
-        'event_number', //format sesi_id + nomor event mulai dari 01
-        'distance', //dalam meter
+        'event_number',
+        'distance',
         'stroke',
         'gender',
         'event_type',
         'max_relay_athletes',
+        'equipment',
         'registration_fee',
         'limit_waktu'
     ];
@@ -105,9 +106,17 @@ class CompetitionEvent extends Model
         return $this->hasMany(EventRoundConfig::class);
     }
     public function getLabel(){
+        $distance = $this->distance . ' M';
+        if ($this->event_type === EventType::estafet->value && $this->max_relay_athletes) {
+            $distance = $this->max_relay_athletes . 'x' . $this->distance . ' M';
+        }
+
+        $equip = $this->equipment ? ' ' . ucfirst($this->equipment) : '';
+
         return 'Event ' . $this->event_number . ' - '
-            . $this->distance . ' M '
-            . ($this->stroke ? Stroke::from($this->stroke)->label() : '###') . ' • '
+            . $distance
+            . ($this->stroke ? ' ' . Stroke::from($this->stroke)->label() : ' ###')
+            . $equip . ' • '
             . ($this->gender === 'mixed' ? 'Campuran' : Gender::from($this->gender)->label()) . ' • '
             . $this->ageGroup->label . ' / '
             . ($this->event_type ? EventType::from($this->event_type)->label() : '-')

@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(AgeGroupSeeder::class);
+        $this->call(MasterEventSeeder::class);
         $this->call(UserRolePermissionSeeder::class);
 
         DB::table('users')->truncate();
