@@ -42,60 +42,62 @@
             background-repeat: no-repeat;
         }
 
-        /* Logo area */
         .cover-logos {
             position: absolute;
-            top: 25px;
-            left: 25px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            /* top: 360px; */
+            top: 220px;
+            left: 0;
+            width: 100%;
+            text-align: center;   /* ganti dari display:flex + justify-content */
         }
-
         .cover-logos img {
-            height: 55px;
+            height: 90px;
+            display: inline-block;   /* supaya img mengikuti text-align dari parent */
+            vertical-align: middle;
+            margin: 0 4px;            /* pengganti gap, karena inline-block tidak support gap */
         }
 
-        /* Teks utama cover */
-        .cover-main-text {
+        .cover-title {
             position: absolute;
-            top: 100px;
-            left: 30px;
-            right: 160px;
+            top: 490px;
+            left: 0;
+            right: 0;
+            text-align: center;
         }
 
-        .cover-main-text .meet {
-            font-size: 72pt;
+        .cover-title .meet,
+        .cover-title .program {
+            font-size: 76pt;
             font-weight: 900;
             color: #1B2B6B;
-            line-height: 1;
-            letter-spacing: -1px;
+            line-height: 1.0;
+            letter-spacing: -2px;
         }
 
-        .cover-main-text .program {
-            font-size: 72pt;
-            font-weight: 900;
-            color: #1B2B6B;
-            line-height: 1;
-            letter-spacing: -1px;
+        .cover-event-info {
+            position: absolute;
+            top: 720px;
+            left: 0;
+            right: 0;
+            text-align: center;
         }
 
-        .cover-main-text .ev-name {
-            font-size: 15pt;
+        .cover-event-info .ev-name {
+            font-size: 19pt;
             font-weight: bold;
             color: #1B2B6B;
-            margin-top: 18px;
             line-height: 1.3;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .cover-main-text .ev-detail {
-            font-size: 10pt;
-            color: #1B2B6B;
-            margin-top: 10px;
-            line-height: 1.6;
-            border-left: 4px solid #F5C400;
-            padding-left: 8px;
+        .cover-event-info .ev-detail {
+            font-size: 11.5pt;    /* dari 10pt */
+            border-top: 1px solid #F5C400;
+            border-bottom: 1px solid #F5C400;
+            padding: 7px 22px;
+            display: inline-block;
+            line-height: 1.7;
         }
 
         /* ================================================
@@ -347,7 +349,6 @@
          HALAMAN 1: COVER
     ============================================= --}}
     <div class="cover-page">
-        {{-- Logo --}}
         <div class="cover-logos">
             @if(!empty($logoKiri))
                 @foreach($logoKiri as $logo)
@@ -355,18 +356,18 @@
                 @endforeach
             @endif
         </div>
-
-        {{-- Teks utama --}}
-        <div class="cover-main-text">
+        <div class="cover-title">
             <div class="meet">MEET</div>
             <div class="program">PROGRAM</div>
+        </div>
+
+        <div class="cover-event-info">
             <div class="ev-name">{{ $namaEvent }}</div>
             <div class="ev-detail">
                 {{ $tanggal }}<br>
                 {{ $venue }}
             </div>
         </div>
-
     </div>
 
 

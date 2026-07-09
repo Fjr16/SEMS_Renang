@@ -274,6 +274,8 @@ class ExportController extends Controller
                 'venue'     => ($item?->venue?->name ?? '-') . ', ' . ($item?->venue?->city ?? '-'),
 
                 'logoKiri'  => [
+                    public_path('assets/logo-sumbar.png'),
+                    public_path('assets/logo-kota.png'),
                     public_path('assets/akuatik-indonesia-seeklogo.png'),
                 ],
 
@@ -558,19 +560,16 @@ class ExportController extends Controller
             }
 
             $data = [
-                // Info event
-                'namaEvent' => $row->name ?? '-',
-                'venue'     => $row?->venue?->name ?? '-',
-                'tanggal'   => $tanggal,
+                'namaEvent' => strtoupper($item?->name ?? 'Kompetisi -'),
+                'tanggal'   => strtoupper($tanggal),
+                'venue'     => ($item?->venue?->name ?? '-') . ', ' . ($item?->venue?->city ?? '-'),
 
-                // Logo — path absolut wajib untuk Dompdf
                 'logoKiri'  => [
-                    public_path('images/logo-sumbar.png'),
-                    public_path('images/logo-kota.png'),
+                    public_path('assets/logo-sumbar.png'),
+                    public_path('assets/logo-kota.png'),
                 ],
                 'logoKanan' => [
-                    public_path('images/logo-akuatik.png'),
-                    public_path('images/logo-gb.png'),
+                    public_path('assets/akuatik-indonesia-seeklogo.png'),
                 ],
 
                 'rekapMedali' => collect($ranked)
@@ -702,17 +701,16 @@ class ExportController extends Controller
             }
 
             $data = [
-                'namaEvent' => $competition->name,
-                'venue'     => $competition->venue->name,
-                'tanggal'   => $tanggal,
+                'namaEvent' => strtoupper($competition?->name ?? 'Kompetisi -'),
+                'tanggal'   => strtoupper($tanggal),
+                'venue'     => ($competition?->venue?->name ?? '-') . ', ' . ($competition?->venue?->city ?? '-'),
 
                 'logoKiri' => [
-                    public_path('images/logo-sumbar.png'),
-                    public_path('images/logo-kota.png'),
+                    public_path('assets/logo-sumbar.png'),
+                    public_path('assets/logo-kota.png'),
                 ],
                 'logoKanan' => [
-                    public_path('images/logo-akuatik.png'),
-                    public_path('images/logo-gb.png'),
+                    public_path('assets/akuatik-indonesia-seeklogo.png'),
                 ],
 
                 'atletTerbaik' => $atletTerbaik,

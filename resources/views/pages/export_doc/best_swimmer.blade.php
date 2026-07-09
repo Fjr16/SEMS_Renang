@@ -144,11 +144,7 @@
         .col-perak  { width: 5%; }
         .col-perunggu { width: 6%; }
         .col-poin   { width: 5%; }
-        .col-extra  { width: 4%; } /* kolom - (4 buah) */
-
-        /* ================================================
-           PAGE FOOTER via Dompdf page_text
-        ================================================ */
+        .col-extra  { width: 4%; }
     </style>
 </head>
 <body>
@@ -182,26 +178,26 @@
 
     {{-- PAGE HEADER --}}
     <div class="page-header">
-        {{-- <div class="logo-left">
+        <div class="logo-left">
             @if(!empty($logoKiri))
                 @foreach($logoKiri as $logo)
                     <img src="{{ $logo }}" alt="logo">
                 @endforeach
             @endif
-        </div> --}}
+        </div>
         <div class="header-center">
             <div class="ev-name">{{ $namaEvent }}</div>
             <div class="ev-venue">{{ $venue }}</div>
             <div class="ev-date">{{ $tanggal }}</div>
             <div class="ev-section">DAFTAR ATLET TERBAIK</div>
         </div>
-        {{-- <div class="logo-right">
+        <div class="logo-right">
             @if(!empty($logoKanan))
                 @foreach($logoKanan as $logo)
                     <img src="{{ $logo }}" alt="logo">
                 @endforeach
             @endif
-        </div> --}}
+        </div>
     </div>
 
     {{-- TABLE --}}

@@ -211,26 +211,26 @@
          HALAMAN 1: REKAP MEDALI PER KONTINGEN
     ============================================= --}}
     <div class="page-header">
-        {{-- <div class="logo-left">
+        <div class="logo-left">
             @if(!empty($logoKiri))
                 @foreach($logoKiri as $logo)
                     <img src="{{ $logo }}" alt="logo">
                 @endforeach
             @endif
-        </div> --}}
+        </div>
         <div class="header-center">
             <div class="ev-name">{{ $namaEvent }}</div>
             <div class="ev-venue">{{ $venue }}</div>
             <div class="ev-date">{{ $tanggal }}</div>
             <div class="ev-section">REKAP MEDALI PER KONTINGEN</div>
         </div>
-        {{-- <div class="logo-right">
+        <div class="logo-right">
             @if(!empty($logoKanan))
                 @foreach($logoKanan as $logo)
                     <img src="{{ $logo }}" alt="logo">
                 @endforeach
             @endif
-        </div> --}}
+        </div>
     </div>
 
     <div class="header-divider-top"></div>
