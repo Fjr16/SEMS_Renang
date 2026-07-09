@@ -16,7 +16,7 @@ enum Stroke:string
             self::gaya_dada => 'Gaya Dada',
             self::gaya_kupu => 'Gaya Kupu-kupu',
             self::gaya_punggung => 'Gaya Punggung',
-            self::gaya_campuran => 'Gaya Campuran',
+            self::gaya_campuran => 'Gaya Ganti',
         };
     }
 

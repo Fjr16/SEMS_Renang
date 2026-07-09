@@ -29,44 +29,17 @@
         /* ================================================
            HALAMAN 1: COVER
         ================================================ */
+
         .cover-page {
             width: 210mm;
             height: 297mm;
             position: relative;
             overflow: hidden;
             page-break-after: always;
-        }
-
-        /* Background kuning bawah */
-        .cover-bg-yellow-bottom {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 45%;
-            background-color: #F5C400;
-        }
-
-        /* Segitiga hitam pojok kiri bawah */
-        .cover-tri-black-left {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 0;
-            border-right: 90px solid transparent;
-            border-bottom: 120px solid #1a1a1a;
-        }
-
-        /* Segitiga hitam pojok kanan atas */
-        .cover-tri-black-right {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 0;
-            height: 0;
-            border-left: 100px solid transparent;
-            border-top: 130px solid #1a1a1a;
+            background-image: url('{{ public_path("assets/cover-doc.png") }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         /* Logo area */
@@ -374,14 +347,6 @@
          HALAMAN 1: COVER
     ============================================= --}}
     <div class="cover-page">
-
-        {{-- Background kuning --}}
-        <div class="cover-bg-yellow-bottom"></div>
-
-        {{-- Segitiga hitam --}}
-        <div class="cover-tri-black-left"></div>
-        <div class="cover-tri-black-right"></div>
-
         {{-- Logo --}}
         <div class="cover-logos">
             @if(!empty($logoKiri))
