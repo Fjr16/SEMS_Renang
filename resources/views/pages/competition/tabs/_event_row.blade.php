@@ -33,7 +33,8 @@
     data-gaya="{{ \App\Enums\Stroke::from($event->stroke)->label() }}"
     data-kelamin="{{ $event->gender }}"
     data-tipe="{{ $event->event_type }}"
-    data-session="{{ strtolower($sesi->name ?? '') }}">
+    data-session="{{ strtolower($sesi->name ?? '') }}"
+    data-age-group-id="{{ $event->age_group_id ?? '' }}">
     <td class="px-4 text-muted" style="font-family:monospace;font-size:12px">{{ $index + 1 }}</td>
     <td class="px-4">
         <span style="font-family:monospace;font-weight:700;color:#4f46e5;font-size:15px">

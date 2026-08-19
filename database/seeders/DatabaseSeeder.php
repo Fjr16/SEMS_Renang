@@ -50,9 +50,9 @@ class DatabaseSeeder extends Seeder
         Competition::factory(200)->create();
 
         $user = \App\Models\User::orderBy('id')->first();
-        if ($user) {
-            $user->assignRole('super_admin');
-        }
+        // if ($user) {
+        //     $user->assignRole('super_admin');
+        // }
 
         // create dummy Entries
         $competition_team_id = DB::table('competition_teams')->insertGetId([

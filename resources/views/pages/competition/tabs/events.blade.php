@@ -206,6 +206,14 @@
                         </tr>
                     </thead>
                     <tbody class="event-rows-desktop">
+                        @php
+                            $sesiEvents = $sesiEvents
+                                ->sortBy([
+                                    ['event_number', 'asc'],
+                                    ['age_group_id', 'desc'],
+                                ])
+                                ->values();
+                        @endphp
                         @forelse($sesiEvents as $i => $event)
                             @include('pages.competition.tabs._event_row', [
                                 'event'       => $event,
@@ -270,43 +278,50 @@
                     </select>
                 </div>
 
-                <div class="col-12">
-                    <label class="form-label">Pilih Event</label>
-                    <select name="master_event_id" id="master_event_id" class="form-select" required>
-                        <option value="">-- Pilih Event --</option>
-                        @php
-                            $grouped = $masterEvents->groupBy('event_type');
-                        @endphp
-                        @foreach($grouped as $type => $events)
-                            <optgroup label="{{ \App\Enums\EventType::from($type)->label() }}">
-                                @foreach($events as $me)
-                                    @php
-                                        $gLabel = $me->gender === 'mixed' ? 'Campuran' : (\App\Enums\Gender::tryFrom($me->gender)?->label() ?? $me->gender);
-                                        $sLabel = \App\Enums\Stroke::tryFrom($me->stroke)?->label() ?? $me->stroke;
-                                        $bgGender = $me->gender === 'mixed' ? '#6c757d' : ($me->gender === 'male' ? '#0d6efd' : '#d63384');
-                                        $kuLabel = $me->ageGroup?->label ?? '-';
-                                        $isRelay = $me->event_type === \App\Enums\EventType::estafet->value;
-                                        $equipLabel = $me->equipment ? ucfirst($me->equipment) : '';
-                                        if ($isRelay && $me->max_relay_athletes) {
-                                            $distDisplay = $me->max_relay_athletes . 'x' . $me->distance . 'm';
-                                        } else {
-                                            $distDisplay = $me->distance . 'm';
-                                        }
-                                        $searchText = $distDisplay . ' ' . $sLabel . ' ' . ($equipLabel ? $equipLabel . ' ' : '') . ($isRelay ? 'Estafet ' : '') . $gLabel . ' ' . $kuLabel;
-                                    @endphp
-                                    <option value="{{ $me->id }}"
-                                        data-event-type="{{ $me->event_type }}"
-                                        data-stroke="{{ $sLabel }}"
-                                        data-distance="{{ $me->distance }}"
-                                        data-dist-display="{{ $distDisplay }}"
-                                        data-gender="{{ $gLabel }}"
-                                        data-gender-color="{{ $bgGender }}"
-                                        data-ku="{{ $kuLabel }}"
-                                        data-equipment="{{ $equipLabel }}">{{ $searchText }}</option>
-                                @endforeach
-                            </optgroup>
-                        @endforeach
-                    </select>
+                <div class="col-md-9 col-12">
+                    {{-- <div class="col-12"> --}}
+                        <label class="form-label">Pilih Event</label>
+                        <select name="master_event_id" id="master_event_id" class="form-select" required>
+                            <option value="">-- Pilih Event --</option>
+                            @php
+                                $grouped = $masterEvents->groupBy('event_type');
+                            @endphp
+                            @foreach($grouped as $type => $events)
+                                <optgroup label="{{ \App\Enums\EventType::from($type)->label() }}">
+                                    @foreach($events as $me)
+                                        @php
+                                            $gLabel = $me->gender === 'mixed' ? 'Campuran' : (\App\Enums\Gender::tryFrom($me->gender)?->label() ?? $me->gender);
+                                            $sLabel = \App\Enums\Stroke::tryFrom($me->stroke)?->label() ?? $me->stroke;
+                                            $bgGender = $me->gender === 'mixed' ? '#6c757d' : ($me->gender === 'male' ? '#0d6efd' : '#d63384');
+                                            $kuLabel = $me->ageGroup?->label ?? '-';
+                                            $isRelay = $me->event_type === \App\Enums\EventType::estafet->value;
+                                            $equipLabel = $me->equipment ? ucfirst($me->equipment) : '';
+                                            if ($isRelay && $me->max_relay_athletes) {
+                                                $distDisplay = $me->max_relay_athletes . 'x' . $me->distance . 'm';
+                                            } else {
+                                                $distDisplay = $me->distance . 'm';
+                                            }
+                                            $searchText = $distDisplay . ' ' . $sLabel . ' ' . ($equipLabel ? $equipLabel . ' ' : '') . ($isRelay ? 'Estafet ' : '') . $gLabel . ' ' . $kuLabel;
+                                        @endphp
+                                        <option value="{{ $me->id }}"
+                                            data-event-type="{{ $me->event_type }}"
+                                            data-stroke="{{ $sLabel }}"
+                                            data-distance="{{ $me->distance }}"
+                                            data-dist-display="{{ $distDisplay }}"
+                                            data-gender="{{ $gLabel }}"
+                                            data-gender-color="{{ $bgGender }}"
+                                            data-ku="{{ $kuLabel }}"
+                                            data-equipment="{{ $equipLabel }}">{{ $searchText }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endforeach
+                        </select>
+                    {{-- </div> --}}
+                </div>
+                <div class="col-md-3 col-12">
+                    <label class="form-label">Nomor Event</label>
+                    <input type="number" name="event_number" class="form-control form-control-sm" id="event_number"
+                           placeholder="Nomor Event" required>
                 </div>
 
                 <div class="col-md-6 col-12">

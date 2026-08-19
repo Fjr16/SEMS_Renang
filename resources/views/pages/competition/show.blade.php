@@ -622,12 +622,14 @@
                 }
 
                 const ev = data.event;
+                const ev_number = data.event_number;
                 const masterId = data.master_event_id;
                 const modal = document.getElementById('modalEvent');
 
                 modal.querySelector('#eventForm').reset();
                 modal.querySelector('#competition_event_id').value   = ev.id;
                 modal.querySelector('#competition_session_id').value = ev.competition_session_id;
+                modal.querySelector('#event_number').value       = ev_number;
                 modal.querySelector('#registration_fee').value       = toNum(ev.registration_fee);
                 if(ev.limit_waktu && ev.limit_waktu != 'NO LIMIT'){
                     modal.querySelector('#limit_waktu').value       = ev.limit_waktu ?? '';
@@ -808,9 +810,25 @@
                     const equip    = $el.data('equipment') || '';
                     return `${distDisp} ${stroke} ${equip} ${gender} ${ku}`;
                 },
-            }).on('change', function () {
-                // placeholder for future logic
+            })
+            // }).on('change', function () {
+            //     // placeholder for future logic
+            // });
+        }
+
+        function insertRowSorted(tbody, newTr) {
+            const num = parseInt(newTr.dataset.nomor, 10);
+            const age = parseInt(newTr.dataset.ageGroupId, 10);
+
+            const rows = [...tbody.querySelectorAll('tr.event-row')];
+            const target = rows.find(row => {
+                const rNum = parseInt(row.dataset.nomor, 10);
+                const rAge = parseInt(row.dataset.ageGroupId, 10);
+                if (num !== rNum) return num < rNum;
+                return age > rAge;
             });
+
+            target ? tbody.insertBefore(newTr, target) : tbody.appendChild(newTr);
         }
 
         function initEventTabScripts() {
@@ -894,14 +912,18 @@
 
                                 // Tambahkan ke sesi BARU
                                 tbody?.querySelector('.session-empty-row')?.remove();
-                                tbody?.appendChild(newTr);
+                                // tbody?.appendChild(newTr);
+                                insertRowSorted(tbody, newTr);
                             } else {
                                 // Sesi sama, replace saja
-                                tbody?.querySelector(`tr.event-row[data-id="${eventId}"]`)?.replaceWith(newTr);
+                                // tbody?.querySelector(`tr.event-row[data-id="${eventId}"]`)?.replaceWith(newTr);
+                                tbody?.querySelector(`tr.event-row[data-id="${eventId}"]`)?.remove();
+                                insertRowSorted(tbody, newTr);  
                             }
                         } else {
                             tbody?.querySelector('.session-empty-row')?.remove(); // hapus empty state
-                            tbody?.appendChild(newTr);
+                            // tbody?.appendChild(newTr);
+                            insertRowSorted(tbody, newTr);  
                         }
 
                         refreshSessionCount(sessionId);

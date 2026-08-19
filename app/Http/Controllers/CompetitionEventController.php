@@ -30,6 +30,7 @@ class CompetitionEventController extends Controller
             'competition_session_id' => 'required|exists:competition_sessions,id',
             'master_event_id'        => 'required|exists:master_events,id',
             'registration_fee'       => 'required|numeric|min:0',
+            'event_number'           => 'required|digits_between:3,5',
             'limit_waktu'           => 'nullable|regex:/^\d{2}:\d{2}\.\d{2}$/'
         ]);
 
@@ -57,6 +58,7 @@ class CompetitionEventController extends Controller
         }
 
         $eventData = [
+            'event_number'           => $validated['event_number'],
             'competition_session_id' => $validated['competition_session_id'],
             'distance'               => $masterEvent->distance,
             'stroke'                 => $masterEvent->stroke,
@@ -111,6 +113,7 @@ class CompetitionEventController extends Controller
         return response()->json([
             'success'         => true,
             'event'           => $event,
+            'event_number'     => $event->event_number,
             'master_event_id' => $masterEvent?->id,
         ]);
     }
@@ -119,6 +122,7 @@ class CompetitionEventController extends Controller
             'competition_session_id' => 'required|exists:competition_sessions,id',
             'master_event_id'        => 'required|exists:master_events,id',
             'registration_fee'       => 'required|numeric|min:0',
+            'event_number'           => 'required|digits_between:3,5',
             'limit_waktu'           => 'nullable|regex:/^\d{2}:\d{2}\.\d{2}$/'
         ]);
 
@@ -146,6 +150,7 @@ class CompetitionEventController extends Controller
         }
 
         $eventData = [
+            'event_number' => $validated['event_number'],
             'competition_session_id' => $validated['competition_session_id'],
             'distance'               => $masterEvent->distance,
             'stroke'                 => $masterEvent->stroke,
